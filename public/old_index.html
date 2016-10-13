@@ -1,0 +1,238 @@
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=euc-kr" />
+	<link rel="shortcut icon" href="http://www.toronsil.com/image/toronsil007.ico">
+	<style>
+	* { font-family:tahoma; font-size:12px; }
+	a:link {text-decoration: none; color: #333333;}
+	a:visited {text-decoration: none; color: #333333;}
+	a:active {text-decoration: none; color: #333333;}
+	a:hover {text-decoration: underline; color: red;}
+	hr { margin-left:0px; padding-left: 0px;}
+
+	#top{
+		background-color:black;
+		color:white;
+		clear:both;
+		text-align:center;
+		padding:5px;
+	}
+
+	#header {
+		background-color:black;
+		color:white;
+		text-align:center;
+		padding:5px;
+	}
+
+	#mid{
+		width:100%;
+		display:flex;
+	}
+
+
+	#nav {
+		position:absolute;
+		line-height:20px;
+		background-color:#eeeeee;
+		height:auto;
+		width:30%;
+		float:left;
+		padding:5px; 
+	}
+
+	#section {
+		line-height:15px;
+		width:67%;
+		height:auto;
+		float:right;
+		padding:10px; 
+	}
+
+	#footer {
+		background-color:black;
+		color:white;
+		clear:both;
+		text-align:center;
+		padding:5px;
+		float:bottom;
+	}
+
+	#chat{
+		background-color:darkgray;
+		float:left;
+		height:inherit;
+		width:50%;
+		padding:15px;
+	}
+
+	#low-right{
+		background-color:black;
+		color:white;
+		width: 49%;
+		height: inherit;
+		padding:15px;
+		float:left;
+	}
+
+	#low{
+		width:100%;
+		display:flex;
+	}
+
+	#chatresult {
+		position:relative;
+		width:auto;
+		padding:5px;
+		line-height:5px;
+		background:#ddd;
+		border-radius:5px;
+		overflow-y: scroll;
+		border:1px solid #CCC;
+		margin-top:10px;
+		height:250px;
+		bottom:0;
+	}
+	#input {
+		border-radius:2px;
+		border:1px solid #ccc;
+		margin-top:10px;
+		padding:5px;
+		width:calc(100% - 88px);
+		margin-left: 15px;
+	}
+
+	#output {
+		border-radius:2px;
+		border:1px solid #ccc;
+		margin-top:10px;
+		padding:5px ;
+		width:72px;
+		float:left
+	}    
+
+
+	#below-content{
+		display:inline-table;
+	}
+
+	
+	#status {
+		width:88px;
+		display:block;
+		float:left;
+		margin-top:15px;
+	}
+
+	
+	</style>
+
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="./websocket/ws-client.js"></script>
+	
+</head>
+
+<body>
+	<div id="top">
+		웹소켓 채팅 프로그램 (ws://sej-node.ws.herokuapp.com/)
+	</div>
+
+	
+	
+	
+	<div id="low">
+		<div id="chat">
+			<div id="chatresult"></div>
+			<div>
+				<input type="text" id="output" disabled="disabled" />
+				<input type="text" id="input" disabled="disabled" />
+			</div>
+		</div>
+
+		<div id="low-right">
+			<h1><strong>추후</strong></h1>
+
+			<li> 웹소켓을 이용한 3D 온라인 환경 구축 </li>
+			<ul>
+				<li> 클라이언트의 input values 서버로 전송</li>
+				<li> 서버에서는 input value 들에 따른 결과 각 클라이언트에 전송</li>
+				<li> 클라이언트 canvas에 결과값 실시간 반영 - connection.onmessage</li>
+				<br>
+				<li> 채팅 프로그램 : div 클래스에 utf8 타입의 텍스트를 append </li>
+				<li> three.js : div 클래스에 render.domelement 를 append</li>
+
+			</ul>
+
+			<li><strong> 기본 구조 </strong>
+				<ul>
+					<li> 클라이언트가 접속할때마다 GenerateCharacter();</li>
+					<li> 접속한 모든 클라이언트가 같은 이미지 실시간 전송 / 받음
+						<ul>
+							<li> renderer.DOMElement.toDataURL </li>
+							<li> 위 String을 Bytearray 로 변환한 뒤 Binary message type 으로 전송</li>    
+						</ul></li>
+						<li> 각 클라이언트에서 해당 index 의 캐릭터만 조작할 수 있게(배열) 정의함</li>
+						<br>
+						<li> 클라이언트가 많아질수록 서버에서 각 클라이언트로 보내는 시간당 이미지 증가, - 렌더링에 문제?</li>
+
+					</ul>
+				</li>
+
+				<br>
+				<li>기본적인 1인 캐릭터 키보드, 마우스 조작부터 구현하기</li>
+				<br>
+				<li> report 페이지는 월별로 정리하기</li>
+				<br>
+				<li> RAYCASTER?</li>
+			</div>
+		</div>
+
+		
+
+		<div id="header">
+			<h1>EJ Shim</h1>
+		</div>
+
+		
+		<div id="mid">
+			<div id="nav">
+				<h1> Programs </h1>
+				<ul style="margin:0px">
+					<li><a href="./material/index.html" target="_blank">(2014. 05) <strong>Material</strong></a></li>
+					<li><a href="http://soulrommel.comoj.com/presentation/index.html" target="_blank">(2014. 06) <strong>Presentation</strong></a></li> 
+					<li><a href="http://soulrommel.comoj.com/material/626.html" target="_blank">(2014.6.26 ~ 6.29) <strong>Gravity</strong></a></li> 
+					<li><a href="http://soulrommel.comoj.com/material/629.html" target="_blank">(2014.6.29 ~) <strong>Earth Gravity</strong></a></li>
+					<li><a href="http://soulrommel.comoj.com/material/London/gMapAPI.html" target="_blank">(2014.8.3) <strong>London Insight Map</strong></a> </li>
+					<li><a href="./BulletGame/cannon.html" target="_blank"> (2014.08 ~ 2014.09.16) <strong>Cannon Game</strong></a> </li>
+					<li><a href="./BulletGame/Joint.html" target="_blank"> (2014.09.16 ~ 2014.9.22) <strong>Terrain</strong></a></li>
+					<li><a href="./BulletGame/IO.html" target="_blank"> (2014.09.23 ~ ) <strong>Input and Output</strong></a></li>
+
+					<li><a href="./websocket/ws_client.html" target="_blank"> (2014.09.23 ~ 9.27) <strong>Websocket Experiment</strong></a></li>
+					<li><a href="./BulletGame/glSocket.html" target="_blank"> (2014.09.28 ~ ) <strong>WebGL + WebSocket</strong></a></li>
+				</ul>
+				<hr style="color:black">
+				<ul>
+					<li> <a onclick="Month('september')"><strong>September</strong></a></li>
+					<li> <a onclick="Month('october')"><strong>October</strong></a></li>
+					<li> <a onclick="Month('november')"><strong>November</strong></a></li>
+				</ul>
+			</div>
+		</div>
+
+		<div id="section"></div>
+
+
+		<div id="footer">
+			soulrommel@gmail.com basd
+		</div>
+
+		<script type="text/javascript">
+		$('#section').load("./month/november.html #msg");
+
+		function Month(id){
+			$('#section').load("./month/" + id + ".html #msg");
+		}
+		</script>
+	</body>
+	</html>

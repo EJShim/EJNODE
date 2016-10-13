@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta charset="utf-8">
+		<title> EJ google map </title>
+		<meta name="generator" content="Bootply" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<!--[if lt IE 9]>
+			<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		<link href="css/styles.css" rel="stylesheet">
+	</head>
+	<body>
+<!-- begin template -->
+<div class="navbar navbar-custom navbar-fixed-top">
+ <div class="navbar-header"><a class="navbar-brand" href="#">LG 글로벌첼린지 공모전</a>
+      <a class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+    </div>
+    <div class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">지도보기</a></li>
+        <li><a href="#meaning">의미</a></li>
+        <li><a href="#introduction">팀 소개</a></li>
+        <li>&nbsp;</li>
+      </ul>
+      <form class="navbar-form">
+        <div class="form-group" style="display:inline;">
+          <div class="input-group">
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-chevron-down"></span></button>
+              <ul class="dropdown-menu">
+                <li><a href="#" id="p1">장소 1</a></li>
+                <li><a href="#">장소 2</a></li>
+                <li><a href="#">장소 3</a></li>
+                <li><a href="#">장소 4</a></li>
+                <li><a href="#">장소 5</a></li>
+              </ul>
+            </div>
+            <input type="text" class="form-control" placeholder="Search">
+            <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span> </span>
+          </div>
+        </div>
+      </form>
+    </div>
+</div>
+
+
+
+
+<div class="container-fluid" id="main">
+	<div class="row">
+		<div class="col-md-12" id="map-canvas"></div>
+		<h2 class="text-center">지도 앱 테스트</h2>
+
+			<div class="col-md-6 .panel panel-default">
+				<div class="panel-heading"><a href="">장소</a></div>
+				<div class="panel-body"> 서울,사진 </div>
+				<hr>
+			</div>
+
+
+			<div class="col-md-6 .panel panel-default">
+				<div class="panel-heading"><a href="">설명</a></div>
+				<div class="panel-body">웹앱은 브라우저,핸드폰에서 모두 호환됨</div>
+				<hr>
+			</div>
+
+			<div id="meaning" class="col-md-12 .panel panel-default">
+				<div class="panel-heading"><a href="">문화대로의미</a></div>
+				<div class="panel-body">
+					<p>문화대로</p>
+					<p>어쩌구저쩌구</p>
+				</div>
+			</div>
+
+			<div id="introduction" class="col-md-12 .panel panel-default">
+				<div class="panel-heading"><a href="">팀 소개</a></div>
+				<div class="panel-body">
+					<p>심응준</p>
+					<p>어쩌구저쩌구</p>
+					<p>다른사람</p>
+					<p>어쩌국저쩌구</p>
+				</div>
+			</div>
+
+			<div class=col-md-12>
+				<p>
+					<a href="http://soulrommel.esy.es" target="_ext" class="center-block btn btn-primary">심응준 Portfolio</a>
+				</p>
+		</div>
+	</div>
+</div>
+<!-- end template -->
+
+	<!-- script references -->
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed"></script>
+		<script src="js/scripts.js"></script>
+	</body>
+</html>

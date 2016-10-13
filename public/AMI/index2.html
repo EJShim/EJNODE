@@ -1,0 +1,80 @@
+<html>
+	<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title> Picture1 </title>
+    <meta name="generator" content="Bootply" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="../gmapBstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+	</head>
+	<body>
+
+    <div class="container-fluid" id="main">
+      <div class="row">
+				<p class="col-md-12" id="debugConsole"></p>
+        <div class="col-md-12" id = "viewport"></div>
+      </div>
+    </div>
+
+
+    <!---script area -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="../gmapBstrap/js/bootstrap.min.js"></script>
+		<script src="../libs/Math//three.js"></script>
+    <script src="../libs/TrackballControls.js"></script>
+
+
+
+		<script type="x-shader/x-vertex" id="shader-vertex">
+		// switch on high precision floats
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying vec3 viewDirection;
+
+		uniform vec3 camPos;
+
+		void main()
+		{
+			float xSeg = 1000.0;
+			vNormal = normal;
+			vNormal = normalize(vNormal);
+
+			viewDirection = camPos - position;
+			viewDirection = normalize(viewDirection);
+			//invert view direction if the angle between viewdir and normal > 90 degree, it happens in double-sided plane
+			if(dot(vNormal, viewDirection) < 0.0) viewDirection = -viewDirection;
+
+		  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+			vPosition = position;
+		}
+		</script>
+		<script type="x-shader/x-fragment" id="shader-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying vec3 viewDirection;
+
+		void main()
+		{
+			float pos = vPosition.z;
+			vec3 ambient = vec3(0.0, 0.0, 0.0);
+			vec3 col = vec3( exp(-pow(pos, 2.0) / 10000.0), exp(-pow(pos - 150.0, 2.0) / 10000.0), exp(-pow(pos- 300.0, 2.0) / 10000.0));
+
+
+
+			vec3 color = col * (dot(vNormal, viewDirection) + ambient);
+
+		  gl_FragColor 	= vec4(color ,1.0);
+
+		}
+		</script>
+		<script src="pic2Mgr.js"></script>
+	</body>
+</html>

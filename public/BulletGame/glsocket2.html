@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+<html>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+
+<head>
+	<title>webGL + webSocket</title>
+
+	<style type="text/css">
+	body {
+		margin-left: 0px;
+		margin-top: 0px;
+		margin-right: 0px;
+		margin-bottom: 0px;
+		overflow:hidden;
+	}
+	</style>
+	
+	<script type="text/javascript" src="../libs/Math/three.js"></script>
+	<script type="text/javascript" src="../libs/physi.js"></script>
+	<script src="../libs/THREEx.KeyboardState.js"></script>
+	<script src="http://sejserver.cafe24app.com/socket.io/socket.io.js"></script>
+	
+	<script type="text/javascript">
+	
+	
+	Physijs.scripts.worker = '../libs/physijs_worker.js';
+	Physijs.scripts.ammo = './ammo.js';
+	
+
+	var applyForce, newBullet_Position, mouse_position,
+	removeCannon,
+	projector, renderer, scene, ground, light, camera, box, cannons=[],  boxes = [],
+	planet, objects = [];
+
+	var target = new THREE.Vector3( 0, 0, 0 );
+
+	
+	var keyboard = new THREEx.KeyboardState();
+	
+	var clock = new THREE.Clock();
+	
+	var generateChair, chair, chairs=[];
+	var generateHuman, human, humans=[];
+	var people=[];
+
+	var host = false;
+	
+	
+	
+	var player = {};
+	var players = [];
+	
+
+	socket = io.connect('http://sejserver.cafe24app.com');
+	
+
+
+	function initScene() {
+		if (player === 1) {
+			host = true;
+		}
+		renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.shadowMapEnabled = false;
+		renderer.shadowMapSoft = false;
+		document.getElementById( 'viewport' ).appendChild( renderer.domElement );
+		
+		
+		scene = new Physijs.Scene({reportsize: 20, fixedTimeStep: 1/60});
+
+		scene.addEventListener(
+			'update',
+			function() {
+				scene.simulate( undefined, 1 );
+			}
+			);
+		
+		InitWorld();
+		
+		requestAnimationFrame( render );
+		scene.simulate();	
+
+
+	};
+
+	
+	var popBullet;
+	
+
+
+	function render() {
+		requestAnimationFrame( render );
+		renderer.render( scene, camera );
+
+		MoveCamera(); //Keyboard
+		refresh();
+		
+
+		
+		renderer.domElement.addEventListener( 'mousedown', setMousePosition );
+		//renderer.domElement.addEventListener( 'mousemove', setTargetPosition);
+	};
+
+
+	var background;
+
+
+	function InitWorld(){
+		
+		///////////////////////////////////////////////////FOG (Background)
+		//scene.fog = new THREE.Fog( 'gold', 1, 500 );
+		//renderer.setClearColor( scene.fog.color, 1 );
+
+
+
+		var background_material = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( '../images/redspace.jpg' ) });
+		background = new THREE.Mesh(new THREE.SphereGeometry( 100, 32, 32 ), background_material);
+		background.material.side = THREE.BackSide;
+		scene.add(background);
+		
+		/////////////Gravity
+		scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+		
+		
+		//////////////////////////////////////////////////Camera
+		camera = new THREE.PerspectiveCamera(
+			45,
+			window.innerWidth / window.innerHeight,
+			1,
+			1000
+			);
+		camera.position.set( 60, 50, 60 );
+		scene.add( camera );
+
+		///////////////////////////////////////////////////////////////////////  Light
+		light = new THREE.DirectionalLight( 0xFFFFFF );
+		light.position.set( 20, 40, -15 );
+		light.target.position.copy( scene.position );
+		light.castShadow = false;
+		light.shadowCameraLeft = -60;
+		light.shadowCameraTop = -60;
+		light.shadowCameraRight = 60;
+		light.shadowCameraBottom = 60;
+		light.shadowCameraNear = 20;
+		light.shadowCameraFar = 200;
+		light.shadowBias = -.0001
+		light.shadowMapWidth = light.shadowMapHeight = 2048;
+		light.shadowDarkness = .7;
+		var ambient = new THREE.AmbientLight( 0X555555 );
+		background.add(ambient);
+		scene.add( light );
+		
+		
+		//////////////////////////////////////////////////////////////////////// Ground
+		
+		Materials();
+		
+		
+		ground = new Physijs.BoxMesh(new THREE.BoxGeometry(100, 2, 100), ground_material, 0);
+		ground.receiveShadow = true;
+		ground.position.y = -10;
+		scene.add( ground );
+
+               /////////////////////////////////////////////////////
+
+               
+           }
+
+
+
+
+           var cannon_material, ground_material, box_material;
+
+
+           function Materials(){
+           	ground_material = Physijs.createMaterial(
+           		new THREE.MeshLambertMaterial({ color:'lightblue' }),
+			.8, // high friction
+			.4 // low restitution
+			);
+
+
+
+           	box_material = Physijs.createMaterial(
+           		new THREE.MeshLambertMaterial({ color:'gray' }),
+			.4, // low friction
+			.6 // high restitution
+			);
+
+           	cannon_material = Physijs.createMaterial(new THREE.MeshPhongMaterial({color:0xff0000}), 4, 3);
+		//box_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+		//box_material.map.repeat.set( .25, .25 );
+	}
+
+	function setMousePosition( evt ) {
+		// Find where mouse cursor intersects the ground plane
+		var vector = new THREE.Vector3(
+			( evt.clientX / renderer.domElement.clientWidth ) * 2 - 1,
+			-( ( evt.clientY / renderer.domElement.clientHeight ) * 2 - 1 ),
+			1
+			);
+		vector.unproject(camera);
+		vector.sub(camera.position);
+		
+		var bulletPosition = camera.position.clone().add(vector);
+		var rayDirection = bulletPosition.sub(camera.position.clone()).normalize();
+
+		var caster =  new THREE.Raycaster(camera.position.clone(), rayDirection);
+
+		var intersects = caster.intersectObject(ground);
+
+		for(var i in intersects){
+			var shootVolume = new THREE.Vector3( intersects[i].point.x, intersects[i].point.y+Math.random()+Math.random(), intersects[i].point.z );
+			var shootPos = new THREE.Vector3( intersects[i].point.x, intersects[i].point.y, intersects[i].point.z );
+			var startPoint = new THREE.Vector3( humans[myIndex].position.x, humans[myIndex].position.y+3, humans[myIndex].position.z );
+
+			var send = JSON.stringify({from:startPoint, to:shootVolume});
+
+			socket.emit('shoot', send);
+			//GenerateBullet(startPoint, shootVolume);
+		}			
+	};
+	
+	var newBullet = [];
+	function GenerateBullet(from, to){
+
+		var bullet = new Physijs.SphereMesh(new THREE.SphereGeometry( 0.8, 16, 16 ),cannon_material,10);
+		var bPos = from.clone().add(to.clone().sub(from.clone()).normalize().multiplyScalar(5));
+
+		bullet.position.set(bPos.x, bPos.y, bPos.z);
+		bullet.castShadow = false;
+		
+		var shootingForce = 3000, effect, offset;
+
+		scene.add(bullet);
+		newBullet.unshift(bullet);
+		
+		effect = to.sub(from).normalize().multiplyScalar(shootingForce);
+		offset = to.sub(from);
+		bullet.applyImpulse(effect, offset);   //apply impulse
+	};
+	
+	
+	var color = ["gold", "blue", "red", "darkgreen", "black"];
+	
+	
+	
+	function GenerateHuman(hx, hy, hz){
+		var head, leftArm, _leftArm, rightArm, _rightArm, leftLeg, _leftLeg, rightLeg, _rightLeg, leftFoot, rightFoot;
+		var humanMaterial;
+		
+		humanMaterial = new Physijs.createMaterial(
+			new THREE.MeshPhongMaterial({ map: THREE.ImageUtils.loadTexture( '../images/lavatile.jpg' )}),
+			.6,
+			.4
+			);
+		
+		human = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 4, 1), humanMaterial);
+		human.receiveShadow = true;
+		human.castShadow = true;
+		
+		head = new Physijs.SphereMesh(new THREE.SphereGeometry(1, 16, 16), humanMaterial);
+		head.castShadow = true;
+		head.receiveShadow = true;
+		head.position.y=3;
+		human.add(head);
+		
+		leftArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		leftArm.castShadow = true;
+		leftArm.receiveShadow = true;
+		leftArm.position.x = -1.6;
+		leftArm.position.y = 1.5;
+		leftArm.rotation.set(0, 0, Math.PI/4);
+		
+		_leftArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		_leftArm.castShadow = true;
+		_leftArm.receiveShadow = true;
+		_leftArm.position.x = -1.5;
+		
+		leftArm.add(_leftArm);
+		human.add(leftArm);
+		
+		rightArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		rightArm.castShadow = true;
+		rightArm.receiveShadow = true;
+		rightArm.position.x = 1.5;
+		rightArm.position.y = 1.5;
+		rightArm.rotation.set(0, 0, -Math.PI/4);
+		
+		_rightArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		_rightArm.castShadow = true;
+		_rightArm.receiveShadow = true;
+		_rightArm.position.x = 1.5;
+		
+		
+		rightArm.add(_rightArm);
+		human.add(rightArm);
+		
+		leftLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.5, 2, 0.5), humanMaterial);
+		leftLeg.castShadow = true;
+		leftLeg.receiveShadow = true;
+		leftLeg.position.y = -3.25;
+		leftLeg.position.x = -1;
+		
+		_leftLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.5, 2, 0.5), humanMaterial);
+		_leftLeg.castShadow = true;
+		_leftLeg.receiveShadow = true;
+		_leftLeg.position.y = -2;
+
+		
+		leftFoot = new Physijs.BoxMesh(new THREE.BoxGeometry(1, 0.5, 1), humanMaterial);
+		leftFoot.castShadow = true;
+		leftFoot.receiveShadow = true;
+		leftFoot.position.y = -1;
+		_leftLeg.add(leftFoot);
+		leftLeg.add(_leftLeg);
+		
+		human.add(leftLeg);
+		
+		rightLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.5, 2, 0.5), humanMaterial);
+		rightLeg.castShadow = true;
+		rightLeg.receiveShadow = true;
+		rightLeg.position.y = -3.25;
+		rightLeg.position.x = 1;
+		
+		_rightLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.5, 2, 0.5), humanMaterial);
+		_rightLeg.castShadow = true;
+		_rightLeg.receiveShadow = true;
+		_rightLeg.position.y = -2;
+		
+		rightFoot = new Physijs.BoxMesh(new THREE.BoxGeometry(1, 0.5, 1), humanMaterial);
+		rightFoot.castShadow = true;
+		rightFoot.receiveShadow  = true;
+		rightFoot.position.y = -1;
+		
+		_rightLeg.add(rightFoot);
+		rightLeg.add(_rightLeg);
+		
+		human.add(rightLeg);
+		
+		
+		human.position.set(hx, hy, hz);
+		
+
+		humans.push(human);
+		scene.add(human);
+		
+	}
+	
+	
+	function GeneratePerson(px, py, pz, rx, ry, rz){
+
+		var personMaterial;
+		var person = {};
+		
+		
+		people.push(person);
+		
+		
+		for(var i in people){
+			personMaterial = new Physijs.createMaterial(
+				new THREE.MeshLambertMaterial({color:color[i]}),
+				.6,
+				.8	
+				);
+		}
+		
+		
+		
+
+		person.body = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 4, 1), personMaterial, 3);
+		person.body.castShadow = false;
+		person.body.receiveShadow = false;
+		person.body.__dirtyPosition = true;
+		
+		person.body.position.set(px, py, pz);
+		
+		
+		scene.add(person.body);
+		
+		
+		
+		person.head = new Physijs.SphereMesh(new THREE.SphereGeometry(1, 16, 16), personMaterial);
+		person.head.castShadow = person.head.receiveShadow = false;
+		
+		person.head.position.set(
+			person.body.position.x,
+			person.body.position.y + 3,
+			person.body.position.z
+			);
+		
+		
+		
+		scene.add(person.head);
+		
+		person.head.constraint = new Physijs.ConeTwistConstraint(
+			person.head,
+			person.body,
+			new THREE.Vector3(person.head.position.x, person.head.position.y-0.5, person.head.position.z)
+			);
+		scene.addConstraint(person.head.constraint);
+		
+		person.leftArm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.leftArm.castShadow = person.leftArm.receiveShadow = false;
+		person.leftArm.position.set(person.body.position.x - 2.2, person.body.position.y + 2, person.body.position.z);
+		scene.add(person.leftArm);
+		person.leftArm.constraint = new Physijs.ConeTwistConstraint(
+			person.leftArm, person.body,
+			new THREE.Vector3(person.body.position.x - 1,person.body.position.y + 2, person.body.position.z)
+			);
+		scene.addConstraint(person.leftArm.constraint);
+		
+		person.left_Arm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.left_Arm.castShadow = person.left_Arm.receiveShadow = false;
+		person.left_Arm.position.set(person.leftArm.position.x - 2.2, person.leftArm.position.y, person.leftArm.position.z);
+		scene.add(person.left_Arm);
+		
+		person.left_Arm.constraint = new Physijs.ConeTwistConstraint(person.left_Arm, person.leftArm,
+			new THREE.Vector3(person.leftArm.position.x - 1, person.leftArm.position.y, person.leftArm.position.z));
+		scene.addConstraint(person.left_Arm.constraint);
+		
+		person.rightArm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.rightArm.castShadow = person.leftArm.receiveShadow = false;
+		person.rightArm.position.set(person.body.position.x + 2.2, person.body.position.y + 2, person.body.position.z);
+		scene.add(person.rightArm);
+		person.rightArm.constraint = new Physijs.ConeTwistConstraint(person.rightArm, person.body, new THREE.Vector3(person.body.position.x + 1, person.body.position.y + 2, person.body.position.z));
+		scene.addConstraint(person.rightArm.constraint);
+		
+		person.right_Arm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.right_Arm.castShadow = person.right_Arm.receiveShadow = false;
+		person.right_Arm.position.set(person.rightArm.position.x + 2.2, person.rightArm.position.y, person.rightArm.position.z);
+		scene.add(person.right_Arm);
+		
+		person.right_Arm.constraint = new Physijs.ConeTwistConstraint(person.right_Arm, person.rightArm,
+			new THREE.Vector3(person.rightArm.position.x + 1, person.leftArm.position.y, person.leftArm.position.z));
+		scene.addConstraint(person.right_Arm.constraint);
+		
+		person.leftLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 3);
+		person.leftLeg.castShadow = person.leftLeg.receiveShadow = false;
+		person.leftLeg.position.set(person.body.position.x-0.5, person.body.position.y-4, person.body.position.z);
+		scene.add(person.leftLeg);
+		
+		person.leftLeg.constraint = new Physijs.ConeTwistConstraint(person.leftLeg, person.body,
+			new THREE.Vector3(person.body.position.x-0.5,
+				person.body.position.y-2.2,
+				person.body.position.z));
+		scene.addConstraint(person.leftLeg.constraint);
+		
+		person.left_Leg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 5);
+		person.left_Leg.castShadow = person.left_Leg.receiveShadow = false;
+		person.left_Leg.position.set(person.leftLeg.position.x, person.leftLeg.position.y - 3.2, person.leftLeg.position.z);
+		scene.add(person.left_Leg);
+		
+		person.left_Leg.constraint = new Physijs.ConeTwistConstraint(person.left_Leg, person.leftLeg,
+			new THREE.Vector3(
+				person.leftLeg.position.x,
+				person.leftLeg.position.y-1.5,
+				person.leftLeg.position.z
+				));
+                //person.left_Leg.constraint.setLimit(Math.PI / 2 , 1, 0);
+                scene.addConstraint(person.left_Leg.constraint);
+
+
+
+                person.rightLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 3);
+                person.rightLeg.castShadow = person.rightLeg.receiveShadow = false;
+                person.rightLeg.position.set(person.body.position.x+0.5, person.body.position.y-4, person.body.position.z);
+                scene.add(person.rightLeg);
+
+                person.rightLeg.constraint = new Physijs.ConeTwistConstraint(person.rightLeg, person.body,
+                	new THREE.Vector3(person.body.position.x+0.5,
+                		person.body.position.y-2.2,
+                		person.body.position.z));
+
+                scene.addConstraint(person.rightLeg.constraint);
+
+                person.right_Leg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 5);
+                person.right_Leg.castShadow = person.right_Leg.receiveShadow = false;
+                person.right_Leg.position.set(person.rightLeg.position.x, person.rightLeg.position.y - 3.2, person.rightLeg.position.z);
+                scene.add(person.right_Leg);
+
+                person.right_Leg.constraint = new Physijs.ConeTwistConstraint(person.right_Leg, person.rightLeg,
+                	new THREE.Vector3(
+                		person.rightLeg.position.x,
+                		person.rightLeg.position.y-1.5,
+                		person.rightLeg.position.z
+                		));
+
+
+                scene.addConstraint(person.right_Leg.constraint);
+
+                person.body.rotation.set(rx, ry, rz);
+
+                person.body.__dirtyRotation = true;
+            }
+
+            function RemovePerson(personi){
+            	scene.remove(personi.body);
+            	scene.remove(personi.head);
+            	scene.remove(personi.leftArm);
+            	scene.remove(personi.leftLeg);
+            	scene.remove(personi.left_Arm);
+            	scene.remove(personi.left_Leg);
+            	scene.remove(personi.rightArm);
+            	scene.remove(personi.rightLeg);
+            	scene.remove(personi.right_Arm);
+            	scene.remove(personi.right_Leg);
+
+            	scene.removeConstraint(personi.head.constraint);
+            	scene.removeConstraint(personi.leftArm.constraint);
+            	scene.removeConstraint(personi.leftLeg.constraint);
+            	scene.removeConstraint(personi.left_Arm.constraint);
+            	scene.removeConstraint(personi.left_Leg.constraint);
+            	scene.removeConstraint(personi.rightArm.constraint);
+            	scene.removeConstraint(personi.rightLeg.constraint);
+            	scene.removeConstraint(personi.right_Arm.constraint);
+            	scene.removeConstraint(personi.right_Leg.constraint);	
+            }
+
+
+
+            function MoveCamera(){
+		var delta = clock.getDelta(); // seconds.
+		var moveDistance = 50*delta; // 200 pixels per second
+		var rotateAngle = Math.PI / 2 * delta;
+		
+		
+		
+
+		/////////Keyboard//////////////////////////
+		
+		if(keyboard.pressed("W")){
+			camera.translateZ(-moveDistance);
+			socket.emit('camPos', JSON.stringify({cx:camera.position.x, cy:camera.position.y, cz:camera.position.z}));
+		}
+
+		if(keyboard.pressed("S")){
+			camera.translateZ(moveDistance);
+			socket.emit('camPos', JSON.stringify({cx:camera.position.x, cy:camera.position.y, cz:camera.position.z}));
+		}
+
+		if(keyboard.pressed("A")){
+			camera.translateX(-moveDistance);
+			socket.emit('camPos', JSON.stringify({cx:camera.position.x, cy:camera.position.y, cz:camera.position.z}));
+		}
+
+		if(keyboard.pressed("D")){
+			camera.translateX(moveDistance);
+			socket.emit('camPos', JSON.stringify({cx:camera.position.x, cy:camera.position.y, cz:camera.position.z}));
+		}
+		
+	}
+	
+
+	
+	function refresh(){
+		
+		 //camera looking at original position
+		 //background.position.set(camera.position);
+		 
+		 
+		 
+		 for(var i in newBullet){
+		 	
+		 	if (newBullet[i].position.z <= -100) {
+		 		scene.remove(newBullet[i]);
+		 		newBullet.splice(i, 1);
+		 	}
+		 }
+		 
+		 
+		 for(var i in boxes){
+		 	if (boxes[i].position.y < -40) {
+		 		scene.remove(boxes[i]);
+		 		boxes.splice(i, 1);
+
+		 		
+		 		box = new Physijs.BoxMesh(new THREE.BoxGeometry( 6, 1.5, 2 ), box_material);
+		 		
+		 		box.position.set(Math.random() * 50 - 25, Math.random() * 5, Math.random() * 50 - 25);
+		 		box.rotation.set(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2)
+		 		
+		 		scene.add(box);
+		 		boxes.unshift(box);
+		 		
+		 	}
+		 }
+		 
+		 
+		 for (var i in people){
+		 	
+		 	if (people[i].body.position.y < -40) {
+		 		RemovePerson(people[i]);
+		 		people.splice(i, 1);
+		 		
+		 		var temp = color[i];
+		 		color.splice(i, 1);
+		 		color.push(temp);
+
+		 		GeneratePerson();
+		 	}
+		 }
+
+
+		///////////////////////////////////////////////Refresh Position///////////////////////////////
+
+		//setTimeout(function(){document.getElementById('thisclock').innerHTML = clock.getElapsedTime().toFixed(2);}, 1000);
+
+		
+
+		for(myIndex in humans){
+			var i = 0;
+			RefreshList();
+
+			var cLinearVelocity  = humans[myIndex].getLinearVelocity();
+			var cAngularVelocity = humans[myIndex].getAngularVelocity();
+
+			if(cLinearVelocity.length() !== 0 && cAngularVelocity.length() !== 0 && i%100*humans.length === 0){
+
+				var cPosition = [humans[myIndex].position.x, humans[myIndex].position.y, humans[myIndex].position.z];
+				var cRotation = [humans[myIndex].rotation.x, humans[myIndex].rotation.y, humans[myIndex].rotation.z];
+
+				var send = JSON.stringify({idx:myIndex, pos:cPosition, rot:cRotation});
+
+				socket.emit('refresh', send);
+			}
+			i++;
+			if(i > 99)
+				i = 0;
+
+
+			if(humans[myIndex].position.y < -40){
+
+				humans[myIndex].setLinearVelocity(new THREE.Vector3( 0, 0, 0 ));
+				humans[myIndex].setAngularVelocity(new THREE.Vector3(0, 0, 0));
+				
+				humans[myIndex].position.set(Math.random()*50-25, Math.random()*5, Math.random()*50-25);
+				humans[myIndex].__dirtyPosition = true;
+				humans[myIndex].rotation.set(0, 1, 0);
+				humans[myIndex].__dirtyRotation = true;
+			}
+		}
+	}
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////+
+	//++++++++++++++++++++++++++++++++++++++++++++SOCKET+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////++
+
+	function RefreshList(){
+
+		myIndex = players.indexOf(mName);
+
+		
+		document.getElementById('myName').innerHTML = myIndex + ". " + players[players.indexOf(mName)];
+
+		
+		
+		document.getElementById('players').innerHTML = '1. ' + players[0]
+		+ "[" + humans[0].position.x.toFixed(2) + "," + humans[0].position.y.toFixed(2) +", "+ humans[0].position.z.toFixed(2) + "]";
+
+		for(var i = 1 ; i < players.length ; i++){
+			
+			var j = i+1;
+			
+			document.getElementById('players').innerHTML += '<br>' + j +'. '+ players[i]
+			+ "[" + humans[i].position.x.toFixed(2) + "," + humans[i].position.y.toFixed(2) +", "+ humans[i].position.z.toFixed(2) + "]";
+		}
+	}
+
+	var mName;
+	
+	window.onload = function Login(){
+		var name = prompt("Please enter your name", "");
+		if (name === "" || name === null) {
+			Login();
+		}
+		else{
+
+			mName = name;
+
+			initScene();
+
+			var position = [Math.random()* 50 - 25, Math.random()* 5, Math.random()*50 - 25];
+			
+
+			player.name = name;
+			player.position = position;
+			player.rotation = null;
+			
+			var obj = JSON.stringify({name:player.name, position:position});
+			
+			socket.emit('new', obj);
+		}
+	}
+	
+	var myIndex = -1;
+
+	socket.on('new', function(data){
+		var obj = JSON.parse(data);
+		
+		GenerateHuman(obj.position[0], obj.position[1], obj.position[2]);
+		
+		players.push(obj.name);
+	});
+
+	
+	socket.on('remove', function(data){
+		
+		scene.remove(humans[data]);
+		players.splice(data, 1);
+	});
+	
+	
+	socket.on('camPos', function(data){
+		
+		var obj = JSON.parse(data);
+		camera.lookAt(target);
+		camera.position.set(obj.cx, obj.cy, obj.cz);
+		
+	});
+	
+	socket.on('shoot', function(data){
+		var obj = JSON.parse(data);
+
+		var from = new THREE.Vector3( obj.from.x, obj.from.y, obj.from.z );
+		var to = new THREE.Vector3( obj.to.x, obj.to.y, obj.to.z );;
+
+		GenerateBullet(from, to);	
+	});
+	
+	socket.on('refresh', function(data){
+		var obj = JSON.parse(data);
+
+		if(obj.idx !== myIndex && obj.idx in humans){
+
+			humans[obj.idx].setLinearVelocity(new THREE.Vector3( 0, 0, 0 ));
+			humans[obj.idx].setAngularVelocity(new THREE.Vector3(0, 0, 0));
+
+			humans[obj.idx].__dirtyPosition = true;
+			humans[obj.idx].position.set(obj.pos[0], obj.pos[1], obj.pos[2]);
+			humans[obj.idx].__dirtyRotation = true;
+			humans[obj.idx].rotation.set(obj.rot[0], obj.rot[1], obj.rot[2]);			
+		}
+
+	}); //그리고 남겨진 것들
+	
+	</script>
+</head>
+
+<body>
+	<div id="viewport"> </div>
+	<div id="myName" style="Position:absolute;top:10%;left:10%;color:red"> MyName</div>
+	<div id="thisclock" style="Position:absolute;top:10%;left:60%;color:red"> clock</div>
+	<div id="players" style="Position:absolute;top:20%;left:10%;color:blue"> players</div>
+</body>
+
+</html>

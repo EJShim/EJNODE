@@ -1,0 +1,89 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<title> Visual Servo 2 (Multiple Scene) </title>
+	<meta name="generator" content="Bootply" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<link href="../style.css" rel="stylesheet">
+	<!--[if lt IE 9]>
+	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<canvas id="canvas"></canvas>
+<canvas id="canvas2D"></canvas>
+<body style="margin:0; padding:0">
+	<div class="container-fluid">
+		<div class="row" id="viewport">
+			<div class="col-sm-6" id = "viewport1"></div>
+			<div class="col-sm-6" id = "viewport2"></div>
+		</div>
+	</div>
+
+	<!---script area -->
+
+	<script src="../../libs/Math//three.js"></script>
+
+<!-- Vertex Shader Shader -->
+	<script type="x-shader/x-vertex" id="shader-vertex">
+	#ifdef GL_ES
+	precision highp float;
+	#endif
+	// switch on high precision floats
+
+	varying vec3 vPosition;
+
+	void main()
+	{
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+		vPosition = normalMatrix * normal;
+	}
+	</script>
+<!--Fragment Shader-->
+	<script type="x-shader/x-fragment" id="shader-fragment">
+	#ifdef GL_ES
+	precision highp float;
+	#endif
+
+	varying vec3 vPosition;
+	void main()
+	{
+		vec3 nor = vPosition;
+		gl_FragColor 	= vec4(nor ,1.0);
+	}
+	</script>
+  <!--- Managers -->
+  <script type="text/javascript" src="E_Interactor.js"></script>
+	<script type="text/javascript" src="../libs/jsfeat.js"></script>
+	<script type="text/javascript" src="../Data/E_Axis.js"></script>
+	<script type="text/javascript" src="E_Image.js"></script>
+	<script type="text/javascript" src="../E_ImageManager.js"></script>
+  <script type="text/javascript" src="E_Manager.js"></script>
+
+	<script>
+    var Manager = new E_Manager();
+    Manager.Initialize();
+    Manager.Redraw();
+
+    $(window).resize(function(){
+
+			Manager.GetRenderer().setSize($("#viewport").width(),$("#viewport").height() );
+
+
+			Manager.GetScene(Manager.VIEW_CAM).camera.aspect = $("#viewport1").width()/$("#viewport1").height();
+			Manager.GetScene(Manager.VIEW_CAM).camera.updateProjectionMatrix();
+
+			Manager.GetScene(Manager.VIEW_SUB).camera.aspect = $("#viewport2").width()/$("#viewport1").height();
+			Manager.GetScene(Manager.VIEW_SUB).camera.updateProjectionMatrix();
+
+			Manager.cameraHelper.update();
+			//console.log($("#viewport1").width() + "," + window.innerHeight);
+			// console.log($("#viewport2").width()/$("#viewport2").height());
+			Manager.Redraw();
+    });
+	</script>
+</body>
+</html>

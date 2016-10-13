@@ -1,0 +1,203 @@
+<html>
+	<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title> EJ Medical Image 3D View Web </title>
+    <meta name="generator" content="Bootply" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="../gmapBstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+	</head>
+	<body>
+		<!-- navbar-top-->
+    <div class="navbar navbar-custom navbar-fixed-top">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">STL Loader TEST</a>
+
+				<input class="navbar-brand" id="files-upload" type="file" multiple>
+      </div>
+    </div>
+
+		<!-- test sidebar -->
+
+
+    <div class="container-fluid" id="main">
+      <div class="row content">
+				<p class="col-md-12" id="debugConsole"></p>
+        <div class="col-md-12" id = "viewport"></div>
+      </div>
+    </div>
+
+
+    <!---script area -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="../gmapBstrap/js/bootstrap.min.js"></script>
+		<script src="../libs/Math//three.js"></script>
+    <script src="js/controls/TrackballControls.js"></script>
+		<script src="js/loaders/STLLoader.js"></script>
+		<script type="x-shader/x-vertex" id="shader-vertex">
+		// switch on high precision floats
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		varying vec3 vNormal;
+
+		void main()
+		{
+		  vNormal = normalMatrix*normal;
+		  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+		}
+		</script>
+		<script type="x-shader/x-fragment" id="shader-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		varying vec3 vNormal;
+
+		void main()
+		{
+		  gl_FragColor 	= vec4(vNormal ,1.0);
+		}
+		</script>
+		<script src="savethumbnail.js"></script>
+
+
+		<script>
+
+    //onload functions
+
+    Initialize();
+    Animate();
+
+    ///////function definitions/////////
+
+    var m_scene, m_camera, m_renderer;
+    var m_pointLight;
+    var m_controls;
+    var shaderMaterial;
+
+    var m_start = new Date();
+
+
+
+    function Initialize()
+    {
+      m_scene = new THREE.Scene();
+      m_camera = new THREE.PerspectiveCamera( 45, $("#viewport").width()/$("#viewport").height(), 0.1, 10000 );
+      m_renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
+      m_controls = new THREE.TrackballControls(m_camera);
+
+      //init renderrer
+      m_renderer.setClearColor(0xffffff, 1);
+      m_renderer.setSize($("#viewport").width(), $("#viewport").height() );
+      document.getElementById("viewport").appendChild( m_renderer.domElement );
+
+
+      //init controls
+      m_controls.rotateSpeed = 4.0;
+    	m_controls.zoomSpeed = 1.2;
+    	m_controls.panSpeed = 0.8;
+    	m_controls.noZoom = false;
+    	m_controls.noPan = false;
+    	m_controls.staticMoving = true;
+    	m_controls.dynamicDampingFactor = 0.3;
+    	m_controls.keys = [ 65, 83, 68 ];
+      m_controls.target = new THREE.Vector3(0, 0, -700);
+    	m_controls.addEventListener( 'change', Render );
+
+
+
+      // create a point light
+      m_pointLight = new THREE.PointLight(0xFFFFFF);
+      // add to the scene
+      m_scene.add(m_pointLight);
+
+      //shader MeshLambertMaterial
+      shaderMaterial = new THREE.ShaderMaterial({
+        vertexShader: $('#shader-vertex').text(),
+        fragmentShader: $('#shader-fragment').text()
+      });
+
+      m_camera.position.z = -2000;
+      m_pointLight.position.z = 20;
+
+      Render();
+    }
+
+    function ImportSTL(data)
+    {
+      //parse Loader
+      var loader = new THREE.STLLoader();
+      var geometry = loader.parse(data);
+      var mesh = new THREE.Mesh( geometry, shaderMaterial );
+      m_scene.add( mesh );
+      Render();
+    }
+
+    function Animate()
+    {
+      requestAnimationFrame( Animate );
+
+      m_controls.update();
+
+      //synchronize light position anc camera position;
+      m_pointLight.position.x = m_camera.position.x;
+      m_pointLight.position.y = m_camera.position.y;
+      m_pointLight.position.z = m_camera.position.z;
+
+      RefreshThumbnail();
+
+    }
+
+    function RefreshThumbnail()
+    {
+      //refresh thumbnail every 10 seconds
+      var ctime = new Date();
+      var elapsed = ctime - m_start;
+      elapsed /= 1000;
+      if(Math.round(elapsed) % 30 == 0 || Math.round(elapsed) == 10) SaveThumbnail();
+    }
+
+    function Render()
+    {
+      m_renderer.render(m_scene, m_camera);
+    }
+
+    //Event Listners
+    //Windows Resize
+    $(window).resize(function(){
+      m_renderer.setSize($("#viewport").width(), $("#viewport").height());
+      m_camera.aspect = $("#viewport").width()/$("#viewport").height();
+      m_camera.updateProjectionMatrix();
+      m_controls.handleResize();
+      Render();
+    });
+
+
+    //TEST file load
+  function OpenFile(file)
+  {
+      var reader = new FileReader();
+      reader.addEventListener("load", function (ev) {
+          var buffer = ev.target.result;
+          ImportSTL(buffer);
+      }, false);
+      reader.readAsArrayBuffer(file);
+  };
+
+  // file input button
+  document.getElementById("files-upload").addEventListener("change", function (ev) {
+      for(var i=0 ; i<ev.target.files.length ; i++){
+        var file = ev.target.files[i];
+        OpenFile(file);
+      }
+  }, false);
+
+    </script>
+	</body>
+</html>

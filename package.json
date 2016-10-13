@@ -1,0 +1,15 @@
+{
+  "name": "express-tutorial",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "~4.13.1",
+    "ejs": "~2.4.1"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "watchify": "^3.7.0"
+  },
+  "scripts": {
+    "build": "browserify core/assignment2/Manager.js -o public/PhysicsAnimation/assignment2/app.js"
+  }
+}

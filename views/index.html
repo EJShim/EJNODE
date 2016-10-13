@@ -1,0 +1,443 @@
+<!DOCTYPE HTML>
+<!--
+Prologue by HTML5 UP
+html5up.net | @n33co
+Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+<head>
+	<title>EJ Shim</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="description" content="" />
+	<meta name="keywords" content="" />
+	<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
+	<script src="js/jquery.min.js"></script>
+	<script src="js/jquery.scrolly.min.js"></script>
+	<script src="js/jquery.scrollzer.min.js"></script>
+	<script src="js/skel.min.js"></script>
+	<script src="js/skel-layers.min.js"></script>
+	<script src="js/init.js"></script>
+	<script src="./websocket/ws-client.js"></script>
+	<script type="text/javascript">
+	$('#month').load("./month/november.html #msg");
+
+	function Month(id){
+		$('#month').load("./month/" + id + ".html #msg");
+	}
+	</script>
+
+	<noscript>
+		<link rel="stylesheet" href="css/skel.css" />
+		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/style-wide.css" />
+	</noscript>
+</head>
+
+<body>
+
+	<!-- Header -->
+	<div id="header" class="skel-layers-fixed">
+
+		<div class="top">
+
+			<!-- Logo -->
+			<div id="logo">
+				<span class="image avatar48"><img src="images/avatar.jpg" alt="" /></span>
+				<h1 id="title">EJ Shim</h1>
+				<p>Graduate Student</p>
+			</div>
+
+			<!-- Nav -->
+			<nav id="nav">
+
+				<ul>
+					<li>
+						<a href="#top" id="top-link" class="skel-layers-ignoreHref">
+							<span class="icon fa-home">Intro</span>
+						</a>
+					</li>
+					<li>
+						<a href="#portfolio" id="portfolio-link" class="skel-layers-ignoreHref">
+							<span class="icon fa-th">Portfolio</span>
+						</a>
+					</li>
+					<li>
+						<a href="#report" id="report-link" class="skel-layers-ignoreHref">
+							<span class="icon fa-th">Reports</span>
+						</a>
+						<ul>
+							<li><a href="#report" id="report-sep" class="submenu" onclick="Month('september')">September</a></li>
+							<li><a href="#report" id="report-oct" class="submenu" onclick="Month('october')">October</a></li>
+							<li><a href="#report" id="report-nov" class="submenu" onclick="Month('november')">November</a></li>
+						</ul>
+					</li>
+					<li>
+						<a href="#about" id="about-link" class="skel-layers-ignoreHref">
+							<span class="icon fa-user">About Me</span>
+						</a>
+					</li>
+					<li>
+						<a href="#chat" id="chat-link" class="skel-layers-ignoreHref">
+							<span class="icon fa-envelope">Chat</span>
+						</a>
+					</li>
+				</ul>
+			</nav>
+
+		</div>
+
+		<div class="bottom">
+
+			<!-- Social Icons -->
+			<ul class="icons">
+				<li>
+					<a href="https://www.facebook.com/eungjune.shim" class="icon fa-facebook"><span class="label">Facebook</span></a>
+				</li>
+				<li><a href="#" class="icon fa-github"><span class="label">Github</span></a></li>
+				<li><a href="#" class="icon fa-dribbble"><span class="label">Dribbble</span></a></li>
+				<li><a href="#" class="icon fa-envelope"><span class="label">Email</span></a></li>
+			</ul>
+
+		</div>
+
+	</div>
+
+	<!-- Main -->
+	<div id="main">
+
+		<!-- Intro -->
+		<section id="top" class="one dark cover">
+			<div class="container">
+
+				<header>
+					<h2 class="alt">EJ<strong>Shim</strong></h2><br />
+
+					<p>Javascript, WebGL,<br />THREE.js, Physijs<br/> jQuery, Websocket,<br/> Node.js, socket.io<br/>
+					</p>
+					<p> C++, OpenGL, OpenCV <br>
+						VTK, ITK
+					</header>
+
+					<footer>
+						<a href="#portfolio" class="button scrolly">Programs</a>
+					</footer>
+
+				</div>
+			</section>
+
+			<!-- Portfolio -->
+			<section id="portfolio" class="two">
+				<div class="container">
+
+					<header>
+						<h2>Portfolio</h2>
+					</header>
+
+					<p>
+						WebGL 로 만든 우주공간, 기본적인 중력.<br/>
+						googleMap API 연습.<br/>
+						websocket 과 three.js, physijs 사용.
+					</p>
+
+					<div class="row">
+						<div class="4u">
+							<article class="item">
+								<a href="./WebGL/index.html" target="_blank" class="image fit"><img src="http://learningwebgl.com/lessons/lesson11/thumb.png" alt="" /></a>
+								<header>
+									<h3>(2016.5.27)<br/> <strong>WebGL Practice</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="http://soulrommel.comoj.com/presentation/index.html" target="_blank" class="image fit"><img src="images/presentation.jpg" alt="" /></a>
+								<header>
+									<h3>(2014. 06) <br/><strong>Presentation</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="http://soulrommel.comoj.com/material/626.html" target="_blank" class="image fit"><img src="images/gravity.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.6.26 ~ 6.29)<br/> <strong>Gravity</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="http://soulrommel.comoj.com/material/629.html" target="_blank" class="image fit"><img src="images/egravity.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.6.29 ~ 7.22) <br/><strong>Earth Gravity</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/cannon2.html" target="_blank" class="image fit"><img src="images/cannon2.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.26)<br/> <strong>Cannon Game (Space)</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/cannon3.html" target="_blank" class="image fit"><img src="images/cannon3.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.26)<br/> <strong>Space_Raycaster</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="presentation/index.html" target="_blank" class="image fit"><img src="images/presentation.jpg" alt="" /></a>
+								<header>
+									<h3>(2014. 11.26) <br/><strong>Presentation 2</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="PINGPONG/pingpong.html" target="_blank" class="image fit"><img src="images/presentation.jpg" alt="" /></a>
+								<header>
+									<h3>(2015. 09.20) <br/><strong>pingpong</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./VisualServo/VisualServo.html" target="_blank" class="image fit"><img src="cacheImage/VisualServo.png" alt="" /></a>
+								<header>
+									<h3>(2016.09.17)<br/> <strong>Visual Servo (Applied Feature Detection)</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./VisualServo2/VisualServo2.html" target="_blank" class="image fit"><img src="cacheImage/VisualServo2.png" alt="" /></a>
+								<header>
+									<h3>(2016.10.05)<br/> <strong>Visual Servo2 (Feature as Projected Vector)</strong></h3>
+								</header>
+							</article>
+						</div>
+
+						<div class="4u">
+							<article class="item">
+								<a href="gmapBstrap/index.html" target="_blank" class="image fit"><img src="images/insight.jpg" alt="" /></a>
+								<header>
+									<h3>(2016.5.3)<br/> <strong>Advanced Insight Map(Gmap + Bootstrap)</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="LondonInsightMap/AppVersion/gMapAPI.html" target="_blank" class="image fit"><img src="images/insight.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.8.3)<br/> <strong>London Insight Map</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="#chat" class="image fit"><img src="images/wex.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.09.23 ~ 9.27) <br/><strong>Websocket Experiment</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/glSocket.html" target="_blank" class="image fit"><img src="images/ww.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.09.28 ~ 11.23)<br/> <strong>WebGL + WebSocket</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/personSocket.html" target="_blank" class="image fit"><img src="images/psocket.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.23 )<br/> <strong>Constraint + Websocket</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/glsocket2.html" target="_blank" class="image fit"><img src="images/ww.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.25)<br/> <strong>GLSocket + Raycaster</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/psocket_space.html" target="_blank" class="image fit"><img src="images/gspace.png" alt="" /></a>
+								<header>
+									<h3>(2014.11.28)<br/> <strong>Socket Space(game prototype!)</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./PhysicsAnimation/Collision_Analytical/index.html" target="_blank" class="image fit"><img src="cacheImage/Collision_Analytical.png" alt="" /></a>
+								<header>
+									<h3>(2016.09.08)<br/> <strong>Collision Detection - Analytical Method</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./PhysicsAnimation/Collision_Penalty/index.html" target="_blank" class="image fit"><img src="cacheImage/Collision_Penalty.png" alt="" /></a>
+								<header>
+									<h3>(2016.09.24)<br/> <strong>Collision Detection - Penalty Method</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./PhysicsAnimation/Project_SpringDamper/index.html" target="_blank" class="image fit"><img src="cacheImage/Project_SpringDamper.png" alt="" /></a>
+								<header>
+									<h3>(2016.09.09)<br/> <strong>Physics Animation2 - Spring Damper</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./PhysicsAnimation/Fabric/index.html" target="_blank" class="image fit"><img src="cacheImage/Fabric.png" alt="" /></a>
+								<header>
+									<h3>(2016.09.12)<br/> <strong>Physics Animation3 - Fabric Experiment</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./PhysicsAnimation/WaterSimulation/index.html" target="_blank" class="image fit"><img src="cacheImage/WaterSimulation.png" alt="" /></a>
+								<header>
+									<h3>(2016.09.14)<br/> <strong>Physics Animation4 - Water Simulation(Experiment)</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./PhysicsAnimation/Assignment2/index.html" target="_blank" class="image fit"><img src="cacheImage/WaterSimulation.png" alt="" /></a>
+								<header>
+									<h3>(2016.10. 11)<br/> <strong>Assignment 2 Large Particles</strong></h3>
+								</header>
+							</article>
+						</div>
+
+						<div class="4u">
+							<article class="item">
+								<a href="./BulletGame/cannon.html" target="_blank" class="image fit"><img src="images/cannon.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.08 ~ 2014.09.16)<br/> <strong>Cannon Game</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/Joint.html" target="_blank" class="image fit"><img src="images/terrain.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.09.16 ~ 2014.9.22)<br/> <strong>Terrain</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/IO.html" target="_blank" class="image fit"><img src="images/io.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.09.23 ~ X)<br/> <strong>Input and Output(using __dirtyPosition)</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/IOV.html" target="_blank" class="image fit"><img src="images/raycaster.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.24 ~ 2014.11.25) <br/><strong>Raycaster</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/IOV2.html" target="_blank" class="image fit"><img src="images/shoot.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.25 ~)<br/> <strong>Physics I/O</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./BulletGame/spaceIO.html" target="_blank" class="image fit"><img src="images/cannon3.jpg" alt="" /></a>
+								<header>
+									<h3>(2014.11.26)<br/> <strong>Space_I/O</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./MedicalImage/index.html" target="_blank" class="image fit"><img src="MedicalImage/cacheImage/index.png" alt="" /></a>
+								<header>
+									<h3>(2016.5.27)<br/> <strong>Visualize Medical Image Using THREE.JS + Auto thumbnail</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./MedicalImage/loadSTL.html" target="_blank" class="image fit"><img src="MedicalImage/cacheImage/loadSTL.png" alt="" /></a>
+								<header>
+									<h3>(2016.5.29)<br/> <strong>STL loader from FileSystem</strong></h3>
+								</header>
+							</article>
+							<article class="item">
+								<a href="./MedicalImage-UI/MedicalImage-UI.html" target="_blank" class="image fit"><img src="cacheImage/MedicalImage-UI.png" alt="" /></a>
+								<header>
+									<h3>(2016.6.7)<br/> <strong>Medical Web Application</strong></h3>
+								</header>
+							</article>
+
+							<article class="item">
+								<a href="./XrayRendering/index.html" target="_blank" class="image fit"><img src="XrayRendering/index.png" alt="" /></a>
+								<header>
+									<h3>(2016.7.4)<br/> <strong>X-ray Rendering</strong></h3>
+								</header>
+							</article>
+						</div>
+					</div>
+
+				</div>
+			</section>
+
+			<!-- Reports -->
+			<section id="report" class="report">
+				<div class="container">
+					<header>
+						<h2 align="center"> Reports</h2>
+					</header>
+
+					<p>
+						<div id="month"></div>
+					</p>
+				</div>
+			</section>
+
+			<!-- About Me -->
+			<section id="about" class="four">
+				<div class="container">
+
+					<header>
+						<h2>About Me</h2>
+					</header>
+
+					<a href="#" class="image featured"><img src="images/avatar.jpg" alt="" /></a>
+
+					<p>Graduated, Konkuk University, Internet and Multimedia engineering</p>
+					<p>Korea Institue of Science and Technology</p>
+
+				</div>
+			</section>
+
+			<!-- Chat -->
+			<section id="chat" class="five">
+				<div class="container">
+
+					<header>
+						<h2>Chat</h2>
+					</header>
+
+					<p>최초 Websocket Project 채팅방. 하고싶은 말을 적어주세요.</p>
+
+					<form method="post" onsubmit="Submit()">
+						<div class="row 50%">
+							<div class="12u">
+								<div id="chatresult"
+								style="padding:5px;
+								line-height: 0px;
+								background:#ddd;
+								border-radius:5px;
+								overflow-y: scroll;
+								border:1px solid #CCC;
+								margin-top:10px;
+								height:250px;
+								text-align:left;
+								bottom:0; " name="message"></div>
+							</div>
+						</div>
+						<div class="row 50%">
+							<div class="3u"><input id="output" type="text" name="name"/></div>
+							<div class="9u"><input id="input" type="text" name="email"/></div>
+						</div>
+						<div class="row">
+							<div class="12u">
+								<a href="#a" onclick="doSubmit()" class="button scrolly">Send Message</a>
+							</div>
+						</div>
+					</form>
+
+				</div>
+			</section>
+
+		</div>
+
+		<!-- Footer -->
+		<div id="footer">
+
+			<!-- Copyright -->
+			<ul class="copyright">
+				<li>&copy; Untitled. All rights reserved.</li><li>Design: EJ Shim</a></li>
+			</ul>
+
+		</div>
+
+	</body>
+	</html>

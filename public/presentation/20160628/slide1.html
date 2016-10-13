@@ -1,0 +1,207 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<title> 20160528 presentation </title>
+	<meta name="generator" content="Bootply" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<!--[if lt IE 9]>
+	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body style="margin:0; padding:0">
+	<canvas id = "viewport"></canvas>
+
+	<!---script area -->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+	<script src="../../libs/Math//three.js"></script>
+	<script src="../../libs/STLLoader.js"></script>
+	<script src="../../libs/TrackballControls.js"></script>
+
+	<script type="x-shader/x-vertex" id="shader-vertex">
+	#ifdef GL_ES
+	precision highp float;
+	#endif
+	// switch on high precision floats
+	uniform vec3 camPos;
+
+	void main()
+	{
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+	}
+	</script>
+	<script type="x-shader/x-fragment" id="shader-fragment">
+	#ifdef GL_ES
+	precision highp float;
+	#endif
+
+	void main()
+	{
+		gl_FragColor 	= vec4(1.0, 0.0, 0.0 ,1.0);
+
+	}
+	</script>
+	<script>
+
+
+	//onload functions
+
+	Initialize();
+	Animate();
+
+	///////function definitions/////////
+
+	var m_scene, m_camera, m_renderer;
+	var m_pointLight;
+	var m_controls;
+
+	var m_start = new Date();
+	var m_shaderMaterial;
+
+
+
+	function Initialize()
+	{
+		var canvas = document.getElementById("viewport");
+		m_scene = new THREE.Scene();
+		m_camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 100000 );
+		m_renderer = new THREE.WebGLRenderer({canvas:canvas, preserveDrawingBuffer: true, antialias: true});
+		m_controls = new THREE.TrackballControls(m_camera);
+
+		//init renderrer
+		m_renderer.setClearColor(0xffffff, 1);
+		m_renderer.setSize(window.innerWidth, window.innerHeight );
+
+
+		//init controls
+		m_controls.rotateSpeed = 4.0;
+		m_controls.zoomSpeed = 1.2;
+		m_controls.panSpeed = 0.8;
+		m_controls.noZoom = false;
+		m_controls.noPan = false;
+		m_controls.staticMoving = true;
+		m_controls.dynamicDampingFactor = 0.3;
+		m_controls.keys = [ 65, 83, 68 ];
+		// m_controls.target = new THREE.Vector3(0, 0, -700);
+		m_controls.addEventListener( 'change', Render );
+
+
+
+		// create a point light
+		m_pointLight = new THREE.PointLight(0xFFFFFF);
+		// add to the scene
+		m_scene.add(m_pointLight);
+
+		//shader MeshLambertMaterial
+		m_shaderMaterial = new THREE.ShaderMaterial({
+			uniforms:{
+				viewDir:{value: m_camera.position.sub(m_controls.target)},
+				camPos:{value: m_camera.position}
+			},
+			vertexShader: $('#shader-vertex').text(),
+			fragmentShader: $('#shader-fragment').text()
+		});
+
+
+		m_pointLight.position.z = 20;
+
+		DrawGeometry();
+		Render();
+	}
+
+	function RadialFunction(X, Y)
+	{
+		//Define X,Y,Z function Here
+		var Z = 0;
+
+
+		Z = 200 /  Math.sqrt( Math.pow( X-250 , 2) + Math.pow( Y-250  , 2)  )
+		+ 200 / Math.sqrt( Math.pow( X-100 , 2) + Math.pow( Y-250  , 2)  )
+		+ 200 / Math.sqrt( Math.pow( X-180 , 2) + Math.pow( Y-100  , 2)  )
+		+ 200 / Math.sqrt( Math.pow( X-320 , 2) + Math.pow( Y-100  , 2)  )
+		+ 200 / Math.sqrt( Math.pow( X-180 , 2) + Math.pow( Y-400  , 2)  )
+		+ 200 / Math.sqrt( Math.pow( X-320 , 2) + Math.pow( Y-400  , 2)  )
+		+ 200 / Math.sqrt( Math.pow( X-400 , 2) + Math.pow( Y-250  , 2)  );
+
+		return Z;
+	}
+
+	function DrawGeometry()
+	{
+		ImportMesh("../../DATA/SKULL.stl");
+		Render();
+	}
+
+	function Animate()
+	{
+		requestAnimationFrame( Animate );
+
+		m_shaderMaterial.uniforms.camPos.value = m_camera.position;
+		m_controls.update();
+
+		//synchronize light position anc camera position;
+		m_pointLight.position.x = m_camera.position.x;
+		m_pointLight.position.y = m_camera.position.y;
+		m_pointLight.position.z = m_camera.position.z;
+	}
+
+	function Render()
+	{
+		m_renderer.render(m_scene, m_camera);
+	}
+
+
+	function ImportMesh(path)
+	{
+		var loader = new THREE.STLLoader();
+
+		loader.load( path, function ( geometry ) {
+			LoadMesh(geometry);
+		} );
+	}
+
+	function LoadMesh(geometry)
+	{
+		var mesh = new THREE.Mesh(geometry, m_shaderMaterial);
+
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+
+		m_scene.add(mesh)
+		m_controls.target = mesh.GetCenter();
+		m_controls.update();
+
+		Render();
+	}
+
+
+	THREE.Mesh.prototype.GetCenter = function()
+	{
+		this.geometry.computeBoundingBox();
+		var boundingBox = this.geometry.boundingBox;
+		var position = new THREE.Vector3();
+		position.subVectors( boundingBox.max, boundingBox.min );
+		position.multiplyScalar( 0.5 );
+		position.add( boundingBox.min );
+		position.applyMatrix4( this.matrixWorld );
+
+		return position;
+	}
+
+
+
+	//Event Listners
+	//Windows Resize
+	$(window).resize(function(){
+		var width = window.innerWidth;
+		var height = window.innerHeight;
+		m_renderer.setSize(width, height);
+		m_camera.aspect = width/height;
+		m_camera.updateProjectionMatrix();
+		m_controls.handleResize();
+		Render();
+	});
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+<html>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+
+<head>
+	<title>Shim EJ Physijs Joint</title>
+
+	<style type="text/css">
+	body {
+		margin-left: 0px;
+		margin-top: 0px;
+		margin-right: 0px;
+		margin-bottom: 0px;
+		overflow:hidden;
+	}
+	</style>
+	
+	<script type="text/javascript" src="../libs/Math/three.js"></script>
+	<script type="text/javascript" src="../libs/physi.js"></script>
+	<script src="../libs/THREEx.KeyboardState.js"></script>
+	<script type="text/javascript" src="libs/simplex-noise.js"></script>
+	
+	<script type="text/javascript">
+	
+	'use strict';
+	
+	Physijs.scripts.worker = '../libs/physijs_worker.js';
+	Physijs.scripts.ammo = './ammo.js';
+	
+	var applyForce, newBullet_Position, mouse_position,
+	removeCannon,renderer, scene, ground, onG, light, camera, box, cannons=[],  boxes = [],
+	objects = [];
+
+	var tGround;
+
+	
+	var keyboard = new THREEx.KeyboardState();
+	
+	var clock = new THREE.Clock();
+	
+	var generateChair, chair, chairs=[];
+	var generateHuman, human = {}, humans=[];
+	var people=[];
+
+	
+	function initScene() {
+		
+		renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.shadowMapEnabled = false;
+		renderer.shadowMapSoft = false;
+		document.getElementById( 'viewport' ).appendChild( renderer.domElement );
+
+		scene = new Physijs.Scene;
+
+		
+		scene.addEventListener(
+			'update',
+			function() {
+				scene.simulate( undefined, 1 );
+			}
+			);
+		
+		InitWorld();
+		
+		
+		
+		requestAnimationFrame( render );
+		scene.simulate();
+	};
+	
+	function render() {
+
+		
+		requestAnimationFrame( render );
+		renderer.render( scene, camera );
+		
+		UpdateParticle();
+		Keyboard();
+		Mouse();
+		refresh();	
+		
+	};
+
+	var geometry, sprite1, sprite2, sprite3, sprite4, sprite5, parameters, pColor, sprite, size, particles;
+	var materials = [];
+
+	function AddParticle(){
+		geometry = new THREE.Geometry();
+
+		sprite1 = THREE.ImageUtils.loadTexture( "../images/sprites/snowflake1.png" );
+		sprite2 = THREE.ImageUtils.loadTexture( "../images/sprites/snowflake2.png" );
+		sprite3 = THREE.ImageUtils.loadTexture( "../images/sprites/snowflake3.png" );
+		sprite4 = THREE.ImageUtils.loadTexture( "../images/sprites/snowflake4.png" );
+		sprite5 = THREE.ImageUtils.loadTexture( "../images/sprites/snowflake5.png" );
+
+		for ( i = 0; i < 10000; i ++ ) {
+
+			var vertex = new THREE.Vector3();
+			vertex.x = Math.random() * 2000 - 1000;
+			vertex.y = Math.random() * 2000 - 1000;
+			vertex.z = Math.random() * 2000 - 1000;
+
+			geometry.vertices.push( vertex );
+
+		}
+
+		parameters = [ [ [1.0, 0.2, 0.5], sprite2, 20 ],
+					[ [0.95, 0.1, 0.5], sprite3, 15 ],
+					[ [0.90, 0.05, 0.5], sprite1, 10 ],
+					[ [0.85, 0, 0.5], sprite5, 8 ],
+					[ [0.80, 0, 0.5], sprite4, 5 ],
+					];
+
+		for (var i = 0; i < parameters.length; i ++ ) {
+
+			pColor  = parameters[i][0];
+			sprite = parameters[i][1];
+			size   = parameters[i][2];
+
+			materials[i] = new THREE.PointCloudMaterial( { size: size, map: sprite, blending: THREE.AdditiveBlending, depthTest: true, transparent : true } );
+			materials[i].color.setHSL( color[0], color[1], color[2] );
+
+			particles = new THREE.PointCloud( geometry, materials[i] );
+
+			particles.rotation.x = Math.random() * 6;
+			particles.rotation.y = Math.random() * 6;
+			particles.rotation.z = Math.random() * 6;
+
+			scene.add( particles );
+		}
+	}
+
+	var h;
+
+	function UpdateParticle(){
+		var time = Date.now() * 0.000005;
+		
+		for (var i = 0; i < scene.children.length; i ++ ) {
+
+					var object = scene.children[ i ];
+
+					if ( object instanceof THREE.PointCloud ) {
+
+						object.rotation.y = time * ( i < 4 ? i + 1 : - ( i + 1 ) );
+
+					}
+
+				}
+
+				for (var i = 0; i < materials.length; i ++ ) {
+
+					pColor = parameters[i][0];
+
+					h = ( 360 * ( pColor[0] + time ) % 360 ) / 360;
+					materials[i].color.setHSL( h, pColor[1], pColor[2] );
+
+				}
+
+	}
+
+	function Materials(){
+		ground_material = Physijs.createMaterial(
+			new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( '../images/rocks.jpg' ) }),
+			.8, // high friction
+			.4 // low restitution
+			);
+		ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+		ground_material.map.repeat.set( 1, 1 );
+		
+		
+		box_material = Physijs.createMaterial(
+			new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( '../images/plywood.jpg' ) }),
+			.4, // low friction
+			.6 // high restitution
+			);
+		
+		cannon_material = Physijs.createMaterial(new THREE.MeshPhongMaterial({color:0xff0000}), 4, 3);
+		box_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+		box_material.map.repeat.set( .25, .25 );
+	}
+	
+
+
+	
+	function InitWorld(){
+		
+		///////////////////////////////////////////////////FOG (Background)
+		// scene.fog = new THREE.Fog( 'orange', 1, 500 );
+		// renderer.setClearColor( scene.fog.color, 1 );
+		
+		/////////////Gravity
+		scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+		
+		
+		//////////////////////////////////////////////////Camera
+		camera = new THREE.PerspectiveCamera(
+			45,
+			window.innerWidth / window.innerHeight,
+			1,
+			1000
+			);
+		camera.position.set( 60, 50, 60 );
+		camera.lookAt(target);
+		scene.add( camera );
+
+		///////////////////////////////////////////////////////////////////////  Light
+		light = new THREE.DirectionalLight( 0xFFFFFF );
+		light.position.set( 20, 40, -15 );
+		light.target.position.copy( scene.position );
+		light.castShadow = false;
+		light.shadowCameraLeft = -60;
+		light.shadowCameraTop = -60;
+		light.shadowCameraRight = 60;
+		light.shadowCameraBottom = 60;
+		light.shadowCameraNear = 20;
+		light.shadowCameraFar = 200;
+		light.shadowBias = -.0001
+		light.shadowMapWidth = light.shadowMapHeight = 2048;
+		light.shadowDarkness = .7;
+		scene.add( light );
+		
+		
+		
+		//////////////////////////////////////////////////////////////////////// Ground
+		
+		Materials();
+
+
+		AddParticle();
+		
+		ground = new Physijs.BoxMesh(new THREE.BoxGeometry(100, 2, 100), ground_material, 0);
+		ground.receiveShadow = true;
+		ground.position.y = -10;
+		scene.add( ground );
+
+
+
+		for (var i = 0 ; i < 5 ; i++) {
+			GeneratePerson();
+		}
+		
+		GenerateHuman();
+		
+	}
+	
+	
+	var popBullet;   
+
+
+	function Keyboard(){
+		var delta = clock.getDelta(); // seconds.
+		var moveDistance = 1000*delta; // 200 pixels per second
+		var rotateAngle = Math.PI / 2 * delta;
+
+
+		var velocity = humans[0].getLinearVelocity();
+
+		var camPos2D = new THREE.Vector2( camera.position.x, camera.position.z );
+		var MePos2D = new THREE.Vector2( humans[0].position.x, humans[0].position.z );
+		var sDirection2D = camPos2D.sub(MePos2D).normalize();
+		var wDirection2D = sDirection2D.negate();
+		var wDirection = new THREE.Vector3( wDirection2D.x, 0, wDirection2D.z ).normalize();
+		var sDirection = new THREE.Vector3( sDirection2D.x, 0, sDirection2D.z ).normalize();
+
+		/////////Keyboard//////////////////////////
+		if(keyboard.pressed("W")){
+			//humans[0].lookAt(lookPosition);
+			var velocity = humans[0].getLinearVelocity();
+			humans[0].setLinearVelocity(velocity.add(new THREE.Vector3(0, 0, -1)).normalize().multiplyScalar(moveDistance));
+		}
+		if(keyboard.pressed("S")){
+			//humans[0].lookAt(lookPosition);
+			var velocity = humans[0].getLinearVelocity();
+			humans[0].setLinearVelocity(velocity.add(new THREE.Vector3(0, 0, 1)).normalize().multiplyScalar(moveDistance));
+		}
+
+		if(keyboard.pressed("A")){
+			//humans[0].lookAt(lookPosition);
+			var velocity = humans[0].getLinearVelocity();
+			humans[0].setLinearVelocity(velocity.add(new THREE.Vector3(-1, 0, 0)).normalize().multiplyScalar(moveDistance));         
+		}
+
+		if(keyboard.pressed("D")){
+			//humans[0].lookAt(lookPosition);
+			var velocity = humans[0].getLinearVelocity();
+			humans[0].setLinearVelocity(velocity.add(new THREE.Vector3(1, 0, 0)).normalize().multiplyScalar(moveDistance));
+		}
+
+		if (keyboard.pressed("space")) {
+			people[1].body.__dirtyPosition = true;
+                    //people[1].body.translateOnAxis(new THREE.Vector3(0,1,0), -moveDistance);
+                }
+            }
+
+
+
+            var cannon_material, ground_material, box_material;
+
+            function Mouse() {
+            	renderer.domElement.addEventListener( 'mousedown', setMousePosition );
+            	renderer.domElement.addEventListener( 'mousemove', setTargetPosition);
+            }
+
+            function setMousePosition( evt ) {
+		// Find where mouse cursor intersects the ground plane
+		var vector = new THREE.Vector3(
+			( evt.clientX / renderer.domElement.clientWidth ) * 2 - 1,
+			-( ( evt.clientY / renderer.domElement.clientHeight ) * 2 - 1 ),
+			1
+			);
+		vector.unproject(camera);
+		vector.sub(camera.position);
+		
+		var bulletPosition = camera.position.clone().add(vector);
+		var rayDirection = bulletPosition.sub(camera.position.clone()).normalize();
+
+		var caster =  new THREE.Raycaster(camera.position.clone(), rayDirection);
+
+		var intersects = caster.intersectObject(ground);
+
+		
+		var inter = document.getElementById("intersect");
+		inter.innerHTML = "number of objects intersected : " + intersects.length;
+		
+		for(var i in intersects){
+			inter.innerHTML += "[ " + intersects[i].point.x.toFixed(2) + intersects[i].point.y.toFixed(2) + intersects[i].point.z.toFixed(2) + "]"; 
+			var shootVolume = new THREE.Vector3( intersects[i].point.x, intersects[i].point.y+Math.random()+Math.random(), intersects[i].point.z );
+			var startPoint = new THREE.Vector3( humans[0].position.x, humans[0].position.y+3, humans[0].position.z );
+			GenerateBullet(startPoint, shootVolume);
+		}			
+	};
+
+	function setTargetPosition(evt){
+		var vector = new THREE.Vector3(
+			( evt.clientX / renderer.domElement.clientWidth ) * 2 - 1,
+			-( ( evt.clientY / renderer.domElement.clientHeight ) * 2 - 1 ),
+			1
+			);
+
+		vector.unproject(camera);
+		vector.sub(camera.position);
+
+		var targetPosition = camera.position.clone().add(vector);
+		var targetDirection = targetPosition.sub(camera.position.clone()).normalize();
+
+		var caster = new THREE.Raycaster(camera.position.clone(), targetDirection);
+		var intersects = caster.intersectObject(ground);
+
+		for(var i in intersects){
+			var look = new THREE.Vector3( intersects[i].point.x , intersects[i].point.y+5, intersects[i].point.z );
+			humans[0].lookAt(look);
+			humans[0].__dirtyRotation = true;
+		}
+
+	}
+
+	var casterClocks = [];
+	var lines = [];
+
+	function DrawLine(from, to){
+		var casterClock;
+
+
+		var casterMaterial = new THREE.LineBasicMaterial({
+			color: 0x0000ff
+		});
+		var casterGeometry = new THREE.Geometry();
+		casterGeometry.vertices.push(from);
+		casterGeometry.vertices.push(to);
+
+		var casterLine = new THREE.Line(casterGeometry, casterMaterial);
+
+		lines.push(casterLine);
+		scene.add(casterLine);
+		casterClock = new THREE.Clock;
+		casterClocks.push(casterClock);
+
+		if(casterClock > 4)
+			scene.remove(casterLine);
+	}
+	
+	var target = new THREE.Vector3();
+
+
+	var humans = [];
+	function GenerateHuman(){
+		var head, leftArm, _leftArm, rightArm, _rightArm, leftLeg, _leftLeg, rightLeg, _rightLeg, leftFoot, rightFoot;
+		var humanMaterial;
+		
+		humanMaterial = new Physijs.createMaterial(
+			new THREE.MeshPhongMaterial({ map: THREE.ImageUtils.loadTexture( '../images/lavatile.jpg' )}),
+			.6,
+			.4
+			);
+		
+		human = new Physijs.BoxMesh(new THREE.BoxGeometry(4, 4, 4), humanMaterial);
+		human.receiveShadow = true;
+		human.castShadow = true;
+		
+		head = new Physijs.SphereMesh(new THREE.SphereGeometry(1, 16, 16), humanMaterial);
+		head.castShadow = true;
+		head.receiveShadow = true;
+		head.position.y=3;
+		human.add(head);
+		
+		leftArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		leftArm.castShadow = true;
+		leftArm.receiveShadow = true;
+		leftArm.position.x = -1.6;
+		leftArm.position.y = 1.5;
+		leftArm.rotation.set(0, 0, Math.PI/4);
+		
+		_leftArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		_leftArm.castShadow = true;
+		_leftArm.receiveShadow = true;
+		_leftArm.position.x = -1.5;
+		
+		leftArm.add(_leftArm);
+		human.add(leftArm);
+		
+		rightArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		rightArm.castShadow = true;
+		rightArm.receiveShadow = true;
+		rightArm.position.x = 1.5;
+		rightArm.position.y = 1.5;
+		rightArm.rotation.set(0, 0, -Math.PI/4);
+		
+		_rightArm = new Physijs.BoxMesh(new THREE.BoxGeometry(1.5, 0.5, 0.5), humanMaterial);
+		_rightArm.castShadow = true;
+		_rightArm.receiveShadow = true;
+		_rightArm.position.x = 1.5;
+		
+		
+		rightArm.add(_rightArm);
+		human.add(rightArm);
+		
+		
+		human.position.set(Math.random() * 50 - 25,0,Math.random() * 50 - 25);
+		
+
+		humans.push(human);
+		scene.add(human);
+	}
+	
+
+	
+	var newBullet = [];
+
+	function GenerateBullet(from, to){
+
+		var bullet = new Physijs.SphereMesh(new THREE.SphereGeometry( 0.8, 16, 16 ),cannon_material,10);
+		var bPos = from.clone().add(to.clone().sub(from.clone()).normalize().multiplyScalar(5));
+
+		bullet.position.set(bPos.x, bPos.y, bPos.z);
+		bullet.castShadow = false;
+		
+		
+		var shootingForce = 3000, effect, offset;
+
+		scene.add(bullet);
+		newBullet.unshift(bullet);
+		
+		effect = to.sub(from).normalize().multiplyScalar(shootingForce);
+		offset = to.sub(from);
+		bullet.applyImpulse(effect, offset);   //apply impulse
+	};
+	
+	var color = ["gold", "blue", "red", "darkgreen", "black"];
+	
+	function GeneratePerson(){
+
+		var personMaterial;
+		var person = {};
+		
+		
+		people.push(person);
+		
+		
+		for(var i in people){
+
+			personMaterial = new Physijs.createMaterial(
+				new THREE.MeshLambertMaterial({color:color[i]}),
+				.6,
+				.8	
+				);
+		}
+		
+		
+		
+
+		person.body = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 4, 1), personMaterial, 3);
+		person.body.castShadow = false;
+		person.body.receiveShadow = false;
+		
+		person.body.position.set(Math.random() * 50 - 25, 5 * Math.random() ,Math.random() * 50 - 25);
+		
+		
+		scene.add(person.body);
+		
+		
+		
+		person.head = new Physijs.SphereMesh(new THREE.SphereGeometry(1, 16, 16), personMaterial, 0.1);
+		person.head.castShadow = person.head.receiveShadow = false;
+		
+		person.head.position.set(
+			person.body.position.x,
+			person.body.position.y + 3,
+			person.body.position.z
+			);
+		
+		
+		
+		scene.add(person.head);
+		
+		person.head.constraint = new Physijs.ConeTwistConstraint(
+			person.head,
+			person.body,
+			new THREE.Vector3(person.head.position.x, person.head.position.y-0.5, person.head.position.z)
+			);
+		scene.addConstraint(person.head.constraint);
+		
+		person.leftArm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.leftArm.castShadow = person.leftArm.receiveShadow = false;
+		person.leftArm.position.set(person.body.position.x - 2.2, person.body.position.y + 2, person.body.position.z);
+		scene.add(person.leftArm);
+		person.leftArm.constraint = new Physijs.ConeTwistConstraint(
+			person.leftArm, person.body,
+			new THREE.Vector3(person.body.position.x - 1,person.body.position.y + 2, person.body.position.z)
+			);
+		scene.addConstraint(person.leftArm.constraint);
+		
+		person.left_Arm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.left_Arm.castShadow = person.left_Arm.receiveShadow = false;
+		person.left_Arm.position.set(person.leftArm.position.x - 2.2, person.leftArm.position.y, person.leftArm.position.z);
+		scene.add(person.left_Arm);
+		
+		person.left_Arm.constraint = new Physijs.ConeTwistConstraint(person.left_Arm, person.leftArm,
+			new THREE.Vector3(person.leftArm.position.x - 1, person.leftArm.position.y, person.leftArm.position.z));
+		scene.addConstraint(person.left_Arm.constraint);
+		
+		person.rightArm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.rightArm.castShadow = person.leftArm.receiveShadow = false;
+		person.rightArm.position.set(person.body.position.x + 2.2, person.body.position.y + 2, person.body.position.z);
+		scene.add(person.rightArm);
+		person.rightArm.constraint = new Physijs.ConeTwistConstraint(person.rightArm, person.body, new THREE.Vector3(person.body.position.x + 1, person.body.position.y + 2, person.body.position.z));
+		scene.addConstraint(person.rightArm.constraint);
+		
+		person.right_Arm = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 0.5, 0.5), personMaterial);
+		person.right_Arm.castShadow = person.right_Arm.receiveShadow = false;
+		person.right_Arm.position.set(person.rightArm.position.x + 2.2, person.rightArm.position.y, person.rightArm.position.z);
+		scene.add(person.right_Arm);
+		
+		person.right_Arm.constraint = new Physijs.ConeTwistConstraint(person.right_Arm, person.rightArm,
+			new THREE.Vector3(person.rightArm.position.x + 1, person.leftArm.position.y, person.leftArm.position.z));
+		scene.addConstraint(person.right_Arm.constraint);
+		
+		person.leftLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 3);
+		person.leftLeg.castShadow = person.leftLeg.receiveShadow = false;
+		person.leftLeg.position.set(person.body.position.x-0.5, person.body.position.y-4, person.body.position.z);
+		scene.add(person.leftLeg);
+		
+		person.leftLeg.constraint = new Physijs.ConeTwistConstraint(person.leftLeg, person.body,
+			new THREE.Vector3(person.body.position.x-0.5,
+				person.body.position.y-2.2,
+				person.body.position.z));
+		scene.addConstraint(person.leftLeg.constraint);
+		
+		person.left_Leg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 5);
+		person.left_Leg.castShadow = person.left_Leg.receiveShadow = false;
+		person.left_Leg.position.set(person.leftLeg.position.x, person.leftLeg.position.y - 3.2, person.leftLeg.position.z);
+		scene.add(person.left_Leg);
+		
+		person.left_Leg.constraint = new Physijs.ConeTwistConstraint(person.left_Leg, person.leftLeg,
+			new THREE.Vector3(
+				person.leftLeg.position.x,
+				person.leftLeg.position.y-1.5,
+				person.leftLeg.position.z
+				));
+                //person.left_Leg.constraint.setLimit(Math.PI / 2 , 1, 0);
+                scene.addConstraint(person.left_Leg.constraint);
+
+
+
+                person.rightLeg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 3);
+                person.rightLeg.castShadow = person.rightLeg.receiveShadow = false;
+                person.rightLeg.position.set(person.body.position.x+0.5, person.body.position.y-4, person.body.position.z);
+                scene.add(person.rightLeg);
+
+                person.rightLeg.constraint = new Physijs.ConeTwistConstraint(person.rightLeg, person.body,
+                	new THREE.Vector3(person.body.position.x+0.5,
+                		person.body.position.y-2.2,
+                		person.body.position.z));
+
+                scene.addConstraint(person.rightLeg.constraint);
+
+                person.right_Leg = new Physijs.BoxMesh(new THREE.BoxGeometry(0.7, 3, 0.7), personMaterial, 5);
+                person.right_Leg.castShadow = person.right_Leg.receiveShadow = false;
+                person.right_Leg.position.set(person.rightLeg.position.x, person.rightLeg.position.y - 3.2, person.rightLeg.position.z);
+                scene.add(person.right_Leg);
+
+                person.right_Leg.constraint = new Physijs.ConeTwistConstraint(person.right_Leg, person.rightLeg,
+                	new THREE.Vector3(
+                		person.rightLeg.position.x,
+                		person.rightLeg.position.y-1.5,
+                		person.rightLeg.position.z
+                		));
+
+
+                scene.addConstraint(person.right_Leg.constraint);
+
+                person.body.rotation.set(Math.random() * Math.PI * 2,
+                	Math.random() * Math.PI * 2,
+                	Math.random() * Math.PI * 2
+                	);
+
+                person.body.__dirtyRotation = true;
+            }
+
+            function RemovePerson(personi){
+            	scene.remove(personi.body);
+            	scene.remove(personi.head);
+            	scene.remove(personi.leftArm);
+            	scene.remove(personi.leftLeg);
+            	scene.remove(personi.left_Arm);
+            	scene.remove(personi.left_Leg);
+            	scene.remove(personi.rightArm);
+            	scene.remove(personi.rightLeg);
+            	scene.remove(personi.right_Arm);
+            	scene.remove(personi.right_Leg);
+
+            	scene.removeConstraint(personi.head.constraint);
+            	scene.removeConstraint(personi.leftArm.constraint);
+            	scene.removeConstraint(personi.leftLeg.constraint);
+            	scene.removeConstraint(personi.left_Arm.constraint);
+            	scene.removeConstraint(personi.left_Leg.constraint);
+            	scene.removeConstraint(personi.rightArm.constraint);
+            	scene.removeConstraint(personi.rightLeg.constraint);
+            	scene.removeConstraint(personi.right_Arm.constraint);
+            	scene.removeConstraint(personi.right_Leg.constraint);	
+            }
+
+            function refresh(){
+            	camera.lookAt(target);
+            	var bTime = document.getElementById("bTime");
+
+            	for(var i in newBullet){
+
+            		if (newBullet[i].position.z <= -40) {
+            			scene.remove(newBullet[i]);
+            			newBullet.splice(i, 1);
+            		}
+            	}
+
+            	for(var i in casterClocks){
+            		if(casterClocks[i] > 4){
+            			scene.remove(lines[i]);
+            		}
+            	}
+
+
+
+
+
+            	for (var i in people){
+
+            		if (people[i].body.position.y < -40) {
+            			RemovePerson(people[i]);
+            			people.splice(i, 1);
+
+            			var temp = color[i];
+            			color.splice(i, 1);
+            			color.push(temp);
+
+            			GeneratePerson();
+            		}
+            	}	
+            }
+
+
+
+            window.onload = initScene;
+
+            </script>
+        </head>
+
+        <body style="margin: 0px;">
+        	<div id="viewport"> </div>
+        	<div id="intersect" style="Position:absolute;top:10%;left:10%;color:red"> nothing's intersected </div>
+        </body>
+
+        </html>

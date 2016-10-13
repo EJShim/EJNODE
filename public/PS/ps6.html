@@ -1,0 +1,136 @@
+<html>
+<head>
+	<style type="text/css">
+			
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: black;
+				shape-rendering: crispEdges;
+			}
+			
+			.axis text {
+				font-family: sans-serif;
+				font-size: 11px;
+			}
+
+	</style>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script type="text/javascript">
+
+		function Graph(n, dataset){
+
+			//Width and height
+			var w = 1000;
+			var h = 450;
+			var padding = 30;
+
+			//Create scale functions
+			var xScale = d3.scale.linear()
+								 .domain([0, n])
+								 .range([padding, w - padding ]);
+
+			var yScale = d3.scale.linear()
+								 .domain([0, 4])
+								 .range([h - padding, padding]);
+
+			//Define THREE.Texture( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type ); axis
+			var xAxis = d3.svg.axis()
+							  .scale(xScale)
+							  .orient("bottom")
+							  .ticks(5);
+
+			//Define Y axis
+			var yAxis = d3.svg.axis()
+							  .scale(pyScale)
+							  .orient("left")
+							  .ticks(5);
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			//Create circles
+			svg.selectAll("circle")
+			   .data(dataset)
+			   .enter()
+			   .append("circle")
+			   .attr("cx", function(d) {
+			   		return xScale(d[0]);
+			   })
+			   .attr("cy", function(d) {
+			   		return yScale(d[1]);
+			   })
+			   .attr("r", function(d) {
+			   		return 1;
+			   });
+
+			//Create X axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(0," + (h - padding) + ")")
+				.call(xAxis);
+			
+			//Create Y axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("transform", "translate(" + padding + ",0)")
+				.call(yAxis);
+		}	
+
+		function P(){   //PMF of xi
+			
+			var px = Math.random();
+			var py = Math.random(); //(px, py in S)
+
+			if(Math.pow(px-1/2, 2) + Math.pow(py-1/2, 2) <= 1/4){ //if (px, py) in C
+				return 1;
+			}
+			else{
+				return 0;
+			}
+		}
+
+		function main(){
+
+			var dataset = [];
+
+			var n = 100;
+
+			var X = new Array();
+			var Sn = new Array();
+
+			var k = 0;
+			while(k < Math.random()*100){
+				for(var i = 1 ; i <= n ; i++){
+
+					for(var j = 1 ; j <= n ; j++){
+						X[j] = P(); //1 or 0
+
+						if(j === 1){
+							Sn[j] = X[j];
+						}
+						else{
+							Sn[j] = Sn[j-1] + X[j];
+						}
+					}
+
+					dataset.push([i, 4*Sn[i]/i]);
+
+					//(n, sn 입력받아서 그래프로 그리기!!!)
+				}
+				k++;
+			}
+
+			Graph(n, dataset);
+		}
+
+		</script>
+	</head>
+	<body onload="main()">
+
+	</body>
+
+	</html>

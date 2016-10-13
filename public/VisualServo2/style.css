@@ -1,0 +1,57 @@
+canvas{
+  position:absolute
+}
+body{
+  background-color: black;
+}
+
+#canvas2D {
+  position:absolute;
+}
+
+#canvas {
+  position:absolute;
+  left: 0px; top: 0px;
+  width:100%;
+}
+
+#uvMat{
+  position:absolute;
+  background-color: rgba(0, 0, 0, 0.5);
+  color:#00FF00;
+  left:52%;
+  top:1%;
+  padding: 5px;
+  width:90px;
+  font-size:20%;
+}
+
+#LMat{
+  position:absolute;
+  color:#00FF00;
+  left:2%;
+  top:0;
+  width:48%;
+  font-size:20%;
+  z-index: -2;
+}
+
+#viewport1 {
+  height:100%;
+  margin:0;
+  z-index:1;
+}
+#viewport2 {
+  height:100%;
+  margin:0;
+  z-index: -1;
+  background-image: -webkit-gradient(#1A8FCF,#1A8FCF,#03ABDE,#03ABDE,#DDDDDD,#AAAAAA);
+  /* Safari 5.1, iOS 5.0-6.1, Chrome 10-25, Android 4.0-4.3 */
+  background-image: -webkit-linear-gradient(#1A8FCF,#1A8FCF,#03ABDE,#03ABDE,#DDDDDD,#AAAAAA);
+  /* Firefox 3.6 - 15 */
+  background-image: -moz-linear-gradient(#1A8FCF,#1A8FCF,#03ABDE,#03ABDE,#DDDDDD,#AAAAAA);
+  /* Opera 11.1 - 12 */
+  background-image: -o-linear-gradient(#1A8FCF,#1A8FCF,#03ABDE,#03ABDE,#DDDDDD,#AAAAAA);
+  /* Opera 15+, Chrome 25+, IE 10+, Firefox 16+, Safari 6.1+, iOS 7+, Android 4.4+ */
+  background-image: linear-gradient(#1A8FCF,#1A8FCF,#03ABDE,#03ABDE,#DDDDDD,#AAAAAA);
+}
