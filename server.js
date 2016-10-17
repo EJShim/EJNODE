@@ -10,6 +10,3 @@ app.use(express.static('public'));
 var server = app.listen(80, function(){
     console.log("Express server has started on port 80")
 });
-
-
-///SERVER
