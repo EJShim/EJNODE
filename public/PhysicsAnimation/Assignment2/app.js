@@ -378,10 +378,14 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
 E_Manager.prototype.SaveThumbnail = function()
 {
   var elapsedTime = (new Date() - this.starttime)/1000;
-  if(elapsedTime < 15 || this.thumbnailSaved){
+  if(elapsedTime > 15 || this.thumbnailSaved){
     return;
   }
+
+
   this.thumbnailSaved = true;
+  console.log("Thumbnail Saved");
+
 
   if(this.thumbnailSaved) return;
 	//var testCanvas = m_renderer.domElement.toDataURL();
