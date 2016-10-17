@@ -10,6 +10,6 @@
     "watchify": "^3.7.0"
   },
   "scripts": {
-    "build": "browserify core/assignment2/Manager.js -o public/PhysicsAnimation/assignment2/app.js"
+    "build": "browserify core/assignment2/MainFrm.js -o public/PhysicsAnimation/assignment2/app.js"
   }
 }

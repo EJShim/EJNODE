@@ -68,7 +68,7 @@ E_FinitePlane.prototype.IsCollisionOccured = function(object , nextPosition)
 
     var cP = this.GetPlaneEquation(s, t);
     var length = nP.clone().sub(cP).length();
-    return cP.add(n.clone().multiplyScalar( object.radius) );
+    return cP.add(n.clone().multiplyScalar( object.radius / 2 ) );
   }
   else return false;
 }

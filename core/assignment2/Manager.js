@@ -1,6 +1,7 @@
 var E_Interactor = require('./E_Interactor.js');
 var E_Particle = require("../libs/physics/E_Particle.js");
-var E_FinitePlane = require("../libs/physics/E_FinitePlane");
+var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
+var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
 
 function E_Manager()
 {
@@ -9,6 +10,7 @@ function E_Manager()
   var m_camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 100000 );
   var m_renderer = new THREE.WebGLRenderer({canvas:canvas, preserveDrawingBuffer: true, antialias: true});
   var m_interactor = new E_Interactor(this);
+  var m_particleSystem = new E_ParticleSystem(this);
 
   var m_gravity = new THREE.Vector3(0.0, -10, 0.0);
 
@@ -18,6 +20,10 @@ function E_Manager()
   this.then = new Date();
   this.interval = 1000 / 60;
   this.temp = 0;
+
+  //Time Step for Rendering
+  this.timeStep = 0;
+  this.prevTime = new Date();
 
   this.groundMesh = [];
 
@@ -45,6 +51,11 @@ function E_Manager()
   {
     return m_gravity;
   }
+
+  this.ParticleSystem = function()
+  {
+    return m_particleSystem;
+  }
 }
 
 E_Manager.prototype.Initialize = function()
@@ -60,61 +71,40 @@ E_Manager.prototype.Initialize = function()
 
 E_Manager.prototype.Animate = function()
 {
-  var elapsedTime = (new Date() - this.starttime)/1000;
-  if(elapsedTime > 15 && !this.thumbnailSaved){
-    this.SaveThumbnail();
-    this.thumbnailSaved = true;
-  }
-
-  this.temp++;
-  if(this.temp == 10){
-    //this.GenerateObject(this.frand(-2.0, 2.0), this.frand(2.0, 3.0), this.frand(-2.0, 2.0));
-    this.temp = 0;
-  }
-
-  var Mgr = this;
+  //Rendering
   var now = new Date();
   this.delta = (now - this.then);
   if(this.delta > this.interval){
+    //Update Time Step
+    this.timeStep = (now - this.prevTime) / 1000;
+    if(this.timeStep > 1/this.interval) this.timeStep = 1/this.interval;
+
+    this.ParticleSystem().Update();
+
     var renderer = this.GetRenderer();
     var camera = this.GetCamera();
     var scene = this.GetScene();
 
     renderer.render(scene, camera);
 
-    //Update Interactor
-    var interactor = this.GetInteractor();
-    interactor.Update();
-
-    var Mgr = this;
-    //Update Objects in Scene
-    var count = [];
-
-    scene.traverse (function (object)
-    {
-      if (object instanceof E_Particle)
-      {
-        scene.traverse(function(object2){
-          if(object2 instanceof E_FinitePlane){
-            Mgr.PlaneCollisionDetection(object, object2);
-          }
-        });
-        object.Update();
-        if(object.elapsedTime > 30){
-          object.visible = false;
-          count.push(object);
-        }
-      }
-
-    });
-
-    //Remove object in Scene
-    for(var i in count){
-      scene.remove(count[i]);
-    }
-
+    this.prevTime = now;
   }
 
+
+  //Update Interactor
+  var interactor = this.GetInteractor();
+  interactor.Update();
+
+  //generate Random Object
+  this.temp++;
+  if(this.temp == 10){
+    //this.GenerateObject(this.frand(-2.0, 2.0), this.frand(2.0, 3.0), this.frand(-2.0, 2.0));
+    this.temp = 0;
+  }
+
+  this.SaveThumbnail();
+
+  var Mgr = this;
   requestAnimationFrame(Mgr.Animate.bind(Mgr));
 }
 
@@ -142,6 +132,7 @@ E_Manager.prototype.InitObject = function()
 E_Manager.prototype.GenerateRandomTriangle = function()
 {
   var scene = this.GetScene();
+  var system = this.ParticleSystem();
 
   var scaleFactor = 3;
   var vertices = [];
@@ -170,13 +161,12 @@ E_Manager.prototype.GenerateRandomTriangle = function()
 
 
   for(var i=0 ; i<10 ; i++){
-
     this.groundMesh[i].material.transparent = true;
     this.groundMesh[i].material.opacity = 0.2;
     this.groundMesh[i].material.color = new THREE.Color(Math.random() / 4, Math.random() / 4, Math.random() / 4);
 
-    console.log(this.groundMesh[i].material.transparent);
     scene.add(this.groundMesh[i]);
+    system.add(this.groundMesh[i]);
   }
 }
 
@@ -214,6 +204,7 @@ E_Manager.prototype.GenerateObjectScreen = function(x, y)
 E_Manager.prototype.GenerateObject = function(x, y, z)
 {
   var scene = this.GetScene();
+  var system = this.ParticleSystem();
 
   var newMesh = new E_Particle(this, 0.1);
   newMesh.position.set(x, y, z);
@@ -223,22 +214,8 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   var velFactor = 5;
   newMesh.velocity.set( this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor) );
 
-  // var newMesh2 = new E_Particle(this, 0.1);
-  //
-  // newMesh2.position.set(x + Math.random()/4, y + Math.random()/4, z + Math.random()/4);
-  // newMesh2.material.color = new THREE.Color(Math.random() / 3, Math.random() / 3, Math.random() / 3);
-  // newMesh2.m_colorFixed = true;
-  //
-  // var spring = new E_SpringDamper(this);
-  // spring.AddMesh(newMesh);
-  // spring.AddMesh(newMesh2);
-  // spring.equilibriumLength = 0.4;
-  // spring.cValue = 30;
-  //
-  // newMesh.elasticity = 0.2;
-  // newMesh2.elasticity = 0.8;
-
   scene.add(newMesh);
+  system.add(newMesh);
   // scene.add(newMesh2);
   // scene.add(spring);
 
@@ -246,80 +223,21 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   //newMesh.ApplyImpulse(raycaster.ray.direction.clone().normalize().multiplyScalar(0));
 }
 
-E_Manager.prototype.PlaneCollisionDetection = function(object, plane)
-{
-  var colPoint = plane.IsCollisionOccured(object, false);
-  if(!colPoint){
-    //Intersection with next position - in case of fast movement of the particle
-    colPoint = plane.IsCollisionOccured(object, true);
-    if(!colPoint){
-      return
-    }else{
-      this.OnCollision(object, plane, colPoint);
-      return;
-    }
-  }else{
-    this.OnCollision(object, plane, colPoint);
-    return;
-  }
-}
-
-E_Manager.prototype.OnCollision = function(object, plane, colPoint)
-{
-  //Check if Local Collision Occurs
-  var normal = plane.GetNormal();
-
-  var Vn = normal.clone().multiplyScalar(object.velocity.clone().dot(normal));
-  var Vt = object.velocity.clone().sub(Vn.clone());
-  var Vnp = Vn.clone().multiplyScalar(-1 * object.elasticity);
-  var V = Vnp.clone().add(Vt);
-
-  object.position.set(colPoint.x, colPoint.y, colPoint.z);
-  object.velocity.set(V.x, V.y, V.z);
-
-  //plane.material.color = object.material.color;
-}
-
-E_Manager.prototype.ParticleCollisionDetection = function(objectA, objectB)
-{
-  var posA = objectA.GetNextPosition();
-  var posB = objectB.GetNextPosition();
-
-  var z = posB.clone().sub(posA).length() - (objectA.radius + objectB.radius);
-  //If Collision
-  if(z < 0){
-    var n = posB.clone().sub(posA).multiplyScalar( posB.clone().sub(posA).length() );
-
-    // var VaN = n.clone().multiplyScalar(objectA.velocity.clone().dot(n));
-    // var VaT = objectA.velocity.clone().sub(VaN);
-    // //Va = VaN + VaT
-    //
-    // var VbN = n.clone().multiplyScalar(objectB.velocity.clone().dot(n));
-    // var VbT = objectB.velocity.clone().sub(VbN);
-
-    var Uminus = (objectB.velocity.clone().sub(objectA.velocity).dot(n) );
-    var e = (objectB.elasticity + objectA.elasticity);
-
-    var j = (1 + e)*(objectA.mass*objectB.mass / (objectA.mass+objectB.mass) )
-    var E = n.clone().multiplyScalar(j);
-
-
-    objectB.ApplyImpulse(E)
-    objectA.ApplyImpulse(E.multiplyScalar(-1));
-
-    objectB.m_bCollided = true;
-  }
-}
 
 
 E_Manager.prototype.SaveThumbnail = function()
 {
+  var elapsedTime = (new Date() - this.starttime)/1000;
+  if(elapsedTime < 15 || this.thumbnailSaved){
+    return;
+  }
+  this.thumbnailSaved = true;
+
   if(this.thumbnailSaved) return;
 	//var testCanvas = m_renderer.domElement.toDataURL();
 	var canvasData = this.GetRenderer().domElement.toDataURL();
 	var postData = "canvasData="+canvasData;
-	//var debugConsole= document.getElementById("debugConsole");
-	//debugConsole.value=canvasData;
+
 
 	//alert("canvasData ="+canvasData );
 	var ajax = new XMLHttpRequest();
@@ -334,7 +252,7 @@ E_Manager.prototype.SaveThumbnail = function()
 		{
 			//alert(ajax.responseText);
 			// Write out the filename.
-      //console.log(ajax.responseText);
+
 
 		}
 	}
@@ -352,51 +270,4 @@ E_Manager.prototype.frand = function(min, max)
   return value;
 }
 
-
-
-//Run Program
-
-var Manager = new E_Manager();
-Manager.Initialize();
-Manager.Animate();
-
-$(window).resize(function(){
-  Manager.GetRenderer().setSize(window.innerWidth, window.innerHeight);
-  Manager.GetCamera().aspect = $("#viewport").width()/$("#viewport").height();
-  Manager.GetCamera().updateProjectionMatrix();
-});
-
-
-//Event Handlers
-$("#viewport").mousedown(function(event){
-  Manager.GetInteractor().onMouseDown(event);
-});
-
-$("#viewport").mousemove(function(event){
-  Manager.GetInteractor().onMouseMove(event);
-});
-
-$("#viewport").mouseup(function(event){
-  Manager.GetInteractor().onMouseUp(event);
-});
-
-
-$("#viewport").bind('touchstart', function(event) {
-  Manager.GetInteractor().onMouseDown(event.originalEvent.touches[0]);
-});
-
-$("#viewport").bind('touchmove', function(event) {
-  Manager.GetInteractor().onMouseMove(event.originalEvent.touches[0]);
-  event.preventDefault();
-});
-$("#viewport").bind('touchend', function(event) {
-  Manager.GetInteractor().onMouseUp(event.originalEvent.touches[0]);
- });
-
-$(window).keydown(function(event){
-  Manager.GetInteractor().onKeyboardDown(event);
-});
-
-$(window).keyup(function(event){
-  Manager.GetInteractor().onKeyboardUp(event);
-});
+module.exports = E_Manager;

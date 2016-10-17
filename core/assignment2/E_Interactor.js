@@ -61,10 +61,14 @@ E_Interactor.prototype.Update = function()
   camera.getWorldDirection(camDir);
   var camUp = camera.up.clone();
 
+
   var sideDir = camUp.cross(camDir.clone());
   switch (this.m_keyCode) {
     case -1:
       return;
+    break;
+    case 32:
+      this.Manager.GenerateObject(this.Manager.frand(-2.0, 2.0), this.Manager.frand(2.0, 3.0), this.Manager.frand(-2.0, 2.0));
     break;
     case 87: // W Key
       var nextPosition = camera.position.clone().add(camDir.clone().multiplyScalar(0.1));
