@@ -120,7 +120,7 @@ E_Manager.prototype.InitObject = function()
 
   var pointLight = new THREE.PointLight({color:0xffffff});
   pointLight.position.set(0, 5, 0);
-  var ambient = new THREE.AmbientLight({color:0x555555});
+  var ambient = new THREE.AmbientLight({color:0x000000});
 
   scene.add(pointLight);
   scene.add(ambient);
@@ -208,7 +208,7 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
 
   var newMesh = new E_Particle(this, 0.1);
   newMesh.position.set(x, y, z);
-  newMesh.material.color = new THREE.Color(Math.random() / 4, Math.random() / 4, Math.random() / 4);
+  newMesh.material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
   newMesh.m_colorFixed = true;
 
   var velFactor = 5;

@@ -49,20 +49,72 @@ E_ParticleSystem.prototype.Update = function()
 
 E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 {
-  var colPoint = plane.IsCollisionOccured(object, false);
+  // var colPoint = plane.IsCollisionOccured(object, false);
+  // if(!colPoint){
+  //   //Intersection with next position - in case of fast movement of the particle
+
+  var colPoint = this.IsPlaneObjectCollisionOccured(plane, object, false);
   if(!colPoint){
-    //Intersection with next position - in case of fast movement of the particle
-    colPoint = plane.IsCollisionOccured(object, true);
-    if(!colPoint){
-      return
-    }else{
-      this.OnCollision(object, plane, colPoint);
-      return;
-    }
+    colPoint = this.IsPlaneObjectCollisionOccured(plane, object, true);
+  }
+
+
+  if(!colPoint){
+    return
   }else{
     this.OnCollision(object, plane, colPoint);
+  }
+  // }else{
+  //   this.OnCollision(object, plane, colPoint);
+  //   return;
+  // }
+}
+
+E_ParticleSystem.prototype.IsPlaneObjectCollisionOccured = function(plane, object, nextPosition)
+{
+  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle){
+    console.error("not proper type");
     return;
   }
+
+  var p = plane.geometry.vertices[0];
+  var q = plane.geometry.vertices[1];
+  var r = plane.geometry.vertices[2];
+
+  var nP;
+  if(nextPosition){
+    nP = object.GetNextPosition();
+  }else{
+    nP = object.position.clone().add(object.velocity.clone().normalize().multiplyScalar(object.radius));
+  }
+
+  var u = q.clone().sub(p);
+  var v = r.clone().sub(p);
+
+  var a = object.GetPosition().clone().sub(nP);
+  var b = object.GetPosition().clone().sub(p);
+
+  var Const = 1 / (u.clone().cross(v.clone()).dot(a));
+
+  var s = Const * (a.clone().cross(b.clone()).dot(v));
+  var t = Const * -1 * (a.clone().cross(b.clone()).dot(u));
+  var l = Const * (u.clone().cross(v.clone()).dot(b));
+
+
+  if(s >= 0 && t >= 0  && l >= 0 && l <= 1 && s+t <= 1) { //if collision occured
+    // intersected point on the plane
+    var n = plane.GetNormal();
+    var v = nP.clone().sub(p);
+    var dist = n.clone().dot(v);
+
+    if(dist < 0) dist *= -1;
+    else n.multiplyScalar(-1);
+
+    var cP = plane.GetPlaneEquation(s, t);
+    var length = nP.clone().sub(cP).length();
+    return cP.add(n.clone().multiplyScalar( object.radius ) );
+  }
+  else return false;
 }
 
 E_ParticleSystem.prototype.OnCollision = function(object, plane, colPoint)
