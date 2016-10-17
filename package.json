@@ -9,6 +9,11 @@
     "browserify": "^13.1.0",
     "watchify": "^3.7.0"
   },
+  "repository" :
+  {
+    "type" : "git"
+    , "url" : "https://github.com/EJShim/ejshim.git"
+  },
   "scripts": {
     "build": "browserify core/assignment2/MainFrm.js -o public/PhysicsAnimation/assignment2/app.js"
   }

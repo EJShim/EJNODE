@@ -231,8 +231,12 @@ E_Manager.prototype.SaveThumbnail = function()
   if(elapsedTime < 15 || this.thumbnailSaved){
     return;
   }
-  this.thumbnailSaved = true;
 
+
+  this.thumbnailSaved = true;
+  console.log("Thumbnail Saved");
+
+  
   if(this.thumbnailSaved) return;
 	//var testCanvas = m_renderer.domElement.toDataURL();
 	var canvasData = this.GetRenderer().domElement.toDataURL();
