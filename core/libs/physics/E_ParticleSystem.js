@@ -35,7 +35,7 @@ E_ParticleSystem.prototype.remove = function( object )
 
 E_ParticleSystem.prototype.Update = function()
 {
-  for(var a = 0 ; a < 10 ; a++){
+  for(var a = 0 ; a < 2 ; a++){
     for(var i = 0  ; i < this.particleList.length ; i++){
       for(var j in this.planeList){
         this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
@@ -44,8 +44,11 @@ E_ParticleSystem.prototype.Update = function()
       for(var k = i+1 ; k < this.particleList.length ; k++){
         this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
       }
-      this.particleList[i].Update();
     }
+  }
+
+  for(var i=0 ; i<this.particleList.length ; i++){
+    this.particleList[i].Update();
   }
 }
 
