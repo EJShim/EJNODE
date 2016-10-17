@@ -13,6 +13,8 @@ var m_controls;
 var m_start = new Date();
 var m_shaderMaterial;
 
+var m_keyCode = -1;
+
 
 
 function Initialize()
@@ -185,6 +187,7 @@ function Animate()
   m_shaderMaterial.uniforms.camPos.value = m_camera.position;
   m_controls.update();
 
+  HandleKeyEvent();
   //RefreshThumbnail();
 }
 
@@ -226,3 +229,78 @@ THREE.Mesh.prototype.GetCenter = function()
 
   return position;
 }
+
+function OnKeyboardDown(event)
+{
+  m_keyCode = event.keyCode;
+}
+
+function OnKeyboardUp()
+{
+  m_keyCode = -1;
+}
+
+
+function HandleKeyEvent()
+{
+  if(m_scene.children.length < 6){
+    return;
+  }
+  
+  var object = m_scene.children[5];
+  var mat = object.matrix.clone();
+
+
+  switch (m_keyCode) {
+    case -1:
+      return;
+    break;
+    case 87: // w
+      mat.multiply(new THREE.Matrix4().makeTranslation(0, 0, 1));
+      object.position.setFromMatrixPosition(mat);
+    break;
+    case 32: // Space key
+      mat.multiply(new THREE.Matrix4().makeTranslation(0, 0, -1));
+      object.position.setFromMatrixPosition(mat);
+    break;
+    case 67: // c
+      mat.multiply(new THREE.Matrix4().makeTranslation(0, 1, 0));
+      object.position.setFromMatrixPosition(mat);
+    break;
+    case 83: // S key
+      mat.multiply(new THREE.Matrix4().makeTranslation(0, 0, -1));
+      object.position.setFromMatrixPosition(mat);
+    break;
+    case 65: // A key
+      mat.multiply(new THREE.Matrix4().makeTranslation(-1, 0, 0));
+      object.position.setFromMatrixPosition(mat);
+    break;
+    case 68: // D Key
+      mat.multiply(new THREE.Matrix4().makeTranslation(1, 0, 0));
+      object.position.setFromMatrixPosition(mat);
+    break;
+    case 81: // Q
+      mat.multiply(new THREE.Matrix4().makeRotationZ(0.01));
+      object.rotation.setFromRotationMatrix(mat);
+
+    break;
+    case 69: // E Key
+      mat.multiply(new THREE.Matrix4().makeRotationZ(-0.01));
+      object.rotation.setFromRotationMatrix(mat);
+    break;
+    default:
+    break;
+  }
+
+    Render();
+}
+
+
+
+$(window).keydown(function(event){
+  OnKeyboardDown(event);
+});
+
+$(window).keyup(function(event){
+  OnKeyboardUp(event);
+});
