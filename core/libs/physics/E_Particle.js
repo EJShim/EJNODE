@@ -15,7 +15,7 @@ function E_Particle(Mgr, radius){
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
   this.mass = 1;
 
-  this.elasticity = 0.9;
+  this.elasticity = 0.1;
 
   //Informations
   this.lifeSpan = 30000000000000;

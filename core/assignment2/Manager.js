@@ -134,7 +134,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 3;
+  var scaleFactor = 1;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -224,7 +224,6 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
 
 
   //log
-  this.SetLog("Number of Particles : " + this.ParticleSystem().particleList.length);
 
 }
 

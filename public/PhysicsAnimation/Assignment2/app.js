@@ -284,7 +284,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 3;
+  var scaleFactor = 1;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -374,7 +374,6 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
 
 
   //log
-  this.SetLog("Number of Particles : " + this.ParticleSystem().particleList.length);
 
 }
 
@@ -545,7 +544,7 @@ function E_Particle(Mgr, radius){
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
   this.mass = 1;
 
-  this.elasticity = 0.9;
+  this.elasticity = 0.1;
 
   //Informations
   this.lifeSpan = 30000000000000;
@@ -679,10 +678,13 @@ E_ParticleSystem.prototype.remove = function( object )
 
 E_ParticleSystem.prototype.Update = function()
 {
-  for(var a = 0 ; a < 2 ; a++){
+
+  for(var a = 0 ; a < 5 ; a++){
     for(var i = 0  ; i < this.particleList.length ; i++){
-      for(var j in this.planeList){
-        this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
+      if(a == 0){
+        for(var j in this.planeList){
+          this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
+        }
       }
 
       for(var k = i+1 ; k < this.particleList.length ; k++){
@@ -730,6 +732,8 @@ E_ParticleSystem.prototype.IsPlaneObjectCollisionOccured = function(plane, objec
   if(chk < 0) n.multiplyScalar(-1);
 
   var nP, curP;
+
+
   if(nextPosition){
     nP = object.GetNextPosition().clone().add( n.clone().multiplyScalar(object.radius) ) ;
     curP = object.GetPosition().clone().add( n.clone().multiplyScalar(object.radius) ) ;
@@ -796,6 +800,7 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
   var posA = objectA.GetNextPosition();
   var posB = objectB.GetNextPosition();
 
+  //penetration
   var z = posB.clone().sub(posA).length() - (objectA.radius + objectB.radius);
   //If Collision
   if(z < 0){
@@ -807,16 +812,26 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
     //
     // var VbN = n.clone().multiplyScalar(objectB.velocity.clone().dot(n));
     // var VbT = objectB.velocity.clone().sub(VbN);
-
+    //this.Manager.SetLog( Math.abs(z) * 1000 / (objectA.radius + objectB.radius) );
     var Uminus = (objectB.velocity.clone().sub(objectA.velocity).dot(n) );
-    var e = (objectB.elasticity + objectA.elasticity);
+    var e = Math.abs(z) * 300 / (objectA.radius + objectB.radius);
+    this.Manager.SetLog( e );
 
-    var j = (e)*(objectA.mass*objectB.mass / (objectA.mass+objectB.mass) )
+    var j = (1+e)*(objectA.mass*objectB.mass / (objectA.mass+objectB.mass) )
     var E = n.clone().multiplyScalar(j);
 
+    var velA = objectA.velocity.clone();
+    var velB = objectB.velocity.clone();
 
-    objectB.ApplyImpulse(E)
-    objectA.ApplyImpulse(E.multiplyScalar(-1));
+    velA.sub(n.clone().multiplyScalar(j/objectA.mass));
+    velB.add(n.clone().multiplyScalar(j/objectB.mass));
+
+    objectA.velocity.set(velA.x, velA.y, velA.z);
+    objectB.velocity.set(velB.x, velB.y, velB.z);
+
+
+    //objectB.ApplyImpulse(E)
+    //objectA.ApplyImpulse(E.multiplyScalar(-1));
 
     objectB.m_bCollided = true;
   }
