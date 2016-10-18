@@ -36,7 +36,13 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
 E_SpringDamper.prototype.Update = function()
 {
   //Calculate The amount of Stretc
-  if(this.objects.length != 2) return;
+  if(this.objects[0].parent == null && this.objects[1].parent == null){
+    this.Manager.ParticleSystem().remove(this);
+    this.Manager.GetScene().remove(this);
+  }
+  if(this.objects.length != 2){
+    return;
+  }
 
   //Update Line Shape
   this.geometry.verticesNeedUpdate = true;

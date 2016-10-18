@@ -2,6 +2,7 @@ var E_Interactor = require('./E_Interactor.js');
 var E_Particle = require("../libs/physics/E_Particle.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
+var E_SpringDamper = require("../libs/physics/E_SpringDamper.js");
 
 function E_Manager()
 {
@@ -128,7 +129,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 1;
+  var scaleFactor = 5;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -200,25 +201,39 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var newMesh = new E_Particle(this, 0.1);
-  newMesh.position.set(x, y, z);
-  newMesh.material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
-  newMesh.m_colorFixed = true;
+  var con = 3;
+  var list = [];
+  for(var i=0 ; i<con ; i++){
+    list[i] = [];
+    for(var j=0 ; j<con ; j++){
+      list[i][j] = new E_Particle(this, 0.1);
+      list[i][j].position.set(x, y, z);
+      list[i][j].material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
+      list[i][j].m_colorFixed = true;
+      list[i][j].elasticity = 0.9;
+      var velFactor = 5;
+      list[i][j].velocity.set( this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor) );
 
-  var velFactor = 5;
-  newMesh.velocity.set( this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor) );
+      scene.add(list[i][j]);
+      system.add(list[i][j]);
 
-  scene.add(newMesh);
-  system.add(newMesh);
-  // scene.add(newMesh2);
-  // scene.add(spring);
+      if(j > 0){
+        var spring = new E_SpringDamper(this);
+        spring.AddMesh(list[i][j]);
+        spring.AddMesh(list[i][j-1]);
+        scene.add(spring);
+        system.add(spring);
+      }
 
-  //Impulse
-  //newMesh.ApplyImpulse(raycaster.ray.direction.clone().normalize().multiplyScalar(0));
-
-
-  //log
-
+      if(i > 0){
+        var spring = new E_SpringDamper(this);
+        spring.AddMesh(list[i][j]);
+        spring.AddMesh(list[i-1][j]);
+        scene.add(spring);
+        system.add(spring);
+      }
+    }
+  }
 }
 
 E_Manager.prototype.SetLog = function(string)

@@ -1,5 +1,6 @@
 var E_Particle = require("./E_Particle.js");
 var E_FinitePlane = require("./E_FinitePlane.js");
+var E_SpringDamper = require("./E_SpringDamper.js");
 
 function E_ParticleSystem(Mgr)
 {
@@ -7,6 +8,7 @@ function E_ParticleSystem(Mgr)
 
   this.particleList = [];
   this.planeList = [];
+  this.springList = [];
 }
 
 E_ParticleSystem.prototype.add = function( object )
@@ -17,6 +19,8 @@ E_ParticleSystem.prototype.add = function( object )
   }
   else if(object instanceof E_FinitePlane){
     this.planeList.push(object);
+  }else if(object instanceof E_SpringDamper){
+    this.springList.push(object);
   }else{
     return;
   }
@@ -24,8 +28,6 @@ E_ParticleSystem.prototype.add = function( object )
 
 E_ParticleSystem.prototype.remove = function( object )
 {
-
-
   if(object instanceof E_Particle){
     var idx = this.particleList.indexOf(object);
     this.particleList.splice(idx, 1);
@@ -33,6 +35,9 @@ E_ParticleSystem.prototype.remove = function( object )
   }else if(object instanceof E_FinitePlane){
     var idx = this.planeList.indexOf(object);
     this.planeList.splice(idx, 1);
+  }else if(object instanceof E_SpringDamper){
+    var idx = this.springList.indexOf(object);
+    this.springList.splice(idx, 1);
   }
 }
 
@@ -43,6 +48,7 @@ E_ParticleSystem.prototype.Update = function()
   for(var a = 0 ; a < 3 ; a++){
     for(var i = 0  ; i < this.particleList.length ; i++){
       if(a == 0){
+        //Update Plane Collision
         for(var j in this.planeList){
           this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
         }
@@ -56,6 +62,10 @@ E_ParticleSystem.prototype.Update = function()
 
   for(var i=0 ; i<this.particleList.length ; i++){
     this.particleList[i].Update();
+  }
+
+  for(var i=0 ; i<this.springList.length ; i++){
+    this.springList[i].Update();
   }
 }
 
