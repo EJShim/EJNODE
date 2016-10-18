@@ -221,6 +221,16 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
 
   //Impulse
   //newMesh.ApplyImpulse(raycaster.ray.direction.clone().normalize().multiplyScalar(0));
+
+
+  //log
+  this.SetLog("Number of Particles : " + this.ParticleSystem().particleList.length);
+
+}
+
+E_Manager.prototype.SetLog = function(string)
+{
+  document.getElementById("log").innerHTML = string;
 }
 
 

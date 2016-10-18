@@ -15,7 +15,7 @@ function E_Particle(Mgr, radius){
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
   this.mass = 1;
 
-  this.elasticity = 0.6;
+  this.elasticity = 0.9;
 
   //Informations
   this.lifeSpan = 30000000000000;
@@ -51,6 +51,7 @@ E_Particle.prototype.ApplyImpulse = function(force)
 E_Particle.prototype.Update = function()
 {
   if(!this.visible) {
+    this.Manager.particleList().remove(this);
     this.Manager.GetScene().remove(this);
     return;
   }
@@ -86,6 +87,7 @@ E_Particle.prototype.Update = function()
   //Remove Particle When
   if(new Date() - this.startTime > this.lifeSpan || this.position.y < -10){
     this.Manager.GetScene().remove(this);
+    this.Manager.ParticleSystem().remove(this);
   }
 }
 
