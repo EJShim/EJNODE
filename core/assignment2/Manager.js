@@ -19,7 +19,6 @@ function E_Manager()
 
   this.then = new Date();
   this.interval = 1000 / 60;
-  this.temp = 0;
 
   //Time Step for Rendering
   this.timeStep = 0;
@@ -77,7 +76,7 @@ E_Manager.prototype.Animate = function()
   if(this.delta > this.interval){
     //Update Time Step
     this.timeStep = (now - this.prevTime) / 1000;
-    if(this.timeStep > 1/this.interval) this.timeStep = 1/this.interval;
+    if(this.timeStep > this.interval/1000) this.timeStep = this.interval / 1000;
 
     this.ParticleSystem().Update();
 
@@ -88,19 +87,14 @@ E_Manager.prototype.Animate = function()
     renderer.render(scene, camera);
 
     this.prevTime = now;
+    this.then = now - (this.delta % this.interval);
+    //this.then = now - (this.delta % this.interval);
   }
 
 
   //Update Interactor
   var interactor = this.GetInteractor();
   interactor.Update();
-
-  //generate Random Object
-  this.temp++;
-  if(this.temp == 10){
-    //this.GenerateObject(this.frand(-2.0, 2.0), this.frand(2.0, 3.0), this.frand(-2.0, 2.0));
-    this.temp = 0;
-  }
 
   this.SaveThumbnail();
 

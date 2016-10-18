@@ -40,7 +40,7 @@ E_ParticleSystem.prototype.remove = function( object )
 E_ParticleSystem.prototype.Update = function()
 {
 
-  for(var a = 0 ; a < 5 ; a++){
+  for(var a = 0 ; a < 3 ; a++){
     for(var i = 0  ; i < this.particleList.length ; i++){
       if(a == 0){
         for(var j in this.planeList){
