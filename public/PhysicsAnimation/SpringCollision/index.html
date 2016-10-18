@@ -1,0 +1,59 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<title> Particle Simulation </title>
+	<meta name="generator" content="Bootply" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<!--[if lt IE 9]>
+	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body style="margin:0; padding:0">
+
+	<div style="position:absolute; left:5%; top:10%" id = "log"> Number of Particles : </div>
+	<canvas id = "viewport"></canvas>
+
+	<!---script area -->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"></script>
+	<script src="../../libs/Math//three.js"></script>
+	<script src="../../libs/TrackballControls.js"></script>
+	<script src="../../libs/STLLoader.js"></script>
+	<link href="style.css" rel="stylesheet">
+
+
+<!-- Vertex Shader Shader -->
+	<script type="x-shader/x-vertex" id="shader-vertex">
+	#ifdef GL_ES
+	precision highp float;
+	#endif
+	// switch on high precision floats
+
+	varying vec3 vPosition;
+
+
+	void main()
+	{
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+		vPosition = normal;
+	}
+	</script>
+<!--Fragment Shader-->
+	<script type="x-shader/x-fragment" id="shader-fragment">
+	#ifdef GL_ES
+	precision highp float;
+	#endif
+
+	varying vec3 vPosition;
+	void main()
+	{
+		gl_FragColor 	= vec4(normalize(vPosition) ,1.0);
+	}
+	</script>
+  <!--- Managers -->
+
+	<script type="text/javascript" src="app.js"></script>
+
+</body>
+</html>
