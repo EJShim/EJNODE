@@ -10,7 +10,7 @@ function E_Manager()
 
   var m_scene =  new THREE.Scene();
 
-  var m_camera = []
+  var m_camera = [];
   m_camera[this.VIEW_CAM] = new THREE.PerspectiveCamera( 45, $("#viewport1").width()/$("#viewport1").height(), 0.1, 1200 );
   m_camera[this.VIEW_CAM].userData.axis = new E_Axis();
   m_camera[this.VIEW_CAM].userData.axis.matrixAutoUpdate = false;

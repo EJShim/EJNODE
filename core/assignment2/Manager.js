@@ -8,7 +8,7 @@ function E_Manager()
   var canvas = document.getElementById("viewport");
   var m_scene = new THREE.Scene();
   var m_camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 100000 );
-  var m_renderer = new THREE.WebGLRenderer({canvas:canvas, preserveDrawingBuffer: true, antialias: true});
+  var m_renderer = new THREE.WebGLRenderer({canvas:canvas, preserveDrawingBuffer: true, antialias: true, alpha:true});
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
@@ -61,7 +61,7 @@ E_Manager.prototype.Initialize = function()
 {
   var renderer = this.GetRenderer();
   //init renderrer
-  renderer.setClearColor(0xffffff, 1);
+  //renderer.setClearColor(0xffffff, 1);
   renderer.setSize(window.innerWidth, window.innerHeight );
 
   //Initialize Object
