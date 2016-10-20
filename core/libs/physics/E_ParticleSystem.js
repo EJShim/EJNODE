@@ -45,20 +45,20 @@ E_ParticleSystem.prototype.remove = function( object )
 E_ParticleSystem.prototype.Update = function()
 {
 
-  for(var a = 0 ; a < 3 ; a++){
+
     for(var i = 0  ; i < this.particleList.length ; i++){
-      if(a == 0){
+
         //Update Plane Collision
         for(var j in this.planeList){
           this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
         }
-      }
+
 
       for(var k = i+1 ; k < this.particleList.length ; k++){
         this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
       }
     }
-  }
+
 
   for(var i=0 ; i<this.particleList.length ; i++){
     this.particleList[i].Update();
@@ -175,33 +175,23 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
   var z = posB.clone().sub(posA).length() - (objectA.radius + objectB.radius);
   //If Collision
   if(z < 0){
-    var n = posB.clone().sub(posA).multiplyScalar( posB.clone().sub(posA).length() );
+    //Normal
+    var n = posB.clone().sub(posA).normalize();
+    var curVel = (objectB.velocity.clone().sub(objectA.velocity).dot(n) );
 
-    // var VaN = n.clone().multiplyScalar(objectA.velocity.clone().dot(n));
-    // var VaT = objectA.velocity.clone().sub(VaN);
-    // //Va = VaN + VaT
-    //
-    // var VbN = n.clone().multiplyScalar(objectB.velocity.clone().dot(n));
-    // var VbT = objectB.velocity.clone().sub(VbN);
-    //this.Manager.SetLog( Math.abs(z) * 1000 / (objectA.radius + objectB.radius) );
-    var Uminus = (objectB.velocity.clone().sub(objectA.velocity).dot(n) );
-    var e = Math.abs(z) * 300 / (objectA.radius + objectB.radius);
+    //Elasticity
+    var avgElasticity = (objectA.elasticity + objectB.elasticity) / 2;
+    var e = avgElasticity;
 
-    var j = (1+e)*(objectA.mass*objectB.mass / (objectA.mass+objectB.mass) )
-    var E = n.clone().multiplyScalar(j);
-
-    var velA = objectA.velocity.clone();
-    var velB = objectB.velocity.clone();
-
-    velA.sub(n.clone().multiplyScalar(j/objectA.mass));
-    velB.add(n.clone().multiplyScalar(j/objectB.mass));
-
-    objectA.velocity.set(velA.x, velA.y, velA.z);
-    objectB.velocity.set(velB.x, velB.y, velB.z);
+    //J-Impulse, E-force
+    var j = (1+e)*(objectA.mass*objectB.mass)*curVel / (objectA.mass+objectB.mass);
+    var E = n.clone().multiplyScalar( j );
 
 
-    //objectB.ApplyImpulse(E)
-    //objectA.ApplyImpulse(E.multiplyScalar(-1));
+
+    //Apply Impulse
+    objectA.ApplyImpulse(E)
+    objectB.ApplyImpulse(E.multiplyScalar(-1));
 
     objectB.m_bCollided = true;
   }

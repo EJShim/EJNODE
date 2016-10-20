@@ -15,6 +15,6 @@
     , "url" : "https://github.com/EJShim/ejshim.git"
   },
   "scripts": {
-    "build": "browserify core/SpringCollision/MainFrm.js -o public/PhysicsAnimation/SpringCollision/app.js"
+    "build": "browserify core/assignment2/MainFrm.js -o public/PhysicsAnimation/assignment2/app.js"
   }
 }

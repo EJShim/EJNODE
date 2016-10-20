@@ -44,7 +44,7 @@ E_Particle.prototype.ApplyImpulse = function(force)
   //this.acceleration.add(force.divideScalar(this.mass));
   var acc = new THREE.Vector3(0, 0, 0);
   acc.add(force.divideScalar(this.mass));
-  this.velocity.add(acc.clone().multiplyScalar(1));
+  this.velocity.add(acc);
 }
 
 

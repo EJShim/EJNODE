@@ -162,6 +162,10 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     scene.add(this.groundMesh[i]);
     system.add(this.groundMesh[i]);
   }
+
+  for(var i=0 ; i<50 ; i++){
+    //this.GenerateObject(this.frand(-2.0, 2.0), this.frand(2.0, 3.0), this.frand(-2.0, 2.0));
+  }
 }
 
 E_Manager.prototype.ResetGround = function()
