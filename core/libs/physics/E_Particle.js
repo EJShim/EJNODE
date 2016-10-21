@@ -4,7 +4,7 @@ function E_Particle(Mgr, radius){
   if(radius == null) radius = 15;
   this.radius = radius;
   this.geometry = new THREE.SphereGeometry(radius, 32, 32);
-  this.material = new THREE.MeshPhongMaterial({color: 0xffff00});
+  this.material = new THREE.MeshPhongMaterial({color: 0xffff00, shininess:80});
 
 
   this.Manager = Mgr;

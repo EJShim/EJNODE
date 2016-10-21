@@ -113,7 +113,7 @@ E_Manager.prototype.InitObject = function()
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   var pointLight = new THREE.PointLight({color:0xffffff});
-  pointLight.position.set(0, 5, 0);
+  pointLight.position.set(10, 50, 0);
   var ambient = new THREE.AmbientLight({color:0x000000});
 
   scene.add(pointLight);

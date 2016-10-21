@@ -188,7 +188,7 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
     //use Z* 20 instead of curVel;
 
     //J-Impulse, E-force
-    var j = (1+e)*(objectA.mass*objectB.mass) * z * 30/ (objectA.mass+objectB.mass);
+    var j = (1+e)*(objectA.mass*objectB.mass) * z * 60/ (objectA.mass+objectB.mass);
     var E = n.clone().multiplyScalar( j );
 
 
