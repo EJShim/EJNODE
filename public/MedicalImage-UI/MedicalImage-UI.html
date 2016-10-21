@@ -85,6 +85,7 @@
   #endif
 
   varying vec3 vNormal;
+  varying vec3 vPosition;
 
   void main()
   {
@@ -92,6 +93,8 @@
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
     vNormal = normal;
+    vPosition = position;
+
 
   }
   </script>
@@ -101,10 +104,16 @@
   #endif
 
   varying vec3 vNormal;
+  varying vec3 vPosition;
 
   void main()
   {
-    gl_FragColor 	= vec4(vNormal ,1.0);
+    float opacity = 1.0;
+
+    if(vPosition.x < 0.0){
+      opacity = 0.2;
+    }
+    gl_FragColor 	= vec4(vNormal ,opacity);
   }
   </script>
 

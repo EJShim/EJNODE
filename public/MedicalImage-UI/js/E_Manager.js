@@ -74,7 +74,7 @@ E_Manager.prototype.Init = function()
   var view2 = document.getElementById("viewport2");
 
 
-  renderer.setClearColor(0x000000, 1);
+  renderer.setClearColor(0x000000, 0);
   renderer.setSize(view1.clientWidth + view1.clientHeight, window.innerHeight);
 
   //init controls
@@ -135,7 +135,7 @@ E_Manager.prototype.Redraw = function()
 
       renderer.setViewport( left, bottom, width, height );
       renderer.setScissor( left, bottom, width, height );
-      renderer.setClearColor(color[scenes.indexOf(scene)]);
+      renderer.setClearColor(color[scenes.indexOf(scene)], scenes.indexOf(scene));
 
 
       if(scenes.indexOf(scene) == VIEW_MAIN && volMgr.m_selectedVolumeIdx != -1 && that.m_isDoublePassRendering){
@@ -291,10 +291,14 @@ E_Manager.prototype.Redraw = function()
   {
     if(name == null) name = "mesh_unnamed";
 
-    //var material = this.Manager.GetShaderMaterial();
+    var material = this.Manager.GetShaderMaterial();
+    material.side = THREE.DoubleSide;
+    material.transparent = true;
+
     geometry.computeVertexNormals();
-    var material = new THREE.MeshPhongMaterial({color:0xff0000, shading:THREE.SmoothShading, shininess:30, specular:0xaaaaaa});
+    //var material = new THREE.MeshPhongMaterial({color:0xff0000, shading:THREE.SmoothShading, shininess:30, specular:0xaaaaaa});
     var mesh = new THREE.Mesh(geometry, material);
+    console.log(new THREE.MeshPhongMaterial());
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;

@@ -16,6 +16,10 @@ var m_shaderMaterial;
 var m_keyCode = -1;
 
 
+var m_selectedMesh = null;
+var m_bones = []
+var detector
+
 
 function Initialize()
 {
@@ -122,7 +126,7 @@ function DrawGeometry()
   //add detector Plane
   var geometry = new THREE.BoxGeometry( 500, 5, 900 );
   var material = new THREE.MeshPhongMaterial( { color:'white', shininess:0, specular:0x000000 } );
-  var detector = new THREE.Mesh( geometry, material );
+  detector = new THREE.Mesh( geometry, material );
   detector.position.z = -750;
   detector.receiveShadow = true;
 
@@ -147,6 +151,7 @@ function LoadMesh(geometry)
 
   var material = new THREE.MeshPhongMaterial( {color: 'blue',shininess: 100, specular: 0x222222} );
   var mesh = new THREE.Mesh(geometry, material);
+  m_bones.push(mesh);
 
   mesh.castShadow = true;
   // mesh.receiveShadow = true;
@@ -185,7 +190,9 @@ function Animate()
   requestAnimationFrame( Animate );
 
   m_shaderMaterial.uniforms.camPos.value = m_camera.position;
-  m_controls.update();
+  if(m_selectedMesh == null){
+    m_controls.update();
+  }
 
   HandleKeyEvent();
   //RefreshThumbnail();
@@ -230,6 +237,25 @@ THREE.Mesh.prototype.GetCenter = function()
   return position;
 }
 
+function SelectObject(x, y)
+{
+  var camera = m_camera;
+  var scene = m_scene;
+
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2(x, y);
+
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(m_bones);
+  if(intersects.length > 0){
+
+    for(var i in intersects){
+      m_selectedMesh = intersects[0].object;
+      break;
+    }
+  }
+}
+
 function OnKeyboardDown(event)
 {
   m_keyCode = event.keyCode;
@@ -246,7 +272,7 @@ function HandleKeyEvent()
   if(m_scene.children.length < 6){
     return;
   }
-  
+
   var object = m_scene.children[5];
   var mat = object.matrix.clone();
 
@@ -294,6 +320,64 @@ function HandleKeyEvent()
 
     Render();
 }
+
+m_prevPosition = new THREE.Vector2(0.0);
+
+
+function onMouseDown(event){
+
+
+  var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  //Check if Object is Selected;
+  SelectObject(mouseX, mouseY);
+
+  //Store Position;
+  m_prevPosition.x = mouseX;
+  m_prevPosition.y = mouseY;
+}
+
+function onMouseMove(event){
+  if(m_selectedMesh == null) return;
+
+  //Get Current position
+  var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  var currentPosition = new THREE.Vector2(mouseX, mouseY);
+
+  //alert(mouseX + "," + mouseY);
+
+  var delta = currentPosition.clone().sub(m_prevPosition.clone());
+  delta.multiplyScalar(1000);
+
+  var mat = m_selectedMesh.matrix.clone();
+  mat.multiply(new THREE.Matrix4().makeTranslation(delta.x, 0,  delta.y));
+  m_selectedMesh.position.setFromMatrixPosition(mat);
+
+  m_prevPosition = currentPosition;
+
+  Render();
+}
+
+function onMouseUp(event)
+{
+  m_selectedMesh = null;
+}
+
+
+//Event Handlers
+$("#viewport").mousedown(function(event){
+  onMouseDown(event);
+});
+
+$("#viewport").mousemove(function(event){
+  onMouseMove(event);
+});
+
+$("#viewport").mouseup(function(event){
+  onMouseUp(event);
+});
 
 
 
