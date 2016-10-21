@@ -14,9 +14,8 @@ function E_Manager()
   m_scene[VIEW_2D_AXL] = new THREE.Scene();
 
   var m_camera = []
-  m_camera[VIEW_MAIN] = new THREE.PerspectiveCamera( 45, $("#viewport").width()/$("#viewport").height(), 0.1, 10000 );
+  m_camera[VIEW_MAIN] = new THREE.PerspectiveCamera( 45, $("#viewport").width()/$("#viewport").height(), 0.1, 10000000000 );
   m_camera[VIEW_2D_AXL] = new THREE.OrthographicCamera( $("#viewport2").width() / - 2, $("#viewport2").width() / 2, $("#viewport2").height() / 2, $("#viewport2").height() / - 2, - 300, 1000 );
-
 
   var m_control = new THREE.TrackballControls(m_camera[VIEW_MAIN], document.getElementById("viewport"));
 
@@ -151,8 +150,6 @@ E_Manager.prototype.Redraw = function()
       }
       //renderer.setRenderTarget(null);
       renderer.render( scene, that.GetCamera( scenes.indexOf(scene) ) );
-
-
     });
 
 
@@ -294,11 +291,14 @@ E_Manager.prototype.Redraw = function()
     var material = this.Manager.GetShaderMaterial();
     material.side = THREE.DoubleSide;
     material.transparent = true;
+    material.depthTest = true;
+    material.depthWrite = true;
+
+    console.log(material.depthWrite);
 
     geometry.computeVertexNormals();
     //var material = new THREE.MeshPhongMaterial({color:0xff0000, shading:THREE.SmoothShading, shininess:30, specular:0xaaaaaa});
     var mesh = new THREE.Mesh(geometry, material);
-    console.log(new THREE.MeshPhongMaterial());
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;

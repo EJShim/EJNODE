@@ -5,9 +5,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
   <link href="css/style.css" rel="stylesheet">
   <link href="css/listgroup.css" rel="stylesheet">
 </head>
@@ -90,12 +92,9 @@
   void main()
   {
     //vNormal = normalMatrix*normal;
-
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
     vNormal = normal;
     vPosition = position;
-
-
   }
   </script>
   <script type="x-shader/x-fragment" id="shader-fragment">
@@ -110,7 +109,7 @@
   {
     float opacity = 1.0;
 
-    if(vPosition.x < 0.0){
+    if(vPosition.x < 10.0){
       opacity = 0.2;
     }
     gl_FragColor 	= vec4(vNormal ,opacity);
