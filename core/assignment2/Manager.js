@@ -128,7 +128,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 0.7;
+  var scaleFactor = 0.8;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -204,7 +204,8 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var newMesh = new E_Particle(this, 0.1);
+  var newMesh = new E_Particle(this, this.frand(0.1,0.2));
+  newMesh.lifeSpan = 60000;
   newMesh.position.set(x, y, z);
   newMesh.material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
   newMesh.m_colorFixed = true;

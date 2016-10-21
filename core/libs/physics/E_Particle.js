@@ -13,7 +13,7 @@ function E_Particle(Mgr, radius){
   //Dynamics
   this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.mass = 1;
+  this.mass = radius * 10;
 
   this.elasticity = 0.1;
 
