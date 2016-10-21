@@ -46,18 +46,18 @@ E_ParticleSystem.prototype.Update = function()
 {
 
 
-    for(var i = 0  ; i < this.particleList.length ; i++){
+  for(var i = 0  ; i < this.particleList.length ; i++){
 
-        //Update Plane Collision
-        for(var j in this.planeList){
-          this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
-        }
-
-
-      for(var k = i+1 ; k < this.particleList.length ; k++){
-        this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
+      //Update Plane Collision
+      for(var j in this.planeList){
+        this.PlaneCollisionDetection(this.particleList[i], this.planeList[j]);
       }
+
+
+    for(var k = i+1 ; k < this.particleList.length ; k++){
+      this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
     }
+  }
 
 
   for(var i=0 ; i<this.particleList.length ; i++){
@@ -179,12 +179,16 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
     var n = posB.clone().sub(posA).normalize();
     var curVel = (objectB.velocity.clone().sub(objectA.velocity).dot(n) );
 
+
     //Elasticity
     var avgElasticity = (objectA.elasticity + objectB.elasticity) / 2;
     var e = avgElasticity;
 
+
+    //use Z* 20 instead of curVel;
+
     //J-Impulse, E-force
-    var j = (1+e)*(objectA.mass*objectB.mass)*curVel / (objectA.mass+objectB.mass);
+    var j = (1+e)*(objectA.mass*objectB.mass) * z * 30/ (objectA.mass+objectB.mass);
     var E = n.clone().multiplyScalar( j );
 
 

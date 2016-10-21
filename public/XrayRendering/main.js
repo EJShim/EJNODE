@@ -25,13 +25,13 @@ function Initialize()
 {
   m_scene = new THREE.Scene();
   m_camera = new THREE.PerspectiveCamera( 45, $("#viewport").width()/$("#viewport").height(), 0.1, 100000 );
-  m_renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, antialias: true});
+  m_renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, antialias: true, alpha:true});
   m_renderer.shadowMap.enabled = true;
   m_renderer.shadowMap.type = THREE.BasicShadowMap;
   m_controls = new THREE.TrackballControls(m_camera);
 
   //init renderrer
-  m_renderer.setClearColor(0xffffff, 1);
+  m_renderer.setClearColor(0xffffff, 0);
   m_renderer.setSize(window.innerWidth, window.innerHeight );
   document.getElementById("viewport").appendChild( m_renderer.domElement );
 
@@ -59,7 +59,10 @@ function Initialize()
     fragmentShader: $('#shader-fragment').text()
   });
 
-  m_camera.position.z = 1000;
+
+  m_camera.position.y = -3000;
+
+
 
   DrawGeometry();
 
@@ -113,7 +116,7 @@ function DrawGeometry()
   shadowCameraHelper.material.linewidth = 5.0;
   m_scene.add(shadowCameraHelper);
 
-  console.log(shadowCameraHelper);
+
 
   var lightGeometry = new THREE.SphereGeometry( 19, 12, 6 );
   var lightMaterial = new THREE.MeshBasicMaterial( { color: 'red' } );
@@ -149,7 +152,7 @@ function ImportMesh(path)
 function LoadMesh(geometry)
 {
 
-  var material = new THREE.MeshPhongMaterial( {color: 'blue',shininess: 100, specular: 0x222222} );
+  var material = new THREE.MeshPhongMaterial( {color: 0xdeceaf,shininess: 100, specular: 0x222222} );
   var mesh = new THREE.Mesh(geometry, material);
   m_bones.push(mesh);
 
@@ -210,6 +213,8 @@ function RefreshThumbnail()
 
 function Render()
 {
+  //console.log(m_camera.position);
+  //console.log(m_camera.rotation);
   m_renderer.render(m_scene, m_camera);
 }
 
