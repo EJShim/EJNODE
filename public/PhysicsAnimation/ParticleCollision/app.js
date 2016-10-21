@@ -69,7 +69,8 @@ E_Interactor.prototype.Update = function()
       return;
     break;
     case 32:
-      this.Manager.GenerateObject(this.Manager.frand(-2.0, 2.0), this.Manager.frand(2.0, 3.0), this.Manager.frand(-2.0, 2.0));
+    //this.Manager.frand(-2.0, 2.0), this.Manager.frand(2.0, 3.0), this.Manager.frand(-2.0, 2.0)
+      this.Manager.GenerateObject(0, 0, 0);
     break;
     case 87: // W Key
       var nextPosition = camera.position.clone().add(camDir.clone().multiplyScalar(0.1));
@@ -278,7 +279,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 1;
+  var scaleFactor = 0.9;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
