@@ -140,17 +140,17 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   vertices[7] = new THREE.Vector3( scaleFactor, scaleFactor, scaleFactor );
 
 
-  //ground
-    this.groundMesh[0] = new E_FinitePlane( vertices[0],vertices[1],vertices[2] );
-    this.groundMesh[1] = new E_FinitePlane( vertices[1],vertices[2],vertices[4] );
-    this.groundMesh[2] = new E_FinitePlane( vertices[0],vertices[1],vertices[5] );
-    this.groundMesh[3] = new E_FinitePlane( vertices[0],vertices[3],vertices[5] );
-    this.groundMesh[4] = new E_FinitePlane( vertices[0],vertices[2],vertices[6] );
-    this.groundMesh[5] = new E_FinitePlane( vertices[0],vertices[6],vertices[3] );
-    this.groundMesh[6] = new E_FinitePlane( vertices[1],vertices[4],vertices[7] );
-    this.groundMesh[7] = new E_FinitePlane( vertices[1],vertices[7],vertices[5] );
-    this.groundMesh[8] = new E_FinitePlane( vertices[3],vertices[5],vertices[6] );
-    this.groundMesh[9] = new E_FinitePlane( vertices[5],vertices[6],vertices[7] );
+  //Cube Box
+  this.groundMesh[0] = new E_FinitePlane( vertices[0],vertices[1],vertices[2] );
+  this.groundMesh[1] = new E_FinitePlane( vertices[1],vertices[2],vertices[4] );
+  this.groundMesh[2] = new E_FinitePlane( vertices[0],vertices[1],vertices[5] );
+  this.groundMesh[3] = new E_FinitePlane( vertices[0],vertices[3],vertices[5] );
+  this.groundMesh[4] = new E_FinitePlane( vertices[0],vertices[2],vertices[6] );
+  this.groundMesh[5] = new E_FinitePlane( vertices[0],vertices[6],vertices[3] );
+  this.groundMesh[6] = new E_FinitePlane( vertices[1],vertices[4],vertices[7] );
+  this.groundMesh[7] = new E_FinitePlane( vertices[1],vertices[7],vertices[5] );
+  this.groundMesh[8] = new E_FinitePlane( vertices[3],vertices[5],vertices[6] );
+  this.groundMesh[9] = new E_FinitePlane( vertices[5],vertices[6],vertices[7] );
 
 
 
@@ -164,9 +164,18 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  for(var i=0 ; i<50 ; i++){
-    //this.GenerateObject(this.frand(-2.0, 2.0), this.frand(2.0, 3.0), this.frand(-2.0, 2.0));
-  }
+  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
+  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor*2, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
+  var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+
+  realGround.material.color = groundColor;
+  realGround2.material.color = groundColor;
+
+  scene.add(realGround);
+  system.add(realGround);
+
+  scene.add(realGround2);
+  system.add(realGround2);
 }
 
 E_Manager.prototype.ResetGround = function()
