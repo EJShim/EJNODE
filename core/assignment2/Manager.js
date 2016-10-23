@@ -157,6 +157,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   for(var i=0 ; i<10 ; i++){
     this.groundMesh[i].material.transparent = true;
     this.groundMesh[i].material.opacity = 0.2;
+    this.groundMesh[i].material.side = THREE.DoubleSide;
     this.groundMesh[i].material.color = new THREE.Color(Math.random() / 4, Math.random() / 4, Math.random() / 4);
 
     scene.add(this.groundMesh[i]);
@@ -205,7 +206,7 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   var system = this.ParticleSystem();
 
   var newMesh = new E_Particle(this, this.frand(0.1,0.2));
-  newMesh.lifeSpan = 60000;
+  newMesh.lifeSpan = 180000;
   newMesh.position.set(x, y, z);
   newMesh.material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
   newMesh.m_colorFixed = true;
