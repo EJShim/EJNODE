@@ -69,6 +69,11 @@ E_ParticleSystem.prototype.Update = function()
   }
 }
 
+E_ParticleSystem.prototype.SweepAndPrune = function()
+{
+
+}
+
 E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 {
 
