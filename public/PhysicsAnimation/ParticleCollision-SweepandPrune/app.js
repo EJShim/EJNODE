@@ -279,7 +279,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 0.8;
+  var scaleFactor = 1.2;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -315,8 +315,8 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
-  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
+  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
+  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
   var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
 
   realGround.material.color = groundColor;
@@ -352,15 +352,15 @@ E_Manager.prototype.GenerateObjectScreen = function(x, y)
 
   raycaster.setFromCamera(mouse, camera);
 
-  var distance = 5;
+  var distance = 0;
   var generatePosition = new THREE.Vector3();
   generatePosition.addVectors(raycaster.ray.origin.clone(), raycaster.ray.direction.clone().multiplyScalar(distance));
 
-  this.GenerateObject(generatePosition.x, generatePosition.y, generatePosition.z);
+  this.GenerateObject(generatePosition.x, generatePosition.y, generatePosition.z, raycaster.ray.direction.clone().multiplyScalar(20));
 
 }
 
-E_Manager.prototype.GenerateObject = function(x, y, z)
+E_Manager.prototype.GenerateObject = function(x, y, z, vel)
 {
   var scene = this.GetScene();
   var system = this.ParticleSystem();
@@ -368,11 +368,15 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   var newMesh = new E_Particle(this, this.frand(0.1,0.2));
   newMesh.lifeSpan = 180000;
   newMesh.position.set(x, y, z);
-  newMesh.material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
+  newMesh.material.color = new THREE.Color(0.1, 0.4, 0.3);
   newMesh.m_colorFixed = true;
 
-  var velFactor = 5;
-  newMesh.velocity.set( this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor) );
+  if(vel == undefined) {
+    var velFactor = 5;
+    vel = new THREE.Vector3(this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor));
+  }
+
+  newMesh.velocity.set( vel.x, vel.y, vel.z  );
 
   scene.add(newMesh);
   system.add(newMesh);
@@ -656,6 +660,8 @@ function E_ParticleSystem(Mgr)
   this.Manager = Mgr;
 
   this.particleList = [];
+  this.SAPList = [[], [], []];
+
   this.planeList = [];
   this.springList = [];
 }
@@ -664,6 +670,12 @@ E_ParticleSystem.prototype.add = function( object )
 {
   if(object instanceof E_Particle){
     this.particleList.push(object);
+
+    for(var i in this.SAPList){
+      this.SAPList[i].push(this.particleList.length);
+      this.SAPList[i].push(-this.particleList.length);
+    }
+
     this.Manager.SetLog("Number of Particles : " + this.particleList.length);
   }
   else if(object instanceof E_FinitePlane){
@@ -675,11 +687,29 @@ E_ParticleSystem.prototype.add = function( object )
   }
 }
 
+
 E_ParticleSystem.prototype.remove = function( object )
 {
   if(object instanceof E_Particle){
     var idx = this.particleList.indexOf(object);
     this.particleList.splice(idx, 1);
+
+    for(var i in this.SAPList){
+      var sapidx = this.SAPList[i].indexOf(idx+1);
+      var sapidx2 = this.SAPList[i].indexOf(-idx-1);
+
+
+      this.SAPList[i].splice(sapidx, 1);
+      this.SAPList[i].splice(sapidx2, 1);
+
+      for(var j in this.SAPList[i]){
+        if(this.SAPList[i][j] > 0 && this.SAPList[i][j] > idx+1){
+          this.SAPList[i][j] -= 1;
+        }else if(this.SAPList[i][j] < 0 && this.SAPList[i][j] < -idx-1){
+          this.SAPList[i][j] += 1;
+        }
+      }
+    }
     this.Manager.SetLog("Number of Particles : " + this.particleList.length);
   }else if(object instanceof E_FinitePlane){
     var idx = this.planeList.indexOf(object);
@@ -690,10 +720,83 @@ E_ParticleSystem.prototype.remove = function( object )
   }
 }
 
+E_ParticleSystem.prototype.GetSign = function(num){
+  if(num >= 0) return 1;
+  else return -1;
+}
+
+E_ParticleSystem.prototype.InsertionSort = function()
+{
+  var list = this.SAPList[0];
+  var length = this.particleList.length * 2;
+
+  for(var i=1 ; i<length ; i++){
+    var temp = list[i];
+
+
+    var t = this.particleList[ Math.abs(list[i])-1 ].position.x + this.GetSign(list[i]) * this.particleList[ Math.abs(list[i])-1 ].radius;
+    var j = i-1;
+
+    while(j>=0 && this.particleList[ Math.abs(list[j])-1 ].position.x + this.GetSign(list[j]) * this.particleList[ Math.abs(list[j])-1 ].radius > t){
+      list[j+1] = list[j];
+      j--;
+    }
+
+    list[j+1] = temp;
+  }
+
+
+  //Y axiss
+  list = this.SAPList[1];
+
+  for(var i=1 ; i<length ; i++){
+    var temp = list[i];
+
+    var t = this.particleList[ Math.abs(list[i])-1 ].position.y + this.GetSign(list[i]) * this.particleList[ Math.abs(list[i])-1 ].radius;
+    var j = i-1;
+
+    while(j>=0 && this.particleList[ Math.abs(list[j])-1 ].position.y + this.GetSign(list[j]) * this.particleList[ Math.abs(list[j])-1 ].radius > t){
+      list[j+1] = list[j];
+      j--;
+    }
+
+    list[j+1] = temp;
+  }
+
+  //Z axis
+  list = this.SAPList[2];
+
+  for(var i=1 ; i<length ; i++){
+    var temp = list[i];
+
+    var t = this.particleList[ Math.abs(list[i])-1 ].position.z + this.GetSign(list[i]) * this.particleList[ Math.abs(list[i])-1 ].radius;
+    var j = i-1;
+
+    while(j>=0 && this.particleList[ Math.abs(list[j])-1 ].position.z + this.GetSign(list[j]) * this.particleList[ Math.abs(list[j])-1 ].radius > t){
+      list[j+1] = list[j];
+      j--;
+    }
+
+    list[j+1] = temp;
+  }
+}
+
+E_ParticleSystem.prototype.SAPCollision = function()
+{
+  var list = this.SAPList[0];
+
+
+  console.log(list);
+
+}
 
 E_ParticleSystem.prototype.Update = function()
 {
-
+  if(this.particleList.length < 1) return;
+  this.InsertionSort();
+  if(this.particleList.length == 10){
+    this.SAPCollision();
+  }
 
   for(var i = 0  ; i < this.particleList.length ; i++){
 
@@ -716,6 +819,13 @@ E_ParticleSystem.prototype.Update = function()
   for(var i=0 ; i<this.springList.length ; i++){
     this.springList[i].Update();
   }
+}
+
+E_ParticleSystem.prototype.SweepAndPrune = function()
+{
+  //Selection Sort X
+
+
 }
 
 E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)

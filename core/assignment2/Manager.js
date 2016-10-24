@@ -128,7 +128,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 0.8;
+  var scaleFactor = 1.2;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -164,8 +164,8 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
-  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
+  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
+  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
   var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
 
   realGround.material.color = groundColor;
@@ -201,15 +201,15 @@ E_Manager.prototype.GenerateObjectScreen = function(x, y)
 
   raycaster.setFromCamera(mouse, camera);
 
-  var distance = 5;
+  var distance = 0;
   var generatePosition = new THREE.Vector3();
   generatePosition.addVectors(raycaster.ray.origin.clone(), raycaster.ray.direction.clone().multiplyScalar(distance));
 
-  this.GenerateObject(generatePosition.x, generatePosition.y, generatePosition.z);
+  this.GenerateObject(generatePosition.x, generatePosition.y, generatePosition.z, raycaster.ray.direction.clone().multiplyScalar(20));
 
 }
 
-E_Manager.prototype.GenerateObject = function(x, y, z)
+E_Manager.prototype.GenerateObject = function(x, y, z, vel)
 {
   var scene = this.GetScene();
   var system = this.ParticleSystem();
@@ -217,11 +217,15 @@ E_Manager.prototype.GenerateObject = function(x, y, z)
   var newMesh = new E_Particle(this, this.frand(0.1,0.2));
   newMesh.lifeSpan = 180000;
   newMesh.position.set(x, y, z);
-  newMesh.material.color = new THREE.Color(Math.random() / 2, Math.random() / 2, Math.random() / 2);
+  newMesh.material.color = new THREE.Color(0.1, 0.4, 0.3);
   newMesh.m_colorFixed = true;
 
-  var velFactor = 5;
-  newMesh.velocity.set( this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor) );
+  if(vel == undefined) {
+    var velFactor = 5;
+    vel = new THREE.Vector3(this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor), this.frand(-velFactor, velFactor));
+  }
+
+  newMesh.velocity.set( vel.x, vel.y, vel.z  );
 
   scene.add(newMesh);
   system.add(newMesh);

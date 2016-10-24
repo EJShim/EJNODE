@@ -7,6 +7,8 @@ function E_ParticleSystem(Mgr)
   this.Manager = Mgr;
 
   this.particleList = [];
+  this.SAPList = [[], [], []];
+
   this.planeList = [];
   this.springList = [];
 }
@@ -15,6 +17,12 @@ E_ParticleSystem.prototype.add = function( object )
 {
   if(object instanceof E_Particle){
     this.particleList.push(object);
+
+    for(var i in this.SAPList){
+      this.SAPList[i].push(this.particleList.length);
+      this.SAPList[i].push(-this.particleList.length);
+    }
+
     this.Manager.SetLog("Number of Particles : " + this.particleList.length);
   }
   else if(object instanceof E_FinitePlane){
@@ -26,11 +34,29 @@ E_ParticleSystem.prototype.add = function( object )
   }
 }
 
+
 E_ParticleSystem.prototype.remove = function( object )
 {
   if(object instanceof E_Particle){
     var idx = this.particleList.indexOf(object);
     this.particleList.splice(idx, 1);
+
+    for(var i in this.SAPList){
+      var sapidx = this.SAPList[i].indexOf(idx+1);
+      var sapidx2 = this.SAPList[i].indexOf(-idx-1);
+
+
+      this.SAPList[i].splice(sapidx, 1);
+      this.SAPList[i].splice(sapidx2, 1);
+
+      for(var j in this.SAPList[i]){
+        if(this.SAPList[i][j] > 0 && this.SAPList[i][j] > idx+1){
+          this.SAPList[i][j] -= 1;
+        }else if(this.SAPList[i][j] < 0 && this.SAPList[i][j] < -idx-1){
+          this.SAPList[i][j] += 1;
+        }
+      }
+    }
     this.Manager.SetLog("Number of Particles : " + this.particleList.length);
   }else if(object instanceof E_FinitePlane){
     var idx = this.planeList.indexOf(object);
@@ -41,10 +67,90 @@ E_ParticleSystem.prototype.remove = function( object )
   }
 }
 
+E_ParticleSystem.prototype.GetSign = function(num){
+  if(num >= 0) return 1;
+  else return -1;
+}
+
+E_ParticleSystem.prototype.InsertionSort = function()
+{
+  var list = this.SAPList[0];
+  var length = this.particleList.length * 2;
+
+  for(var i=1 ; i<length ; i++){
+    var temp = list[i];
+
+
+    var t = this.particleList[ Math.abs(list[i])-1 ].position.x + this.GetSign(list[i]) * this.particleList[ Math.abs(list[i])-1 ].radius;
+    var j = i-1;
+
+    while(j>=0 && this.particleList[ Math.abs(list[j])-1 ].position.x + this.GetSign(list[j]) * this.particleList[ Math.abs(list[j])-1 ].radius > t){
+      list[j+1] = list[j];
+      j--;
+    }
+
+    list[j+1] = temp;
+  }
+
+
+  //Y axiss
+  list = this.SAPList[1];
+
+  for(var i=1 ; i<length ; i++){
+    var temp = list[i];
+
+    var t = this.particleList[ Math.abs(list[i])-1 ].position.y + this.GetSign(list[i]) * this.particleList[ Math.abs(list[i])-1 ].radius;
+    var j = i-1;
+
+    while(j>=0 && this.particleList[ Math.abs(list[j])-1 ].position.y + this.GetSign(list[j]) * this.particleList[ Math.abs(list[j])-1 ].radius > t){
+      list[j+1] = list[j];
+      j--;
+    }
+
+    list[j+1] = temp;
+  }
+
+  //Z axis
+  list = this.SAPList[2];
+
+  for(var i=1 ; i<length ; i++){
+    var temp = list[i];
+
+    var t = this.particleList[ Math.abs(list[i])-1 ].position.z + this.GetSign(list[i]) * this.particleList[ Math.abs(list[i])-1 ].radius;
+    var j = i-1;
+
+    while(j>=0 && this.particleList[ Math.abs(list[j])-1 ].position.z + this.GetSign(list[j]) * this.particleList[ Math.abs(list[j])-1 ].radius > t){
+      list[j+1] = list[j];
+      j--;
+    }
+
+    list[j+1] = temp;
+  }
+}
+
+E_ParticleSystem.prototype.SAPCollision = function()
+{
+  var list = this.SAPList[0];
+  var activeList = [];
+
+  for(var i in list){
+    
+  }
+
+
+  console.log(list);
+
+}
 
 E_ParticleSystem.prototype.Update = function()
 {
+  if(this.particleList.length < 1) return;
+  this.InsertionSort();
 
+  //TEST
+  if(this.particleList.length == 10){
+    this.SAPCollision();
+  }
 
   for(var i = 0  ; i < this.particleList.length ; i++){
 
@@ -71,6 +177,8 @@ E_ParticleSystem.prototype.Update = function()
 
 E_ParticleSystem.prototype.SweepAndPrune = function()
 {
+  //Selection Sort X
+
 
 }
 
