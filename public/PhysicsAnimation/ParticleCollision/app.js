@@ -315,8 +315,8 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
-  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor*2, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
+  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
+  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
   var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
 
   realGround.material.color = groundColor;
