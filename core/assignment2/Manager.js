@@ -164,18 +164,18 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
-  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
-  var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
-
-  realGround.material.color = groundColor;
-  realGround2.material.color = groundColor;
-
-  scene.add(realGround);
-  system.add(realGround);
-
-  scene.add(realGround2);
-  system.add(realGround2);
+  // var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
+  // var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
+  // var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+  //
+  // realGround.material.color = groundColor;
+  // realGround2.material.color = groundColor;
+  //
+  // scene.add(realGround);
+  // system.add(realGround);
+  //
+  // scene.add(realGround2);
+  // system.add(realGround2);
 }
 
 E_Manager.prototype.ResetGround = function()
@@ -217,7 +217,7 @@ E_Manager.prototype.GenerateObject = function(x, y, z, vel)
   var newMesh = new E_Particle(this, this.frand(0.1,0.2));
   newMesh.lifeSpan = 180000;
   newMesh.position.set(x, y, z);
-  newMesh.material.color = new THREE.Color(0.1, 0.4, 0.3);
+  newMesh.material.color = new THREE.Color(Math.random()/3, Math.random()/3, Math.random()/3);
   newMesh.m_colorFixed = true;
 
   if(vel == undefined) {

@@ -279,7 +279,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 1.2;
+  var scaleFactor = 2.2;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -315,18 +315,18 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
-  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
-  var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
-
-  realGround.material.color = groundColor;
-  realGround2.material.color = groundColor;
-
-  scene.add(realGround);
-  system.add(realGround);
-
-  scene.add(realGround2);
-  system.add(realGround2);
+  // var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
+  // var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
+  // var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+  //
+  // realGround.material.color = groundColor;
+  // realGround2.material.color = groundColor;
+  //
+  // scene.add(realGround);
+  // system.add(realGround);
+  //
+  // scene.add(realGround2);
+  // system.add(realGround2);
 }
 
 E_Manager.prototype.ResetGround = function()
@@ -368,7 +368,7 @@ E_Manager.prototype.GenerateObject = function(x, y, z, vel)
   var newMesh = new E_Particle(this, this.frand(0.1,0.2));
   newMesh.lifeSpan = 180000;
   newMesh.position.set(x, y, z);
-  newMesh.material.color = new THREE.Color(0.1, 0.4, 0.3);
+  newMesh.material.color = new THREE.Color(Math.random()/3, Math.random()/3, Math.random()/3);
   newMesh.m_colorFixed = true;
 
   if(vel == undefined) {
@@ -783,10 +783,29 @@ E_ParticleSystem.prototype.InsertionSort = function()
 
 E_ParticleSystem.prototype.SAPCollision = function()
 {
-  var list = this.SAPList[0];
+  //Sweep And Prune Algorithm
+  for(var k=0 ; k<3 ; k++){
+    var list = this.SAPList[k];
+    var activeList = [];
+
+    for(var i in list){
+      if(list[i] < 0){
+        activeList.push( this.particleList[ Math.abs(list[i])-1 ] );
+      }else{
+        if(activeList.length > 2){
+          for(var j=1 ; j<activeList.length ; j++){
+            this.ParticleCollisionDetection(activeList[ 0 ], activeList[ j ]);
+          }
+        }
+        activeList.shift();
+      }
+    }
 
 
-  console.log(list);
+  }
+
+
+  //console.log(list);
 
 }
 
@@ -794,9 +813,7 @@ E_ParticleSystem.prototype.Update = function()
 {
   if(this.particleList.length < 1) return;
   this.InsertionSort();
-  if(this.particleList.length == 10){
-    this.SAPCollision();
-  }
+  this.SAPCollision();
 
   for(var i = 0  ; i < this.particleList.length ; i++){
 
@@ -806,9 +823,9 @@ E_ParticleSystem.prototype.Update = function()
       }
 
 
-    for(var k = i+1 ; k < this.particleList.length ; k++){
-      this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
-    }
+    // for(var k = i+1 ; k < this.particleList.length ; k++){
+    //   this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
+    // }
   }
 
 

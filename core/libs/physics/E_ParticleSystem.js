@@ -130,15 +130,29 @@ E_ParticleSystem.prototype.InsertionSort = function()
 
 E_ParticleSystem.prototype.SAPCollision = function()
 {
-  var list = this.SAPList[0];
-  var activeList = [];
+  //Sweep And Prune Algorithm
+  for(var k=0 ; k<3 ; k++){
+    var list = this.SAPList[k];
+    var activeList = [];
 
-  for(var i in list){
-    
+    for(var i in list){
+      if(list[i] < 0){
+        activeList.push( this.particleList[ Math.abs(list[i])-1 ] );
+      }else{
+        if(activeList.length > 2){
+          for(var j=1 ; j<activeList.length ; j++){
+            this.ParticleCollisionDetection(activeList[ 0 ], activeList[ j ]);
+          }
+        }
+        activeList.shift();
+      }
+    }
+
+
   }
 
 
-  console.log(list);
+  //console.log(list);
 
 }
 
@@ -146,11 +160,7 @@ E_ParticleSystem.prototype.Update = function()
 {
   if(this.particleList.length < 1) return;
   this.InsertionSort();
-
-  //TEST
-  if(this.particleList.length == 10){
-    this.SAPCollision();
-  }
+  this.SAPCollision();
 
   for(var i = 0  ; i < this.particleList.length ; i++){
 
@@ -160,9 +170,9 @@ E_ParticleSystem.prototype.Update = function()
       }
 
 
-    for(var k = i+1 ; k < this.particleList.length ; k++){
-      this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
-    }
+    // for(var k = i+1 ; k < this.particleList.length ; k++){
+    //   this.ParticleCollisionDetection(this.particleList[i], this.particleList[k]);
+    // }
   }
 
 

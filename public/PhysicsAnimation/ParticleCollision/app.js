@@ -279,7 +279,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 0.8;
+  var scaleFactor = 2.2;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -315,18 +315,18 @@ E_Manager.prototype.GenerateRandomTriangle = function()
     system.add(this.groundMesh[i]);
   }
 
-  var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
-  var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
-  var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
-
-  realGround.material.color = groundColor;
-  realGround2.material.color = groundColor;
-
-  scene.add(realGround);
-  system.add(realGround);
-
-  scene.add(realGround2);
-  system.add(realGround2);
+  // var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*2 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*2, -scaleFactor*5 ));
+  // var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*2, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*2, -scaleFactor*5));
+  // var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+  //
+  // realGround.material.color = groundColor;
+  // realGround2.material.color = groundColor;
+  //
+  // scene.add(realGround);
+  // system.add(realGround);
+  //
+  // scene.add(realGround2);
+  // system.add(realGround2);
 }
 
 E_Manager.prototype.ResetGround = function()
