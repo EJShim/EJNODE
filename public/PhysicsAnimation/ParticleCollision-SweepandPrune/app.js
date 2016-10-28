@@ -810,12 +810,12 @@ E_ParticleSystem.prototype.SAPCollision = function()
       }else{
         if(activeList.length > 2){
           for(var j=1 ; j<activeList.length-1 ; j++){
-            if(k == 2){
-              if(this.collisionMap[ activeList[0] ][ activeList[j] == k-1 ])
+            if(this.collisionMap[ activeList[0] ][ activeList[j] ] == k){
+              if(k == 2){
                 this.ParticleCollisionDetection( this.particleList[ activeList[ 0 ] ], this.particleList[ activeList[ j ] ]);
-            }
-            else{
-              this.collisionMap[ activeList[0] ][ activeList[j] ]++;
+              }else{
+                this.collisionMap[ activeList[0] ][activeList[j]]++;
+              }
             }
           }
         }
@@ -857,12 +857,6 @@ E_ParticleSystem.prototype.Update = function()
   }
 }
 
-E_ParticleSystem.prototype.SweepAndPrune = function()
-{
-  //Selection Sort X
-
-
-}
 
 E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 {
