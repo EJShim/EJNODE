@@ -94,8 +94,8 @@ E_Volume2.prototype.InitLUT = function()
 
   //color : White for all values
   var CTPbone = [[0, 0, 0, 0],
-                [ this.Normalize(pointZero-16, range[0], range[1]), .73, .25 , .30],
-                [ this.Normalize(pointZero+641, range[0], range[1]), .90, .82, .56],
+                [ .2, .73, .25 , .30],
+                [ .6, .90, .82, .56],
                 [1, 1, 1, 1]];
 
   //Opacity : linear increase
