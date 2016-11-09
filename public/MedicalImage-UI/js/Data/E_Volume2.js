@@ -94,14 +94,14 @@ E_Volume2.prototype.InitLUT = function()
 
   //color : White for all values
   var CTPbone = [[0, 0, 0, 0],
-                [(pointZero-16)/width, .73, .25 , .30],
-                [(pointZero+641)/width, .90, .82, .56],
+                [ this.Normalize(pointZero-16, range[0], range[1]), .73, .25 , .30],
+                [ this.Normalize(pointZero+641, range[0], range[1]), .90, .82, .56],
                 [1, 1, 1, 1]];
 
   //Opacity : linear increase
   var OTPbone = [[0, 0],
-                [(pointZero+160)/width, 0],
-                [(pointZero+641)/width, .72],
+                [this.Normalize(pointZero+160, range[0], range[1]), 0],
+                [this.Normalize(pointZero+641, range[0], range[1]), .72],
                 [1, .71]];
 
   var CTPmip = [[0, 1, 1, 1], [1, 1, 1, 1]];
@@ -109,6 +109,13 @@ E_Volume2.prototype.InitLUT = function()
 
   lut._color = CTPbone;
   lut._opacity = OTPbone;
+}
+
+E_Volume2.prototype.Normalize = function(value, minVal, maxVal)
+{
+  if(value < 0) value = 0;
+  if(value > 1) value = 1;
+  return (value-minVal) / (maxVal - minVal);
 }
 
 
