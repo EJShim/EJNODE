@@ -88,7 +88,6 @@ E_Manager.prototype.Animate = function()
 
     this.prevTime = now;
     this.then = now - (this.delta % this.interval);
-    //this.then = now - (this.delta % this.interval);
   }
 
 

@@ -449,7 +449,7 @@ E_Manager.prototype.frand = function(min, max)
 
 module.exports = E_Manager;
 
-},{"../libs/physics/E_FinitePlane.js":4,"../libs/physics/E_Particle.js":5,"../libs/physics/E_ParticleSystem.js":6,"./E_Interactor.js":1}],4:[function(require,module,exports){
+},{"../libs/physics/E_FinitePlane.js":4,"../libs/physics/E_Particle.js":5,"../libs/physics/E_ParticleSystem.js":7,"./E_Interactor.js":1}],4:[function(require,module,exports){
 function E_FinitePlane(v1, v2, v3)
 {
   THREE.Mesh.call(this);
@@ -651,7 +651,116 @@ E_Particle.prototype.GetNextPosition = function()
 module.exports = E_Particle;
 
 },{}],6:[function(require,module,exports){
+function E_ParticleSource(Mgr){
+
+  //Set Small Radius
+  this.radius = 0.1;
+  this.geometry = new THREE.SphereGeometry(radius, 32, 32);
+  this.material = new THREE.MeshPhongMaterial({color: 0xffff00, shininess:80});
+
+
+  this.Manager = Mgr;
+
+
+  //Dynamics
+  this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
+  this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
+  this.mass = radius * 10;
+
+  this.elasticity = 0.1;
+
+  //Informations
+  this.lifeSpan = 30000000000000;
+  this.startTime = new Date();
+
+  //Position Fix
+  this.m_colorFixed = false;
+  this.m_bFixed = false;
+  this.m_bCollided = false;
+}
+
+E_ParticleSource.prototype.ApplyForce = function(force)
+{
+  //a = f/m;
+
+  if(this == this.Manager.m_selectedMesh) return;
+  //this.acceleration.add(force.divideScalar(this.mass));
+  this.acceleration.add(force.divideScalar(this.mass) );
+}
+
+E_ParticleSource.prototype.ApplyImpulse = function(force)
+{
+  //a = f/m;
+  if(this == this.Manager.m_selectedMesh) return;
+  //this.acceleration.add(force.divideScalar(this.mass));
+  var acc = new THREE.Vector3(0, 0, 0);
+  acc.add(force.divideScalar(this.mass));
+  this.velocity.add(acc);
+}
+
+
+E_ParticleSource.prototype.Update = function()
+{
+  if(!this.visible) {
+    this.Manager.particleList().remove(this);
+    this.Manager.GetScene().remove(this);
+    return;
+  }
+
+  if(this.m_bFixed) {
+    this.material.color = new THREE.Color(0.2, 0.2, 0.2);
+    return;
+  }
+
+  var timeStep = this.Manager.timeStep;
+
+  //Set Velocity and Update Position
+  this.velocity.add(this.acceleration.clone().multiplyScalar(timeStep));
+  this.position.add(this.velocity.clone().multiplyScalar(timeStep) );
+
+  //***FOR FUN***
+  if(!this.m_colorFixed){
+    var velcol = new THREE.Vector3(1.0).sub(this.velocity.clone()).normalize();
+    //if(velcol.length < 1.0) velcol.normalize();
+    this.material.color = new THREE.Color(velcol.x, velcol.y, velcol.z);
+  }
+
+  //Set Initial Acceleration
+  this.acceleration = new THREE.Vector3(0, 0, 0);
+  var gravity = this.Manager.GetGravity();
+  if(gravity.length() > 0){
+    this.ApplyForce(gravity.multiplyScalar(this.mass ));
+  }
+
+  this.m_bCollided = false;
+
+
+  //Remove Particle When
+  if(new Date() - this.startTime > this.lifeSpan || this.position.y < -10){
+    this.Manager.GetScene().remove(this);
+    this.Manager.ParticleSystem().remove(this);
+  }
+}
+
+
+
+E_ParticleSource.prototype.GetPosition = function()
+{
+  return this.position;
+}
+
+E_ParticleSource.prototype.GetNextPosition = function()
+{
+  var tempVel = this.velocity.clone();
+  tempVel.add( this.acceleration.clone().multiplyScalar(this.Manager.timeStep) );
+  return this.position.clone().add(tempVel.clone().multiplyScalar(this.Manager.timeStep));
+}
+
+module.exports = E_ParticleSource;
+
+},{}],7:[function(require,module,exports){
 var E_Particle = require("./E_Particle.js");
+var E_ParticleSource = require("./E_ParticleSource");
 var E_FinitePlane = require("./E_FinitePlane.js");
 var E_SpringDamper = require("./E_SpringDamper.js");
 
@@ -669,7 +778,7 @@ function E_ParticleSystem(Mgr)
 
 E_ParticleSystem.prototype.add = function( object )
 {
-  if(object instanceof E_Particle){
+  if(object instanceof E_Particle || object instanceof E_ParticleSource){
     this.particleList.push(object);
 
     for(var i in this.SAPList){
@@ -691,7 +800,7 @@ E_ParticleSystem.prototype.add = function( object )
 
 E_ParticleSystem.prototype.remove = function( object )
 {
-  if(object instanceof E_Particle){
+  if(object instanceof E_Particle || object instanceof E_ParticleSource){
     var idx = this.particleList.indexOf(object);
     this.particleList.splice(idx, 1);
 
@@ -798,7 +907,7 @@ E_ParticleSystem.prototype.InsertionSort = function()
 E_ParticleSystem.prototype.SAPCollision = function()
 {
   //Sweep And Prune Algorithm
-  for(var k=0 ; k<3 ; k++){
+  for(var k=0 ; k<2 ; k++){
     var list = this.SAPList[k];
     var activeList = [];
 
@@ -810,13 +919,13 @@ E_ParticleSystem.prototype.SAPCollision = function()
       }else{
         if(activeList.length > 2){
           for(var j=1 ; j<activeList.length-1 ; j++){
-            if(this.collisionMap[ activeList[0] ][ activeList[j] ] == k){
-              if(k == 2){
+            //if(this.collisionMap[ activeList[0] ][ activeList[j] ] == k){
+              //if(k == 2){
                 this.ParticleCollisionDetection( this.particleList[ activeList[ 0 ] ], this.particleList[ activeList[ j ] ]);
-              }else{
-                this.collisionMap[ activeList[0] ][activeList[j]]++;
-              }
-            }
+              //}else{
+              //  this.collisionMap[ activeList[0] ][activeList[j]]++;
+              //}
+            //}
           }
         }
         activeList.shift();
@@ -878,7 +987,7 @@ E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 
 E_ParticleSystem.prototype.IsPlaneObjectCollisionOccured = function(plane, object, nextPosition)
 {
-  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle){
+  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle || object instanceof E_ParticleSource){
     console.error("not proper type");
     return;
   }
@@ -955,7 +1064,7 @@ E_ParticleSystem.prototype.OnCollision = function(object, plane, colPoint)
 
 E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, objectB)
 {
-  if(!objectA instanceof E_Particle || !objectB instanceof E_Particle ) return;
+  if(!objectA instanceof E_Particle || !objectB instanceof E_Particle || !objectA instanceof E_ParticleSource || !objectB instanceof E_ParticleSource ) return;
 
   var posA = objectA.GetNextPosition();
   var posB = objectB.GetNextPosition();
@@ -994,7 +1103,7 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
 
 module.exports = E_ParticleSystem;
 
-},{"./E_FinitePlane.js":4,"./E_Particle.js":5,"./E_SpringDamper.js":7}],7:[function(require,module,exports){
+},{"./E_FinitePlane.js":4,"./E_Particle.js":5,"./E_ParticleSource":6,"./E_SpringDamper.js":8}],8:[function(require,module,exports){
 function E_SpringDamper(Mgr)
 {
   THREE.Line.call(this);

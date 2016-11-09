@@ -1,4 +1,5 @@
 var E_Particle = require("./E_Particle.js");
+var E_ParticleSource = require("./E_ParticleSource");
 var E_FinitePlane = require("./E_FinitePlane.js");
 var E_SpringDamper = require("./E_SpringDamper.js");
 
@@ -16,7 +17,7 @@ function E_ParticleSystem(Mgr)
 
 E_ParticleSystem.prototype.add = function( object )
 {
-  if(object instanceof E_Particle){
+  if(object instanceof E_Particle || object instanceof E_ParticleSource){
     this.particleList.push(object);
 
     for(var i in this.SAPList){
@@ -38,7 +39,7 @@ E_ParticleSystem.prototype.add = function( object )
 
 E_ParticleSystem.prototype.remove = function( object )
 {
-  if(object instanceof E_Particle){
+  if(object instanceof E_Particle || object instanceof E_ParticleSource){
     var idx = this.particleList.indexOf(object);
     this.particleList.splice(idx, 1);
 
@@ -145,7 +146,7 @@ E_ParticleSystem.prototype.InsertionSort = function()
 E_ParticleSystem.prototype.SAPCollision = function()
 {
   //Sweep And Prune Algorithm
-  for(var k=0 ; k<3 ; k++){
+  for(var k=0 ; k<2 ; k++){
     var list = this.SAPList[k];
     var activeList = [];
 
@@ -157,13 +158,13 @@ E_ParticleSystem.prototype.SAPCollision = function()
       }else{
         if(activeList.length > 2){
           for(var j=1 ; j<activeList.length-1 ; j++){
-            if(this.collisionMap[ activeList[0] ][ activeList[j] ] == k){
-              if(k == 2){
+            //if(this.collisionMap[ activeList[0] ][ activeList[j] ] == k){
+              //if(k == 2){
                 this.ParticleCollisionDetection( this.particleList[ activeList[ 0 ] ], this.particleList[ activeList[ j ] ]);
-              }else{
-                this.collisionMap[ activeList[0] ][activeList[j]]++;
-              }
-            }
+              //}else{
+              //  this.collisionMap[ activeList[0] ][activeList[j]]++;
+              //}
+            //}
           }
         }
         activeList.shift();
@@ -225,7 +226,7 @@ E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 
 E_ParticleSystem.prototype.IsPlaneObjectCollisionOccured = function(plane, object, nextPosition)
 {
-  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle){
+  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle || object instanceof E_ParticleSource){
     console.error("not proper type");
     return;
   }
@@ -302,7 +303,7 @@ E_ParticleSystem.prototype.OnCollision = function(object, plane, colPoint)
 
 E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, objectB)
 {
-  if(!objectA instanceof E_Particle || !objectB instanceof E_Particle ) return;
+  if(!objectA instanceof E_Particle || !objectB instanceof E_Particle || !objectA instanceof E_ParticleSource || !objectB instanceof E_ParticleSource ) return;
 
   var posA = objectA.GetNextPosition();
   var posB = objectB.GetNextPosition();
