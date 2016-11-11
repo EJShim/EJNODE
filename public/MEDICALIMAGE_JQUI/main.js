@@ -15,7 +15,7 @@ webix.ui({
           cols:[
             {
               rows:[
-                {id:"ID_VIEW_MAIN", view:"template", template:"haha"}
+                {id:"ID_VIEW_MAIN", view:"template"}
               ]
             },{view:"resizer"},
             {

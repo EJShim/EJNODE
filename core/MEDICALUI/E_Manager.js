@@ -26,6 +26,10 @@ function E_Manager()
   ctx.fillRect(10,10,150,80);
 
 
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize( $$("ID_VIEW_MAIN").$width, $$("ID_VIEW_MAIN").$height );
+  $$("ID_VIEW_MAIN").$view.appendChild( renderer.domElement );
+
   //test
   console.log($$("ID_VIEW_MAIN"));
 }
