@@ -15,9 +15,9 @@ webix.ui({
           cols:[
             {
               rows:[
-                {id:"ID_VIEW_MAIN", template :"<canvas id='ID_VIEW_MAIN'> </canvas>"}
+                {id:"ID_VIEW_MAIN", view:"template", template:"haha"}
               ]
-            },{id:"testresize",view:"resizer"},
+            },{view:"resizer"},
             {
               rows:[
                 {template:"<canvas id='ID_VIEW_AXL'> </canvas>", padding:0},
