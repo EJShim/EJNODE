@@ -100,8 +100,8 @@ E_Volume2.prototype.InitLUT = function()
 
   //Opacity : linear increase
   var OTPbone = [[0, 0],
-                [this.Normalize(pointZero+160, range[0], range[1]), 0],
-                [this.Normalize(pointZero+641, range[0], range[1]), .72],
+                //[this.Normalize(pointZero+160, range[0], range[1]), 0],
+                //[this.Normalize(pointZero+641, range[0], range[1]), .72],
                 [1, .71]];
 
   var CTPmip = [[0, 1, 1, 1], [1, 1, 1, 1]];
