@@ -1,0 +1,5 @@
+.ui-widget-content h3 { text-align: center; margin: 0; }
+
+#e_mainView { width: 80%; height: 300px; padding: 0.5em; }
+.ec_subView{ width: 29%; height: 150px; padding: 0.5em; }
+#e_subView { }
