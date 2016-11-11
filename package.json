@@ -15,6 +15,6 @@
     , "url" : "https://github.com/EJShim/ejshim.git"
   },
   "scripts": {
-    "build": "browserify core/fabric/MainFrm.js -o public/PhysicsAnimation/Fabric/app.js"
+    "build": "browserify core/MEDICALUI/MainFrm.js -o public/MEDICALIMAGE_JQUI/app.js"
   }
 }
