@@ -135,7 +135,7 @@ function E_Manager()
 
 
   this.m_selectedMesh;
-  this.m_prevTime = new Date();
+  this.m_prevTime = 0;
   this.m_prevPosition = new THREE.Vector3(0, 0, 0);
 
   this.starttime = new Date();
@@ -143,7 +143,6 @@ function E_Manager()
   this.light.position.set(0, 500, 0);
   this.thumbnailSaved = false;
 
-  this.timeStep = 0;
   this.then = new Date();
   this.interval = 1000 / 30;
 
@@ -197,11 +196,8 @@ E_Manager.prototype.Animate = function()
 
   var now = new Date();
   this.delta = (now - this.then);
+
   if(this.delta > this.interval){
-    this.timeStep = (now - this.prevTime) / 1000;
-    if(this.timeStep > this.interval/1000) this.timeStep = this.interval / 1000;
-
-
     var renderer = this.GetRenderer();
     var camera = this.GetCamera();
     var scene = this.GetScene();
@@ -223,9 +219,6 @@ E_Manager.prototype.Animate = function()
     });
 
     this.light.position.set(camera.position.x, camera.position.y, camera.position.z);
-
-    this.prevTime = now;
-    this.then = now - (this.delta % this.interval);
   }
 
 
@@ -555,26 +548,31 @@ function E_Particle(Mgr, radius){
   if(radius == null) radius = 15;
   this.radius = radius;
   this.geometry = new THREE.SphereGeometry(radius, 32, 32);
-  this.material = new THREE.MeshPhongMaterial({color: 0xffff00, shininess:80});
+  this.material = new THREE.MeshPhongMaterial({color: 0xffff00});
 
 
   this.Manager = Mgr;
+  //Physics
+  this.timeStep = 0; //Dt
 
+  //For forward and backward dynamics
+  this.prevTime = 0;
 
   //Dynamics
   this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.mass = radius * 10;
+  this.mass = 1;
 
-  this.elasticity = 0.1;
+  this.elasticity = 0.7;
 
   //Informations
-  this.lifeSpan = 30000000000000;
   this.startTime = new Date();
+  this.elapsedTime = 0;
 
   //Position Fix
   this.m_colorFixed = false;
   this.m_bFixed = false;
+
   this.m_bCollided = false;
 }
 E_Particle.prototype = Object.create(THREE.Mesh.prototype);
@@ -595,28 +593,38 @@ E_Particle.prototype.ApplyImpulse = function(force)
   //this.acceleration.add(force.divideScalar(this.mass));
   var acc = new THREE.Vector3(0, 0, 0);
   acc.add(force.divideScalar(this.mass));
-  this.velocity.add(acc);
+  this.velocity.add(acc.clone().multiplyScalar(1));
 }
 
 
 E_Particle.prototype.Update = function()
 {
   if(!this.visible) {
-    this.Manager.particleList().remove(this);
     this.Manager.GetScene().remove(this);
     return;
   }
 
+  if(this.prevTime == 0) this.prevTime = this.startTime;
+  var currentTime = new Date();
+  this.timeStep = (currentTime - this.prevTime) / 1000;
+  if(this.timeStep > this.Manager.interval / 1000) this.timeStep = this.Manager.interval / 1000;
+  this.elapsedTime = (currentTime - this.startTime) / 1000;
   if(this.m_bFixed) {
     this.material.color = new THREE.Color(0.2, 0.2, 0.2);
     return;
   }
 
-  var timeStep = this.Manager.timeStep;
+
+    //Gravity
+    var gravity = this.Manager.GetGravity();
+    if(gravity.length() > 0){
+      this.ApplyForce(gravity.multiplyScalar(this.mass ));
+    }
+
 
   //Set Velocity and Update Position
-  this.velocity.add(this.acceleration.clone().multiplyScalar(timeStep));
-  this.position.add(this.velocity.clone().multiplyScalar(timeStep) );
+  this.velocity.add(this.acceleration.clone().multiplyScalar(this.timeStep));
+  this.position.add(this.velocity.clone().multiplyScalar(this.timeStep) );
 
   //***FOR FUN***
   if(!this.m_colorFixed){
@@ -625,21 +633,10 @@ E_Particle.prototype.Update = function()
     this.material.color = new THREE.Color(velcol.x, velcol.y, velcol.z);
   }
 
-  //Set Initial Acceleration
+  //Set Accleration 0 every iteration
+  this.prevTime = currentTime;
   this.acceleration = new THREE.Vector3(0, 0, 0);
-  var gravity = this.Manager.GetGravity();
-  if(gravity.length() > 0){
-    this.ApplyForce(gravity.multiplyScalar(this.mass ));
-  }
-
   this.m_bCollided = false;
-
-
-  //Remove Particle When
-  if(new Date() - this.startTime > this.lifeSpan || this.position.y < -10){
-    this.Manager.GetScene().remove(this);
-    this.Manager.ParticleSystem().remove(this);
-  }
 }
 
 
@@ -652,8 +649,8 @@ E_Particle.prototype.GetPosition = function()
 E_Particle.prototype.GetNextPosition = function()
 {
   var tempVel = this.velocity.clone();
-  tempVel.add( this.acceleration.clone().multiplyScalar(this.Manager.timeStep) );
-  return this.position.clone().add(tempVel.clone().multiplyScalar(this.Manager.timeStep));
+  tempVel.add( this.acceleration.clone().multiplyScalar(this.Manager.interval/1000) );
+  return this.position.clone().add(tempVel.clone().multiplyScalar(this.Manager.interval/1000));
 }
 
 module.exports = E_Particle;
@@ -661,76 +658,56 @@ module.exports = E_Particle;
 },{}],5:[function(require,module,exports){
 function E_ParticleSource(Mgr){
 
-  //Set Small Radius
-  this.radius = 0.1;
 
   this.Manager = Mgr;
-
-  //Dynamics
+  //Physics
+  this.timeStep = 0; //Dt
   this.position = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.mass = this.radius * 10;
-
-  this.elasticity = 0.1;
+  this.acceleration = new THREE.Vector3();
+  this.mass = 1;
+  this.elasticity = 0.0;
 
   //Informations
-  this.lifeSpan = 30000000000000;
   this.startTime = new Date();
+  this.elapsedTime = 0;
+  this.prevTime = 0;
 
   //Position Fix
-  this.m_colorFixed = false;
   this.m_bFixed = false;
-  this.m_bCollided = false;
 }
 
 E_ParticleSource.prototype.ApplyForce = function(force)
 {
   //a = f/m;
-
   if(this == this.Manager.m_selectedMesh) return;
-  //this.acceleration.add(force.divideScalar(this.mass));
-  this.acceleration.add(force.divideScalar(this.mass) );
-}
-
-E_ParticleSource.prototype.ApplyImpulse = function(force)
-{
-  //a = f/m;
-  if(this == this.Manager.m_selectedMesh) return;
-  //this.acceleration.add(force.divideScalar(this.mass));
-  var acc = new THREE.Vector3(0, 0, 0);
-  acc.add(force.divideScalar(this.mass));
-  this.velocity.add(acc);
+  this.acceleration.add(force.divideScalar(this.mass));
 }
 
 
 E_ParticleSource.prototype.Update = function()
 {
-  var timeStep = this.Manager.timeStep;
+  if(this.prevTime == 0) this.prevTime = this.startTime;
+  var currentTime = new Date();
+  this.timeStep = (currentTime - this.prevTime) / 1000;
+  if(this.timeStep > this.Manager.interval / 1000) this.timeStep = this.Manager.interval / 1000;
+  this.elapsedTime = (currentTime - this.startTime) / 1000;
+  if(this.m_bFixed) {
+    return;
+  }
 
-  //Set Velocity and Update Position
-  this.velocity.add(this.acceleration.clone().multiplyScalar(timeStep));
-  this.position.add(this.velocity.clone().multiplyScalar(timeStep) );
-
-
-  //Set Initial Acceleration
-  this.acceleration = new THREE.Vector3(0, 0, 0);
+  //Gravity
   var gravity = this.Manager.GetGravity();
   if(gravity.length() > 0){
-    this.ApplyForce(gravity.multiplyScalar(this.mass ));
+    this.ApplyForce(gravity.multiplyScalar(this.mass));
   }
 
-  this.m_bCollided = false;
-
-
-  //Remove Particle When
-  if(new Date() - this.startTime > this.lifeSpan || this.position.y < -10){
-    this.Manager.GetScene().remove(this);
-    this.Manager.ParticleSystem().remove(this);
-  }
+  //Set Velocity and Update Position
+  this.velocity.add(this.acceleration.clone().multiplyScalar(this.timeStep));
+  this.position.add(this.velocity.clone().multiplyScalar(this.timeStep) );
+  this.prevTime = currentTime;
+  this.acceleration = new THREE.Vector3();
 }
-
-
 
 E_ParticleSource.prototype.GetPosition = function()
 {
@@ -739,10 +716,18 @@ E_ParticleSource.prototype.GetPosition = function()
 
 E_ParticleSource.prototype.GetNextPosition = function()
 {
-  var tempVel = this.velocity.clone();
-  tempVel.add( this.acceleration.clone().multiplyScalar(this.Manager.timeStep) );
-  return this.position.clone().add(tempVel.clone().multiplyScalar(this.Manager.timeStep));
+  return this.position.clone().add(this.velocity.clone().multiplyScalar(this.Manager.interval));
 }
+
+E_ParticleSource.prototype.ApplyCollision = function(normal)
+{
+  var Vn = normal.clone().multiplyScalar(this.velocity.clone().dot(normal));
+  var Vt = this.velocity.clone().sub(Vn.clone());
+  var Vnp = Vn.clone().multiplyScalar(-1 * this.elasticity);
+  var V = Vnp.clone().add(Vt);
+  this.velocity.set(V.x, V.y, V.z);
+}
+
 
 module.exports = E_ParticleSource;
 
