@@ -41,7 +41,7 @@ var position_options = [
 var propertysheet_1 = {
 view:"property",  id:"ID_VIEW_PROPERTY",
 elements:[
-  { label:"Layout", type:"label" },
+  { label:"Property(TEST)", type:"label" },
   { label:"Width", type:"text", id:"width", value: 250},
   { label:"Height", type:"text", id:"height"},
         { label:"Password", type:"password", id:"pass"},
