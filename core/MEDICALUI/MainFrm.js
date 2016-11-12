@@ -13,7 +13,7 @@ $(window).resize(function(){
   Manager.OnResize();
 });
 
-$$("ID_VIEW_TREE").attachEvent("onViewResize", function(){
+$$("ID_LEFT_AREA").attachEvent("onViewResize", function(){
   Manager.OnResize();
 });
 

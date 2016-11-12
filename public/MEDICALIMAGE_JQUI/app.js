@@ -1,4 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var NUM_VIEW = 4;
+
 var VIEW_MAIN = 0;
 var VIEW_2D_AXL = 1;
 var VIEW_2D_COR = 2;
@@ -6,27 +8,42 @@ var VIEW_2D_SAG = 3;
 
 function E_Manager()
 {
-  var m_renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, alpha:true});
+  var m_renderer = [];
 
-  this.GetRenderer = function(){
-    return m_renderer;
+  this.GetRenderer = function(idx){
+    if(idx == null) return m_renderer;
+    return m_renderer[idx];
   }
 }
 
 E_Manager.prototype.Initialize = function()
 {
   var renderer = this.GetRenderer();
-  var viewport = $$("ID_VIEW_MAIN");
 
-  //Create Scene and Camear
-  renderer.scene = new THREE.Scene();
-  renderer.camera = new THREE.PerspectiveCamera( 45, $$("ID_VIEW_MAIN").$width/$$("ID_VIEW_MAIN").$height, 0.1, 10000000000 );
 
-  //Initialize Renderer
-  renderer.setClearColor(0x00000a);
+  for(var i =0 ; i<NUM_VIEW ; i++){
+    renderer[i] = new THREE.WebGLRenderer({preserveDrawingBuffer:true, alpha:true});
+    //Create Scene and Camear
+    renderer[i].scene = new THREE.Scene();
+    renderer[i].camera = new THREE.PerspectiveCamera( 45, $$("ID_VIEW_MAIN").$width/$$("ID_VIEW_MAIN").$height, 0.1, 10000000000 );
+  }
 
   //Attatch Renderer on Viewport
-  viewport.getNode().replaceChild(renderer.domElement, viewport.$view.childNodes[0]);
+  var viewport0 = $$("ID_VIEW_MAIN");
+  viewport0.getNode().replaceChild(renderer[VIEW_MAIN].domElement, viewport0.$view.childNodes[0]);
+  renderer[0].setClearColor(0x00000a);
+
+  var viewport1 = $$("ID_VIEW_AXL");
+  viewport1.getNode().replaceChild(renderer[VIEW_2D_AXL].domElement, viewport1.$view.childNodes[0]);
+  renderer[1].setClearColor(0x1B0000);
+
+  var viewport2 = $$("ID_VIEW_COR");
+  viewport2.getNode().replaceChild(renderer[VIEW_2D_COR].domElement, viewport2.$view.childNodes[0]);
+  renderer[2].setClearColor(0x001B00);
+
+  var viewport3 = $$("ID_VIEW_SAG");
+  viewport3.getNode().replaceChild(renderer[VIEW_2D_SAG].domElement, viewport3.$view.childNodes[0]);
+  renderer[3].setClearColor(0x00001B);
 
   this.Redraw();
 }
@@ -35,17 +52,31 @@ E_Manager.prototype.Redraw = function()
 {
   //Get Renderer and viewport
   var renderer = this.GetRenderer();
-  var viewport = $$("ID_VIEW_MAIN");
+
 
   //Set setSize
-  renderer.setSize(viewport.$width, viewport.$height);
+  var viewport0 = $$("ID_VIEW_MAIN");
+  renderer[0].setSize(viewport0.$width, viewport0.$height);
+
+  var viewport1 = $$("ID_VIEW_AXL");
+  renderer[1].setSize(viewport1.$width, viewport1.$height);
+
+  var viewport2 = $$("ID_VIEW_COR");
+  renderer[2].setSize(viewport2.$width, viewport2.$height);
+
+  var viewport3 = $$("ID_VIEW_SAG");
+  renderer[3].setSize(viewport3.$width, viewport3.$height);
 
   //Render
-  renderer.render(renderer.scene, renderer.camera);
+  for(var i in renderer){
+      renderer[i].render(renderer[i].scene, renderer[i].camera);
+  }
+
 }
 
 E_Manager.prototype.OnResize = function()
 {
+  console.log("resized");
   this.Redraw();
 }
 module.exports = E_Manager;
@@ -66,9 +97,10 @@ $(window).resize(function(){
   Manager.OnResize();
 });
 
-$$("ID_VIEW_TREE").attachEvent("onViewResize", function(){
+$$("ID_LEFT_AREA").attachEvent("onViewResize", function(){
   Manager.OnResize();
 });
+
 
 $$("ID_VIEW_MAIN").attachEvent("onViewResize", function(){
   Manager.OnResize();
