@@ -1,22 +1,24 @@
 //Sample Tree Data Sample
 var tree_data =  [
-{id:"root", value:"Cars", open:true, data:[
-    { id:"1", open:true, value:"Toyota", data:[
-        { id:"1.1", value:"Avalon" },
-        { id:"1.2", value:"Corolla" },
-        { id:"1.3", value:"Camry" }
+{id:"root", value:"Medical Data(Testing)", open:true, data:[
+    { id:"1", open:true, value:"Mesh", data:[
+        { id:"1.1", value:"Mandible" },
+        { id:"1.2", value:"Fibula-Right" },
+        { id:"1.3", value:"Fibula-Left" }
     ]},
-    { id:"2", open:true, value:"Skoda", data:[
-        { id:"2.1", value:"Octavia" },
-        { id:"2.2", value:"Superb" }
+    { id:"2", open:false, value:"Volume", data:[
+        { id:"2.1", value:"001.dcm" },
+        { id:"2.2", value:"002.dcm" },
+        { id:"2.3", value:"003.dcm" },
+        { id:"2.4", value:"004.dcm" },
+        { id:"2.5", value:"005.dcm" },
+        { id:"2.6", value:"006.dcm" },
+        { id:"2.7", value:"007.dcm" },
     ]}
 ]}
 ]
 
 webix.ui({
-  view:"layout",
-  responsive:true,
-  
   rows: [
     {
       view:"toolbar",
@@ -27,22 +29,19 @@ webix.ui({
     },
     {
       cols:[
-        { view:"tree", data: tree_data, id:"main", width:200 },//first column
+        {id:"ID_VIEW_TREE",view:"tree",template:"{common.icon()} {common.checkbox()} {common.folder()} #value#", data: tree_data, width:window.innerWidth/5 },//first column
         {view:"resizer"},
         {
           cols:[
+            {id:"ID_VIEW_MAIN", view:"template", width:window.innerWidth/1.7},
+            {view:"resizer"},
             {
               rows:[
-                {id:"ID_VIEW_MAIN", view:"template", template:""}
-              ]
-            },{view:"resizer"},
-            {
-              rows:[
-                {template:"<canvas id='ID_VIEW_AXL'> </canvas>", padding:0},
+                {id:"ID_VIEW_AXL", view:"template"},
                 {view:"resizer"},
-                {template:"<canvas id='ID_VIEW_COR'> </canvas>"},
+                {id:"ID_VIEW_COR", view:"template"},
                 {view:"resizer"},
-                {template:"<canvas id='ID_VIEW_SAG'> </canvas>"}
+                {id:"ID_VIEW_SAG", view:"template"}
               ]
             }
           ]
@@ -52,7 +51,7 @@ webix.ui({
     {view:"resizer"},
     {
       //Footer
-      template:"Log Area", height:100
+      id:"ID_VIEW_FOOTER", template:"Log Area", height:100
     }
   ]
 });
