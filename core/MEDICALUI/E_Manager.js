@@ -25,24 +25,25 @@ E_Manager.prototype.Initialize = function()
     //Create Scene and Camear
     renderer[i].scene = new THREE.Scene();
     renderer[i].camera = new THREE.PerspectiveCamera( 45, $$("ID_VIEW_MAIN").$width/$$("ID_VIEW_MAIN").$height, 0.1, 10000000000 );
+    renderer[i].setClearColor(0x00000a);
   }
 
   //Attatch Renderer on Viewport
   var viewport0 = $$("ID_VIEW_MAIN");
   viewport0.getNode().replaceChild(renderer[VIEW_MAIN].domElement, viewport0.$view.childNodes[0]);
-  renderer[0].setClearColor(0x00000a);
+
 
   var viewport1 = $$("ID_VIEW_AXL");
   viewport1.getNode().replaceChild(renderer[VIEW_2D_AXL].domElement, viewport1.$view.childNodes[0]);
-  renderer[1].setClearColor(0x1B0000);
+
 
   var viewport2 = $$("ID_VIEW_COR");
   viewport2.getNode().replaceChild(renderer[VIEW_2D_COR].domElement, viewport2.$view.childNodes[0]);
-  renderer[2].setClearColor(0x001B00);
+
 
   var viewport3 = $$("ID_VIEW_SAG");
   viewport3.getNode().replaceChild(renderer[VIEW_2D_SAG].domElement, viewport3.$view.childNodes[0]);
-  renderer[3].setClearColor(0x00001B);
+
 
   this.Redraw();
 }
@@ -75,7 +76,6 @@ E_Manager.prototype.Redraw = function()
 
 E_Manager.prototype.OnResize = function()
 {
-  console.log("resized");
   this.Redraw();
 }
 module.exports = E_Manager;
