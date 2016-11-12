@@ -1,36 +1,38 @@
+var VIEW_MAIN = 0;
+var VIEW_2D_AXL = 1;
+var VIEW_2D_COR = 2;
+var VIEW_2D_SAG = 3;
+
 function E_Manager()
 {
-  var c = document.getElementById("ID_VIEW_AXL");
-  var ctx = c.getContext("2d");
+  var m_renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true, alpha:true});
+  
+  this.GetRenderer = function(){
+    return m_renderer;
+  }
+}
 
-  // Create gradient
-  var grd = ctx.createLinearGradient(0,0,200,0);
-  grd.addColorStop(0,"red");
-  grd.addColorStop(1,"white");
+E_Manager.prototype.Initialize = function()
+{
+  var renderer = this.GetRenderer();
+  renderer.scene = new THREE.Scene();
+  renderer.camera = new THREE.PerspectiveCamera( 45, $$("ID_VIEW_MAIN").$width/$$("ID_VIEW_MAIN").$height, 0.1, 10000000000 );
 
-  // Fill with gradient
-  ctx.fillStyle = grd;
-  ctx.fillRect(10,10,150,80);
+  var viewport = $$("ID_VIEW_MAIN");
 
+  viewport.$view.replaceChild(renderer.domElement, viewport.$view.childNodes[0]);
 
-  var c = document.getElementById("ID_VIEW_COR");
-  var ctx = c.getContext("2d");
+  renderer.setClearColor(0x000000);
+  renderer.setSize(viewport.$width, viewport.$height);
 
-  // Create gradient
-  var grd = ctx.createLinearGradient(0,0,200,0);
-  grd.addColorStop(0,"green");
-  grd.addColorStop(1,"white");
+  this.Redraw();
+}
 
-  // Fill with gradient
-  ctx.fillStyle = grd;
-  ctx.fillRect(10,10,150,80);
+E_Manager.prototype.Redraw = function()
+{
+  var renderer = this.GetRenderer();
 
 
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize( $$("ID_VIEW_MAIN").$width, $$("ID_VIEW_MAIN").$height );
-  $$("ID_VIEW_MAIN").$view.appendChild( renderer.domElement );
-
-  //test
-  console.log($$("ID_VIEW_MAIN"));
+  renderer.render(renderer.scene, renderer.camera);
 }
 module.exports = E_Manager;
