@@ -1,7 +1,11 @@
-var NUM_VIEW = 4;
-
+// var THREE = require("three");
+// var STLLoader = require('three-stl-loader')(THREE);
+// var TrackballControls = require('three.trackball')(THREE);
 
 var E_MeshManager = require("./E_MeshManager.js");
+var E_VolumeManager = require("./E_VolumeManager.js");
+
+
 function E_Manager()
 {
   this.NUM_VIEW = 4;
@@ -17,6 +21,7 @@ function E_Manager()
 
   //Mesh Manager
   var m_meshManager = new E_MeshManager(this);
+  var m_volumeManager = new E_VolumeManager(this);
 
   this.GetRenderer = function(idx){
     if(idx == null) return m_renderer;
@@ -31,6 +36,10 @@ function E_Manager()
   this.MeshMgr = function(){
     return m_meshManager;
   }
+
+  this.VolumeMgr = function(){
+    return m_volumeManager;
+  }
 }
 
 E_Manager.prototype.Initialize = function()
@@ -44,7 +53,7 @@ E_Manager.prototype.Initialize = function()
   renWin[2] = $$("ID_VIEW_COR");
   renWin[3] = $$("ID_VIEW_SAG");
 
-  for(var i =0 ; i<NUM_VIEW ; i++){
+  for(var i =0 ; i<this.NUM_VIEW ; i++){
     //Initialize renderer
     renderer[i] = new THREE.WebGLRenderer({preserveDrawingBuffer:true, alpha:true});
 
@@ -92,8 +101,7 @@ E_Manager.prototype.Initialize = function()
 
 E_Manager.prototype.Animate = function()
 {
-  for(var i=0 ; i<NUM_VIEW ; i++){
-
+  for(var i=0 ; i<this.NUM_VIEW ; i++){
     this.GetRenderer(i).control.update();
   }
 
@@ -152,11 +160,29 @@ E_Manager.prototype.UpdateWindowSize = function()
   var renderer = this.GetRenderer();
   var renWin = this.GetRenderWindow();
 
-  for(var i=0 ; i<NUM_VIEW ; i++){
+  for(var i=0 ; i<this.NUM_VIEW ; i++){
     renderer[i].setSize(renWin[i].$width, renWin[i].$height);
     renderer[i].camera.aspect = renWin[i].$width/renWin[i].$height;
     renderer[i].camera.updateProjectionMatrix();
     renderer[i].control.handleResize();
+  }
+}
+
+
+E_Manager.prototype.ResetTreeItems = function()
+{
+  var tree = $$("ID_VIEW_TREE");
+  tree.clearAll();
+
+  tree.add({ id:"ID_TREE_MESH", open:true, value:"Mesh"});
+  tree.add({ id:"ID_TREE_VOLUME", open:false, value:"Volume"});
+
+
+  var meshList = this.MeshMgr().m_meshList;
+  for(var i in meshList){
+    var mesh = meshList[i];
+    tree.add({id:i, value:mesh.name}, i, "ID_TREE_MESH");
+    tree.checkItem(i);
   }
 }
 module.exports = E_Manager;

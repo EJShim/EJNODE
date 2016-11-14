@@ -1,5 +1,5 @@
 //Define Header
-var E_Manager = require("./E_Manager.js");
+var E_Manager = require("./Manager/E_Manager.js");
 
 
 //Initialize Manager
@@ -69,3 +69,29 @@ $$("ID_BUTTON_IMPORT_MESH").attachEvent("onItemClick", function(){
 $$("ID_BUTTON_IMPORT_VOLUME").attachEvent("onItemClick", function(){
   console.log("Volume Import Clicked");
 });
+
+
+///Tree Events
+$$("ID_VIEW_TREE").attachEvent("onItemCheck", function(id){
+  if(this.isBranch()) return;
+
+  var checkState = this.isChecked(id);
+  Manager.MeshMgr().ShowHide(id, checkState);
+
+})
+
+$$("ID_VIEW_TREE").attachEvent("onItemClick", function(id){
+  //this.select(id);
+  Manager.MeshMgr().SetSelectedMesh(id);
+})
+
+$$("ID_VIEW_TREE").attachEvent("onItemDblClick", function(){
+  console.log("Item DBlClicked");
+})
+
+$$("ID_VIEW_TREE").attachEvent("onKeyPress", function(code, e){
+
+  if(e.key == "Backspace"){
+    Manager.MeshMgr().RemoveMesh();
+  }
+})

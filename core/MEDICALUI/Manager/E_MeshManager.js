@@ -27,12 +27,10 @@ E_MeshManager.prototype.LoadMesh = function(geometry, name)
   material.color = new THREE.Color(Math.random(), Math.random(), Math.random());
 
   var mesh = new THREE.Mesh(geometry, material);
+  mesh.name = name;
 
   //Add Mesh
   this.AddMesh(mesh);
-
-  //Add To Tree
-  $$("ID_VIEW_TREE").add({value:name}, this.m_meshList.length, "ID_TREE_MESH");
 }
 
 E_MeshManager.prototype.AddMesh = function(mesh)
@@ -41,10 +39,52 @@ E_MeshManager.prototype.AddMesh = function(mesh)
   this.m_meshList.push(mesh);
   scene.add(mesh);
 
-
+  this.Mgr.ResetTreeItems();
 
   this.Mgr.ResetCamera();
   this.Mgr.Redraw();
+}
+
+E_MeshManager.prototype.ShowHide = function(id, show)
+{
+  if(this.m_meshList.length < 1) return;
+  var mesh = this.GetMesh(id);
+  var scene = this.Mgr.GetRenderer(this.Mgr.VIEW_MAIN).scene;
+
+  if(show){
+    scene.add(mesh);
+  }else{
+    scene.remove(mesh);
+
+    //Update Tree
+  }
+
+  this.Mgr.Redraw();
+}
+
+E_MeshManager.prototype.RemoveMesh = function(){
+
+  if(this.m_selectedMeshIdx == -1) return;
+  var id = this.m_selectedMeshIdx;
+  //Hide Mesh
+  this.ShowHide(id, false);
+
+  //Remove From The Mesh List
+  this.m_meshList.splice(id, 1);
+
+  if(this.m_meshList.length == 0) this.m_selectedMeshIdx = -1;
+
+  //Remove From Mesh Tree
+  this.Mgr.ResetTreeItems();
+}
+
+E_MeshManager.prototype.SetSelectedMesh = function(id)
+{
+  this.m_selectedMeshIdx = id;
+}
+
+E_MeshManager.prototype.GetMesh = function(id){
+  return this.m_meshList[id];
 }
 
 E_MeshManager.prototype.GetCenter = function(mesh)

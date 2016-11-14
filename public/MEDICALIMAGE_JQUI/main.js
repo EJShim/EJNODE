@@ -1,7 +1,7 @@
 //Sample Tree Data Sa
 var tree_data =  [
     { id:"ID_TREE_MESH", open:true, value:"Mesh"},
-    { id:"ID_TREE_VOLUME", open:false, value:"Volume", data:[]}
+    { id:"ID_TREE_VOLUME", open:false, value:"Volume"}
 ]
 
 

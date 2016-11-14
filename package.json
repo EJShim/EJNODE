@@ -2,17 +2,17 @@
   "name": "express-tutorial",
   "version": "1.0.0",
   "dependencies": {
+    "ejs": "~2.4.1",
     "express": "~4.13.1",
-    "ejs": "~2.4.1"
+    "three-stl-loader": "^1.0.4"
   },
   "devDependencies": {
     "browserify": "^13.1.0",
     "watchify": "^3.7.0"
   },
-  "repository" :
-  {
-    "type" : "git"
-    , "url" : "https://github.com/EJShim/ejshim.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EJShim/ejshim.git"
   },
   "scripts": {
     "build": "browserify core/MEDICALUI/MainFrm.js -o public/MEDICALIMAGE_JQUI/app.js"
