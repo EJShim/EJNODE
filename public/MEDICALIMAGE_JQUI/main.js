@@ -1,23 +1,8 @@
-//Sample Tree Data Sample
+//Sample Tree Data Sa
 var tree_data =  [
-{id:"root", value:"Medical Data(Testing)", open:true, data:[
-    { id:"1", open:true, value:"Mesh", data:[
-        { id:"1.1", value:"Mandible" },
-        { id:"1.2", value:"Fibula-Right" },
-        { id:"1.3", value:"Fibula-Left" }
-    ]},
-    { id:"2", open:false, value:"Volume", data:[
-        { id:"2.1", value:"001.dcm" },
-        { id:"2.2", value:"002.dcm" },
-        { id:"2.3", value:"003.dcm" },
-        { id:"2.4", value:"004.dcm" },
-        { id:"2.5", value:"005.dcm" },
-        { id:"2.6", value:"006.dcm" },
-        { id:"2.7", value:"007.dcm" },
-    ]}
-]}
+    { id:"ID_TREE_MESH", open:true, value:"Mesh"},
+    { id:"ID_TREE_VOLUME", open:false, value:"Volume", data:[]}
 ]
-
 
 
 ////Sample Property Sheets
@@ -62,16 +47,17 @@ webix.ui({
     {
       view:"toolbar",
       elements:[
-        {view:"button", value:"Import Dicom", width:100},
-        {view:"button", value:"Import Mesh", width:100}
+        {id:"ID_BUTTON_IMPORT_MESH", view:"button",  value:"Import Mesh", width:100},
+        {id:"ID_BUTTON_IMPORT_VOLUME", view:"button", value:"Import Dicom", width:100}
       ]
     },
     {
       cols:[
         {
           id:"ID_LEFT_AREA",
+          gravity:0.3,
           rows:[
-            {id:"ID_VIEW_TREE",view:"tree",template:"{common.icon()} {common.checkbox()} {common.folder()} #value#", data: tree_data, width:window.innerWidth/5 },//first column,
+            {id:"ID_VIEW_TREE",view:"tree",template:"{common.icon()} {common.checkbox()} {common.folder()} #value#", data:tree_data},//first column,
             {view:"resizer"},
             propertysheet_1
           ]
@@ -81,7 +67,7 @@ webix.ui({
           rows:[
             {
               cols:[
-                {id:"ID_VIEW_MAIN", view:"template", width:window.innerWidth/1.7},
+                {id:"ID_VIEW_MAIN", view:"template", gravity:2.5},
                 {view:"resizer"},
                 {
                   rows:[
