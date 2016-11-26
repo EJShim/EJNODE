@@ -15,6 +15,6 @@
     "url": "https://github.com/EJShim/ejshim.git"
   },
   "scripts": {
-    "build": "browserify core/MEDICALUI/MainFrm.js -o public/MEDICALIMAGE_JQUI/app.js"
+    "build": "browserify core/assignment3/MainFrm.js -o public/PhysicsAnimation/Assignment3/app.js"
   }
 }
