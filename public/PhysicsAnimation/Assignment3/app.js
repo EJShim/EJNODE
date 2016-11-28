@@ -5,6 +5,7 @@ function E_Interactor(Mgr)
 
   this.m_bDown = false;
   this.m_bRDown = false;
+  this.m_bObjectSelected = false;
 
   this.m_keyCode = -1;
 
@@ -18,11 +19,20 @@ E_Interactor.prototype.onMouseDown = function(event)
   var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
   var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  this.Manager.GenerateObjectScreen(mouseX, mouseY);
+  //Check if Object is Selected;
+  this.m_bObjectSelected = this.Manager.SelectObject(mouseX, mouseY);
+
+  //Store Position;
+  this.prevPosition.x = mouseX;
+  this.prevPosition.y = mouseY;
 }
 
 E_Interactor.prototype.onMouseUp = function(event)
 {
+  if(this.m_bObjectSelected){
+    this.Manager.OnReleaseMouse();
+    this.m_bObjectSelected = false;
+  }
   this.m_bDown = false;
 }
 
@@ -37,7 +47,17 @@ E_Interactor.prototype.onMouseRUp = function(event)
 
 E_Interactor.prototype.onMouseMove = function(event)
 {
+  if(!this.m_bDown || !this.m_bObjectSelected) return;
 
+  //Get Current position
+  var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  var currentPosition = new THREE.Vector2(mouseX, mouseY);
+
+  var delta = currentPosition.clone().sub(this.prevPosition.clone());
+  this.Manager.OnMoveObject(mouseX, mouseY);
+
+  this.prevPosition = currentPosition;
 }
 
 E_Interactor.prototype.onKeyboardDown = function(event)
@@ -152,6 +172,7 @@ $(window).keyup(function(event){
 var E_Interactor = require('./E_Interactor.js');
 var E_Particle = require("../libs/physics/E_Particle.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
+var E_SpringDamper = require('../libs/physics/E_SpringDamper.js');
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
 
 function E_Manager()
@@ -160,6 +181,7 @@ function E_Manager()
   var m_scene = new THREE.Scene();
   var m_camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 100000 );
   var m_renderer = new THREE.WebGLRenderer({canvas:canvas, preserveDrawingBuffer: true, antialias: true, alpha:true});
+  m_renderer.shadowMap.enabled = true;
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
@@ -176,6 +198,7 @@ function E_Manager()
   this.prevTime = new Date();
 
   this.groundMesh = [];
+  this.m_selectedMesh = null
 
   this.GetScene = function()
   {
@@ -256,6 +279,7 @@ E_Manager.prototype.Animate = function()
 E_Manager.prototype.InitObject = function()
 {
   var scene = this.GetScene();
+  var system = this.ParticleSystem();
   var camera = this.GetCamera();
 
   camera.position.z = 3;
@@ -264,12 +288,44 @@ E_Manager.prototype.InitObject = function()
 
   var pointLight = new THREE.PointLight({color:0xffffff});
   pointLight.position.set(10, 50, 0);
+  pointLight.castshadow = true;
   var ambient = new THREE.AmbientLight({color:0x000000});
 
   scene.add(pointLight);
   scene.add(ambient);
 
   this.GenerateRandomTriangle();
+
+
+  //Init ParticleSs
+  var prevMesh = null;
+  for(var i=0 ; i<10 ; i++){
+    var newMesh = new E_Particle(this, 0.45);
+    newMesh.mass = 1;
+    newMesh.lifeSpan = 180000;
+    newMesh.position.set(this.frand(-0.1, 0.1), i+6 , this.frand(-0.1, 0.1));
+    newMesh.material.color = new THREE.Color(0.1, 0.1, 0.4);
+    newMesh.m_colorFixed = true;
+
+
+
+    if( i!= 9)
+    {
+      system.add(newMesh);
+    }
+    scene.add(newMesh);
+
+    if(prevMesh != null){
+      var spring = new E_SpringDamper(this);
+      spring.AddMesh(prevMesh);
+      spring.AddMesh(newMesh);
+
+      scene.add(spring);
+      system.add(spring);
+    }
+
+    prevMesh = newMesh;
+  }
 
 }
 
@@ -278,7 +334,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 2.3;
+  var scaleFactor = 8;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -304,42 +360,18 @@ E_Manager.prototype.GenerateRandomTriangle = function()
 
 
 
-  for(var i=2 ; i<4 ; i++){
-    this.groundMesh[i].material.transparent = true;
-    this.groundMesh[i].material.opacity = 0.2;
+  for(var i=0 ; i<8 ; i++){
+    this.groundMesh[i].receiveShadow = true;
+    //this.groundMesh[i].material.transparent = true;
+    //this.groundMesh[i].material.opacity = 0.2;
     this.groundMesh[i].material.side = THREE.DoubleSide;
-    this.groundMesh[i].material.color = new THREE.Color(Math.random() / 4, Math.random() / 4, Math.random() / 4);
+    this.groundMesh[i].material.color = new THREE.Color(0.2, 0.1, 0.05);
 
     scene.add(this.groundMesh[i]);
     system.add(this.groundMesh[i]);
   }
 
-  // var realGround = new E_FinitePlane( new THREE.Vector3(-scaleFactor*5 ,-scaleFactor*5 , scaleFactor*5) ,new THREE.Vector3(-scaleFactor*5, -scaleFactor , -scaleFactor*5), new THREE.Vector3( scaleFactor*5 , -scaleFactor*5, -scaleFactor*5 ));
-  // var realGround2 = new E_FinitePlane(new THREE.Vector3(-scaleFactor*5, -scaleFactor*5, scaleFactor*5) ,new THREE.Vector3(scaleFactor*5, -scaleFactor, scaleFactor*5), new THREE.Vector3(scaleFactor*5, -scaleFactor*5, -scaleFactor*5));
-  // var groundColor = new THREE.Color(Math.random(), Math.random(), Math.random());
-  //
-  // realGround.material.color = groundColor;
-  // realGround2.material.color = groundColor;
-  //
-  // scene.add(realGround);
-  // system.add(realGround);
-  //
-  // scene.add(realGround2);
-  // system.add(realGround2);
 }
-
-E_Manager.prototype.ResetGround = function()
-{
-//   var v1 = new THREE.Vector3(this.frand(-2.5, -1.0), this.frand(-0.2, 0.2), this.frand(-2.5, -1.0));
-//   var v2 = new THREE.Vector3(this.frand(1.0, 2.5), this.frand(-0.2, 0.2) , this.frand(-2.5, -1.0));
-//   var v3 = new THREE.Vector3(this.frand(-0.5, -0.5), this.frand(-0.2, 0.2, this.frand(1.0, 2.5)));
-//
-//   this.groundMesh.geometry.vertices[0].set(v1.x, v1.y, v1.z) ;
-//   this.groundMesh.geometry.vertices[1].set(v2.x, v2.y, v2.z);
-//   this.groundMesh.geometry.vertices[2].set(v3.x, v3.y, v3.z);
-//   this.groundMesh.geometry.verticesNeedUpdate = true;
-}
-
 
 E_Manager.prototype.GenerateObjectScreen = function(x, y)
 {
@@ -364,8 +396,9 @@ E_Manager.prototype.GenerateObject = function(x, y, z, vel)
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var newMesh = new E_Particle(this, this.frand(0.1,0.2));
-  newMesh.lifeSpan = 180000;
+  var newMesh = new E_Particle(this, 0.1);
+  newMesh.lifeSpan = 18000000000;
+  newMesh.castShadow = true;
   newMesh.position.set(x, y, z);
   newMesh.material.color = new THREE.Color(Math.random()/3, Math.random()/3, Math.random()/3);
   newMesh.m_colorFixed = true;
@@ -435,6 +468,73 @@ E_Manager.prototype.SaveThumbnail = function()
 	ajax.send(postData);
 }
 
+E_Manager.prototype.SelectObject = function(x, y)
+{
+  var camera = this.GetCamera();
+  var scene = this.GetScene();
+
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2(x, y);
+
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(scene.children);
+
+
+  if(intersects.length > 0){
+    for(var i in intersects){
+      if(intersects[i].object instanceof E_Particle){
+        this.m_selectedMesh = intersects[i].object;
+        this.m_selectedMesh.velocity.set(0, 0, 0);
+
+        this.m_prevTime = new Date();
+        this.m_prevPosition = this.m_selectedMesh.position.clone();
+        return true;
+        //intersects[i].object.material.color.set(0xff0000);
+        break;
+      }
+      // else if(intersects[i].object instanceof E_Fabric){
+      //   var faceIdx = intersects[i].face.a;
+      //   this.m_prevTime = new Date();
+      //   this.m_selectedMesh = intersects[i].object.particles[faceIdx];
+      //   this.m_selectedMesh.velocity.set(0, 0, 0);
+      //   this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
+      //   return true;
+      // }
+    }
+  }
+  return false;
+}
+E_Manager.prototype.OnMoveObject = function(x, y)
+{
+
+  //Save Time and Position
+  this.m_prevTime = new Date();
+  this.m_prevPosition = this.m_selectedMesh.position.clone()
+
+  var camera = this.GetCamera();
+  var scene = this.GetScene();
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2(x, y);
+  raycaster.setFromCamera(mouse, camera);
+  var distance = camera.position.clone().sub(this.m_selectedMesh.position).length();
+  var newPosition = camera.position.clone().add(raycaster.ray.direction.clone().multiplyScalar(distance));
+  this.m_selectedMesh.position.set(newPosition.x, newPosition.y, newPosition.z);
+}
+
+E_Manager.prototype.OnReleaseMouse = function()
+{
+  var currentTime = new Date();
+  var currentPosition = this.m_selectedMesh.position.clone();
+
+  var elapsedTime = (currentTime-this.m_prevTime);
+  var elapsedPosition = currentPosition.sub(this.m_prevPosition);
+
+
+  this.m_selectedMesh = -1;
+  this.m_prevTime = 0;
+  this.m_prevPosition.set(0, 0, 0);
+}
+
 E_Manager.prototype.frand = function(min, max)
 {
   var range = max - min;
@@ -448,7 +548,7 @@ E_Manager.prototype.frand = function(min, max)
 
 module.exports = E_Manager;
 
-},{"../libs/physics/E_FinitePlane.js":4,"../libs/physics/E_Particle.js":5,"../libs/physics/E_ParticleSystem.js":7,"./E_Interactor.js":1}],4:[function(require,module,exports){
+},{"../libs/physics/E_FinitePlane.js":4,"../libs/physics/E_Particle.js":5,"../libs/physics/E_ParticleSystem.js":7,"../libs/physics/E_SpringDamper.js":8,"./E_Interactor.js":1}],4:[function(require,module,exports){
 function E_FinitePlane(v1, v2, v3)
 {
   THREE.Mesh.call(this);
@@ -1090,7 +1190,7 @@ function E_SpringDamper(Mgr)
   this.Manager = Mgr;
   this.geometry = new THREE.Geometry();
   this.geometry.vertices.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1));
-  this.material = new THREE.LineBasicMaterial({color:0x0000ff});
+  this.material = new THREE.LineBasicMaterial({color:0x00ffff, linewidth:3});
 
   this.objects = [];
   this.cValue = 5;
@@ -1121,12 +1221,9 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
 E_SpringDamper.prototype.Update = function()
 {
   //Calculate The amount of Stretc
-  if(this.objects[0].parent == null && this.objects[1].parent == null){
+  if(this.objects[0].parent == null || this.objects[1].parent == null){
     this.Manager.ParticleSystem().remove(this);
     this.Manager.GetScene().remove(this);
-  }
-  if(this.objects.length != 2){
-    return;
   }
 
   //Update Line Shape

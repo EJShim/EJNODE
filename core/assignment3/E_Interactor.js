@@ -4,6 +4,7 @@ function E_Interactor(Mgr)
 
   this.m_bDown = false;
   this.m_bRDown = false;
+  this.m_bObjectSelected = false;
 
   this.m_keyCode = -1;
 
@@ -17,11 +18,20 @@ E_Interactor.prototype.onMouseDown = function(event)
   var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
   var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  this.Manager.GenerateObjectScreen(mouseX, mouseY);
+  //Check if Object is Selected;
+  this.m_bObjectSelected = this.Manager.SelectObject(mouseX, mouseY);
+
+  //Store Position;
+  this.prevPosition.x = mouseX;
+  this.prevPosition.y = mouseY;
 }
 
 E_Interactor.prototype.onMouseUp = function(event)
 {
+  if(this.m_bObjectSelected){
+    this.Manager.OnReleaseMouse();
+    this.m_bObjectSelected = false;
+  }
   this.m_bDown = false;
 }
 
@@ -36,7 +46,17 @@ E_Interactor.prototype.onMouseRUp = function(event)
 
 E_Interactor.prototype.onMouseMove = function(event)
 {
+  if(!this.m_bDown || !this.m_bObjectSelected) return;
 
+  //Get Current position
+  var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+  var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  var currentPosition = new THREE.Vector2(mouseX, mouseY);
+
+  var delta = currentPosition.clone().sub(this.prevPosition.clone());
+  this.Manager.OnMoveObject(mouseX, mouseY);
+
+  this.prevPosition = currentPosition;
 }
 
 E_Interactor.prototype.onKeyboardDown = function(event)

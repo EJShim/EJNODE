@@ -5,7 +5,7 @@ function E_SpringDamper(Mgr)
   this.Manager = Mgr;
   this.geometry = new THREE.Geometry();
   this.geometry.vertices.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1));
-  this.material = new THREE.LineBasicMaterial({color:0x0000ff});
+  this.material = new THREE.LineBasicMaterial({color:0x00ffff, linewidth:3});
 
   this.objects = [];
   this.cValue = 5;
@@ -36,12 +36,9 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
 E_SpringDamper.prototype.Update = function()
 {
   //Calculate The amount of Stretc
-  if(this.objects[0].parent == null && this.objects[1].parent == null){
+  if(this.objects[0].parent == null || this.objects[1].parent == null){
     this.Manager.ParticleSystem().remove(this);
     this.Manager.GetScene().remove(this);
-  }
-  if(this.objects.length != 2){
-    return;
   }
 
   //Update Line Shape
