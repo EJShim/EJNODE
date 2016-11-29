@@ -26,6 +26,12 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
   }
   this.objects.push(mesh);
 
+  //Add Mesh a Spring Damper
+  if(this.objects.length == 2){
+    this.objects[0].connectedObject.push(this.objects[1]);
+    this.objects[1].connectedObject.push(this.objects[0]);
+  }
+
   if(this.objects.length >= 2){
     this.geometry.verticesNeedUpdate = true;
     this.geometry.vertices[0] = this.objects[0].position.clone();
@@ -37,6 +43,14 @@ E_SpringDamper.prototype.Update = function()
 {
   //Calculate The amount of Stretc
   if(this.objects[0].parent == null || this.objects[1].parent == null){
+    if(this.objects[0].parent == null){
+      var idx = this.objects[1].connectedObject.indexOf(this.objects[0]);
+      this.objects[1].connectedObject.splice(idx, 1);
+    }else{
+      var idx = this.objects[0].connectedObject.indexOf(this.objects[1]);
+      this.objects[0].connectedObject.splice(idx, 1);
+    }
+
     this.Manager.ParticleSystem().remove(this);
     this.Manager.GetScene().remove(this);
   }
