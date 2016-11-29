@@ -25,6 +25,10 @@ $("#viewport").mouseup(function(event){
   Manager.GetInteractor().onMouseUp(event);
 });
 
+$("#viewport").contextmenu(function(event){
+  Manager.GetInteractor().onMouseRDown(event);
+});
+
 
 $("#viewport").bind('touchstart', function(event) {
   Manager.GetInteractor().onMouseDown(event.originalEvent.touches[0]);

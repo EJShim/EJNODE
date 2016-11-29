@@ -116,8 +116,8 @@ E_Manager.prototype.InitObject = function()
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  camera.position.z = 3;
-  camera.position.y = 5;
+  camera.position.x = 23;
+  camera.position.y = 10;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   //Light
@@ -168,9 +168,41 @@ E_Manager.prototype.InitObject = function()
       scene.add(spring);
       system.add(spring);
     }
+    prevMesh = newMesh;
 
+    if(i == 9) prevMesh = null;
+  }
+
+  prevMesh = null;
+
+  for(var i=0 ; i<10 ; i++){
+    var newMesh = new E_Particle(this, 0.45);
+    newMesh.mass = 1;
+    newMesh.lifeSpan = 18000000000000;
+    newMesh.castShadow = true;
+    newMesh.position.set(this.frand(-0.1, 0.1), i+6 , this.frand(-0.1, 0.1)-3);
+    newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+    newMesh.m_colorFixed = true;
+
+    if( i!= 9)
+    {
+      system.add(newMesh);
+    }
+    scene.add(newMesh);
+
+    if(prevMesh != null){
+      var spring = new E_SpringDamper(this);
+      spring.castShadow = true;
+      spring.AddMesh(prevMesh);
+      spring.AddMesh(newMesh);
+
+      scene.add(spring);
+      system.add(spring);
+    }
     prevMesh = newMesh;
   }
+
+
 
 }
 
