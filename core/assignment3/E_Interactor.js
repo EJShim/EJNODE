@@ -89,7 +89,7 @@ E_Interactor.prototype.Update = function()
     break;
     case 32:
     //this.Manager.frand(-2.0, 2.0), this.Manager.frand(2.0, 3.0), this.Manager.frand(-2.0, 2.0)
-      this.Manager.GenerateObject(0, 0, 0);
+      this.Manager.GenerateObject(0, 5, 0);
     break;
     case 87: // W Key
       var nextPosition = camera.position.clone().add(camDir.clone().multiplyScalar(0.1));

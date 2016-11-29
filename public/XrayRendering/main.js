@@ -111,6 +111,8 @@ function DrawGeometry()
   pointLight.shadow.camera.fov = 26;
   pointLight.shadow.mapSize.width = 5000;
   pointLight.shadow.mapSize.height = 5000;
+  pointLight.position.y = -2000;
+  pointLight.position.z = -750;
 
   var shadowCameraHelper = new THREE.CameraHelper(pointLight.shadow.camera);
   shadowCameraHelper.material.linewidth = 5.0;
@@ -122,8 +124,7 @@ function DrawGeometry()
   var lightMaterial = new THREE.MeshBasicMaterial( { color: 'red' } );
   var lightSphere = new THREE.Mesh( lightGeometry, lightMaterial );
   pointLight.add( lightSphere );
-  pointLight.position.y = -2000;
-  pointLight.position.z = -750;
+
   m_scene.add(pointLight);
 
   //add detector Plane

@@ -5,7 +5,7 @@ function E_SpringDamper(Mgr)
   this.Manager = Mgr;
   this.geometry = new THREE.Geometry();
   this.geometry.vertices.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1));
-  this.material = new THREE.LineBasicMaterial({color:0xffff00, linewidth:10});
+  this.material = new THREE.LineBasicMaterial({color:0xaaaa00, linewidth:10});
 
   this.objects = [];
   this.cValue = 5;

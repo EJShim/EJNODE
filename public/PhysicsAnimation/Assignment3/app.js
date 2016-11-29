@@ -90,7 +90,7 @@ E_Interactor.prototype.Update = function()
     break;
     case 32:
     //this.Manager.frand(-2.0, 2.0), this.Manager.frand(2.0, 3.0), this.Manager.frand(-2.0, 2.0)
-      this.Manager.GenerateObject(0, 0, 0);
+      this.Manager.GenerateObject(0, 5, 0);
     break;
     case 87: // W Key
       var nextPosition = camera.position.clone().add(camDir.clone().multiplyScalar(0.1));
@@ -181,7 +181,8 @@ function E_Manager()
   var m_scene = new THREE.Scene();
   var m_camera = new THREE.PerspectiveCamera( 45, window.innerWidth/window.innerHeight, 0.1, 100000 );
   var m_renderer = new THREE.WebGLRenderer({canvas:canvas, preserveDrawingBuffer: true, antialias: true, alpha:true});
-  m_renderer.shadowMap.enabled = true;
+
+
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
@@ -255,6 +256,7 @@ E_Manager.prototype.Animate = function()
     this.ParticleSystem().Update();
 
     var renderer = this.GetRenderer();
+
     var camera = this.GetCamera();
     var scene = this.GetScene();
 
@@ -281,14 +283,28 @@ E_Manager.prototype.InitObject = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
   var camera = this.GetCamera();
+  var renderer = this.GetRenderer();
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   camera.position.z = 3;
   camera.position.y = 5;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-  var pointLight = new THREE.PointLight({color:0xffffff});
-  pointLight.position.set(10, 50, 0);
-  pointLight.castshadow = true;
+  //Light
+  var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
+
+  pointLight.position.set(10, 15, 5);
+  pointLight.castShadow = true;
+  pointLight.angle = Math.PI/4;
+  pointLight.penumbra = 0.05;
+  pointLight.decay = 2;
+  pointLight.distance = 200;
+  pointLight.shadow.mapSize.width = 1024;
+  pointLight.shadow.mapSize.height = 1024;
+  pointLight.shadow.camera.near = 1;
+  pointLight.shadow.camera.far = 10000;
+
   var ambient = new THREE.AmbientLight({color:0x000000});
 
   scene.add(pointLight);
@@ -302,12 +318,11 @@ E_Manager.prototype.InitObject = function()
   for(var i=0 ; i<10 ; i++){
     var newMesh = new E_Particle(this, 0.45);
     newMesh.mass = 1;
-    newMesh.lifeSpan = 180000;
+    newMesh.lifeSpan = 18000000000000;
+    newMesh.castShadow = true;
     newMesh.position.set(this.frand(-0.1, 0.1), i+6 , this.frand(-0.1, 0.1));
     newMesh.material.color = new THREE.Color(0.1, 0.1, 0.4);
     newMesh.m_colorFixed = true;
-
-
 
     if( i!= 9)
     {
@@ -317,6 +332,7 @@ E_Manager.prototype.InitObject = function()
 
     if(prevMesh != null){
       var spring = new E_SpringDamper(this);
+      spring.castShadow = true;
       spring.AddMesh(prevMesh);
       spring.AddMesh(newMesh);
 
@@ -362,9 +378,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
 
   for(var i=0 ; i<8 ; i++){
     this.groundMesh[i].receiveShadow = true;
-    //this.groundMesh[i].material.transparent = true;
-    //this.groundMesh[i].material.opacity = 0.2;
-    this.groundMesh[i].material.side = THREE.DoubleSide;
+    this.groundMesh[i].material.side = THREE.FrontSide;
     this.groundMesh[i].material.color = new THREE.Color(0.2, 0.1, 0.05);
 
     scene.add(this.groundMesh[i]);
@@ -396,9 +410,10 @@ E_Manager.prototype.GenerateObject = function(x, y, z, vel)
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var newMesh = new E_Particle(this, 0.1);
-  newMesh.lifeSpan = 18000000000;
+  var newMesh = new E_Particle(this, this.frand(0.3, 0.4));
+  newMesh.lifeSpan = 30000; //30 secs
   newMesh.castShadow = true;
+  newMesh.receiveShadow = true;
   newMesh.position.set(x, y, z);
   newMesh.material.color = new THREE.Color(Math.random()/3, Math.random()/3, Math.random()/3);
   newMesh.m_colorFixed = true;
@@ -412,14 +427,6 @@ E_Manager.prototype.GenerateObject = function(x, y, z, vel)
 
   scene.add(newMesh);
   system.add(newMesh);
-  // scene.add(newMesh2);
-  // scene.add(spring);
-
-  //Impulse
-  //newMesh.ApplyImpulse(raycaster.ray.direction.clone().normalize().multiplyScalar(0));
-
-
-  //log
 
 }
 
@@ -1190,7 +1197,7 @@ function E_SpringDamper(Mgr)
   this.Manager = Mgr;
   this.geometry = new THREE.Geometry();
   this.geometry.vertices.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1));
-  this.material = new THREE.LineBasicMaterial({color:0x00ffff, linewidth:3});
+  this.material = new THREE.LineBasicMaterial({color:0xaaaa00, linewidth:10});
 
   this.objects = [];
   this.cValue = 5;
