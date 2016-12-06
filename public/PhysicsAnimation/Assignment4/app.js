@@ -364,7 +364,7 @@ E_Manager.prototype.InitObject = function()
   //Init ParticleSs
   var prevMesh = null;
 
-  var numPart = 3;
+  var numPart = 10;
   for(var i=0 ; i<numPart ; i++){
     var newMesh = new E_Particle(this, 0.45);
     newMesh.mass = 1;
@@ -373,11 +373,10 @@ E_Manager.prototype.InitObject = function()
     newMesh.position.set(this.frand(-0.1, 0.1), i-4 , this.frand(-0.1, 0.1));
     newMesh.material.color = new THREE.Color(0.1, 0.1, 0.4);
     newMesh.m_colorFixed = true;
+    if(i == 0)
+    newMesh.m_bFixed = true;
 
-    //if( i!= numPart-1)
-    //{
-      system.add(newMesh);
-    //}
+    system.add(newMesh);
     scene.add(newMesh);
 
     if(prevMesh != null){
@@ -394,34 +393,35 @@ E_Manager.prototype.InitObject = function()
     if(i == numPart-1) prevMesh = null;
   }
 
-  // prevMesh = null;
-  //
-  // for(var i=0 ; i<10 ; i++){
-  //   var newMesh = new E_Particle(this, 0.45);
-  //   newMesh.mass = 1;
-  //   newMesh.lifeSpan = 18000000000000;
-  //   newMesh.castShadow = true;
-  //   newMesh.position.set(this.frand(-0.1, 0.1), i-4 , this.frand(-0.1, 0.1)-3);
-  //   newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
-  //   newMesh.m_colorFixed = true;
-  //
-  //   if( i!= 9)
-  //   {
-  //     system.add(newMesh);
-  //   }
-  //   scene.add(newMesh);
-  //
-  //   if(prevMesh != null){
-  //     var spring = new E_SpringDamper(this);
-  //     spring.castShadow = true;
-  //     spring.AddMesh(prevMesh);
-  //     spring.AddMesh(newMesh);
-  //
-  //     scene.add(spring);
-  //     system.add(spring);
-  //   }
-  //   prevMesh = newMesh;
-  // }
+  prevMesh = null;
+
+  for(var i=0 ; i<10 ; i++){
+    var newMesh = new E_Particle(this, 0.45);
+    newMesh.mass = 1;
+    newMesh.lifeSpan = 18000000000000;
+    newMesh.castShadow = true;
+    newMesh.position.set(this.frand(-0.1, 0.1), i-4 , this.frand(-0.1, 0.1)-3);
+    newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+    newMesh.m_colorFixed = true;
+    if(i == 0 || i == 9)
+    newMesh.m_bFixed = true;
+
+
+
+    system.add(newMesh);
+    scene.add(newMesh);
+
+    if(prevMesh != null){
+      var spring = new E_SpringDamper(this);
+      spring.castShadow = true;
+      spring.AddMesh(prevMesh);
+      spring.AddMesh(newMesh);
+
+      scene.add(spring);
+      system.add(spring);
+    }
+    prevMesh = newMesh;
+  }
 
 
 
@@ -2790,6 +2790,10 @@ function E_ParticleSystem(Mgr)
   ///C Matrix
   this.C = null;
 
+  this.P = null;
+  this.V = null;
+  this.A = null;
+
 
   //K hat Inverse
   this.invK = null;
@@ -2859,6 +2863,10 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var len = this.particleList.length;
   if(len == 0) return;
 
+
+  var kValue = 0.3;
+  var cValue = 0.2;
+
   var conMatrix = [];
   var massMatrix = [];
   var kMatrix = [];
@@ -2909,13 +2917,13 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
 
 
     //Kvalue (temp)
-    var kValue = 0.1;
+
     kMatrix[i][i] = kValue;
     kMatrix[i+len][i+len] = kValue;
     kMatrix[i+len*2][i+len*2] = kValue;
 
     //cValue (temp, damper)
-    var cValue = 0.01;
+
     cMatrix[i][i] = cValue;
     cMatrix[i+len][i+len] = cValue;
     cMatrix[i+len*2][i+len*2] = cValue;
@@ -2926,29 +2934,19 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var kMatrix = Sushi.Matrix.fromArray(kMatrix);
   var cMatrix = Sushi.Matrix.fromArray(cMatrix);
 
-  console.log(connectivityMatrix.toCSV());
-
-
-
-  this.M = Sushi.Matrix.mul( mMatrix, connectivityMatrix );
-  this.K = Sushi.Matrix.mul( kMatrix, connectivityMatrix );
-  this.C = Sushi.Matrix.mul( cMatrix, connectivityMatrix );
+  this.M = Sushi.Matrix.fromArray( massMatrix );
+  this.K = connectivityMatrix.clone().times(kValue);
+  this.C = connectivityMatrix.clone().times(cValue);
 
   var timeStep = 1 / this.Manager.interval;
   var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
-  var a1 = 0.5/( 0.25 * Math.pow(timeStep, 2) );
+  var a1 = 0.5/( 0.25 * timeStep );
 
 
-  var KHat = Sushi.Matrix.add( Sushi.Matrix.add(this.K ,  this.M.clone().times(a0)) , this.C.clone().times(a1) );
-
-  var determinent = KHat.det();
-  if(determinent != 0){
-    this.invK = KHat.clone().inverse();
-  }else{
-    console.error("Cannot Invert Khat - Singularity");
-    console.error(KHat.toCSV());
-  }
+  var KHat = this.K.clone().add( this.M.clone().times(a0) ).add(this.C.clone().times(a1));
+  this.invK = KHat.clone().inverse();
 }
+
 
 E_ParticleSystem.prototype.UpdateCollisionMap = function()
 {
@@ -3059,9 +3057,9 @@ E_ParticleSystem.prototype.SAPCollision = function()
 E_ParticleSystem.prototype.Update = function()
 {
   if(this.particleList.length < 1) return;
-  this.InsertionSort();
-  this.UpdateCollisionMap();
-  this.SAPCollision();
+  // this.InsertionSort();
+  // this.UpdateCollisionMap();
+  // this.SAPCollision();
 
   for(var i = 0  ; i < this.particleList.length ; i++){
 
@@ -3084,6 +3082,7 @@ E_ParticleSystem.prototype.Update = function()
   for(var i=0 ; i<this.springList.length ; i++){
     //this.springList[i].Update();
     this.ImplicitSpringDamperSystem();
+    this.springList[i].UpdateConnectivity();
     this.springList[i].UpdateLineShape();
   }
 }
@@ -3170,7 +3169,7 @@ E_ParticleSystem.prototype.OnCollision = function(object, plane, colPoint)
   var Vn = normal.clone().multiplyScalar(object.velocity.clone().dot(normal));
 
   var Vt = object.velocity.clone().sub(Vn.clone());
-  //console.log(Vn.length());
+
 
   var Vnp = Vn.clone().multiplyScalar(-1 * object.elasticity);
   if(Vnp.y < 2){
@@ -3226,40 +3225,46 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
 
   var len = this.particleList.length;
 
+  //Build Position, Velocity, Acceleration Matrix
 
-  //Build Matrix
-  var arrayM = [];
+  //if(this.P == null || this.V == null || this.A == null){
   var arrayP = [];
   var arrayV = [];
   var arrayA = [];
 
-
-  //Build Position, Velocity, Acceleration Matrix
   arrayP.push([]);
   arrayV.push([]);
   arrayA.push([]);
+
   for(var i=0 ; i<len ; i++){
     arrayP[0].push(this.particleList[i].position.x);
-    arrayP[0].push(this.particleList[i].position.y);
-    arrayP[0].push(this.particleList[i].position.z);
-
     arrayV[0].push(this.particleList[i].velocity.x);
-    arrayV[0].push(this.particleList[i].velocity.y);
-    arrayV[0].push(this.particleList[i].velocity.z);
-
     arrayA[0].push(this.particleList[i].acceleration.x);
+  }
+
+  for(var i=0 ; i<len ; i++){
+    arrayP[0].push(this.particleList[i].position.y);
+    arrayV[0].push(this.particleList[i].velocity.y);
     arrayA[0].push(this.particleList[i].acceleration.y);
+  }
+
+  for(var i=0 ; i<len ; i++){
+    arrayP[0].push(this.particleList[i].position.z);
+    arrayV[0].push(this.particleList[i].velocity.z);
     arrayA[0].push(this.particleList[i].acceleration.z);
   }
 
-  var P = Sushi.Matrix.fromArray(arrayP).t();
-  var V = Sushi.Matrix.fromArray(arrayV).t();
-  var A = Sushi.Matrix.fromArray(arrayA).t();
+  this.P = Sushi.Matrix.fromArray(arrayP).t();
+  this.V = Sushi.Matrix.fromArray(arrayV).t();
+  this.A = Sushi.Matrix.fromArray(arrayA).t();
+
+  //}
+
 
 
   var timeStep = 1 / this.Manager.interval;
   var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
-  var a1 = 0.5/( 0.25 * Math.pow(timeStep, 2) );
+  var a1 = 0.5/( 0.25 * timeStep );
   var a2 = 1/(0.25 * timeStep);
   var a3 = 1/( 2* 0.25 ) - 1;
   var a4 = (0.5 / 0.25) - 1;
@@ -3267,35 +3272,35 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   var a6 = timeStep * (1 - 0.5);
   var a7 = 0.5 * timeStep;
 
+  var eq1 = Sushi.Matrix.mul(this.M ,  this.P.clone().times(a0).add( this.V.clone().times(a2) ).add( this.A.clone().times(a3) ) );
+  var eq2 = Sushi.Matrix.mul(this.C ,  this.P.clone().times(a1).add( this.V.clone().times(a4) ).add( this.A.clone().times(a5) ) );
 
-  //console.log(this.M);
-  //console.log(P);
-  var eq1 = Sushi.Matrix.mul(this.M ,  P.clone().times(a0).add( V.clone().times(a2) ).add( A.clone().times(a3) ) );
-  var eq2 = Sushi.Matrix.mul(this.C ,  P.clone().times(a1).add( V.clone().times(a4) ).add( A.clone().times(a5) ) );
-  // //console.log(eq1);
   var RHat = eq1.add(eq2);
 
   //Update Position
   var updateP = Sushi.Matrix.mul(this.invK, RHat);
 
   //Update Acceleration
-  var updateA =  updateP.clone().sub( P ).times(a0).sub( V.clone().times(a2) ).sub( A.clone().times(a3) );
+  var updateA =  updateP.clone().sub( this.P ).times(a0).sub( this.V.clone().times(a2) ).sub( this.A.clone().times(a3) );
 
   //Update Velocity
-  var updateV = V.clone().add( A.clone().times(a6) ).add( updateA.clone().times(a7) );
+  var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
 
 
   //Update Animation
   for(var i=0 ; i<len ; i++){
     var particle = this.particleList[i];
-    var idx = i*3;
 
-    particle.position.set( updateP.get(idx, 0),  updateP.get(idx+1, 0),  updateP.get(idx+2, 0) );
-    particle.velocity.set( updateV.get(idx, 0),  updateV.get(idx+1, 0),  updateV.get(idx+2, 0) );
-    particle.acceleration.set( updateA.get(idx, 0),  updateA.get(idx+1, 0),  updateA.get(idx+2, 0) );
-
+    if(!particle.m_bFixed){
+      particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
+      particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
+      particle.acceleration.set( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) );
+    }
 
   }
+
+  // this.P = updateP;
+  // this.V = updateV;
 }
 
 
@@ -3357,7 +3362,7 @@ E_SpringDamper.prototype.UpdateLineShape = function()
   this.geometry.vertices[1] = this.objects[1].position.clone();
 }
 
-E_SpringDamper.prototype.Update = function()
+E_SpringDamper.prototype.UpdateConnectivity = function()
 {
   //Calculate The amount of Stretc
   if(this.objects[0].parent == null || this.objects[1].parent == null){
@@ -3372,8 +3377,12 @@ E_SpringDamper.prototype.Update = function()
     this.Manager.ParticleSystem().remove(this);
     this.Manager.GetScene().remove(this);
   }
+}
 
+E_SpringDamper.prototype.Update = function()
+{
 
+  this.UpdateConnectivity();
   this.UpdateLineShape();
 
 

@@ -50,7 +50,7 @@ E_SpringDamper.prototype.UpdateLineShape = function()
   this.geometry.vertices[1] = this.objects[1].position.clone();
 }
 
-E_SpringDamper.prototype.Update = function()
+E_SpringDamper.prototype.UpdateConnectivity = function()
 {
   //Calculate The amount of Stretc
   if(this.objects[0].parent == null || this.objects[1].parent == null){
@@ -65,8 +65,12 @@ E_SpringDamper.prototype.Update = function()
     this.Manager.ParticleSystem().remove(this);
     this.Manager.GetScene().remove(this);
   }
+}
 
+E_SpringDamper.prototype.Update = function()
+{
 
+  this.UpdateConnectivity();
   this.UpdateLineShape();
 
 
