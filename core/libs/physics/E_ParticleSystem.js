@@ -317,9 +317,11 @@ E_ParticleSystem.prototype.Update = function()
 
   for(var i=0 ; i<this.springList.length ; i++){
     //this.springList[i].Update();
-    this.ImplicitSpringDamperSystem();
+
     this.springList[i].UpdateConnectivity();
     this.springList[i].UpdateLineShape();
+    this.ImplicitSpringDamperSystem();
+
   }
 }
 
