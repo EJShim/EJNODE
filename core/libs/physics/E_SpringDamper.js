@@ -42,6 +42,14 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
   }
 }
 
+E_SpringDamper.prototype.UpdateLineShape = function()
+{
+  //Update Line Shape
+  this.geometry.verticesNeedUpdate = true;
+  this.geometry.vertices[0] = this.objects[0].position.clone();
+  this.geometry.vertices[1] = this.objects[1].position.clone();
+}
+
 E_SpringDamper.prototype.Update = function()
 {
   //Calculate The amount of Stretc
@@ -58,10 +66,8 @@ E_SpringDamper.prototype.Update = function()
     this.Manager.GetScene().remove(this);
   }
 
-  //Update Line Shape
-  this.geometry.verticesNeedUpdate = true;
-  this.geometry.vertices[0] = this.objects[0].position.clone();
-  this.geometry.vertices[1] = this.objects[1].position.clone();
+
+  this.UpdateLineShape();
 
 
   //Calculate Force for both objects - Spring Force

@@ -144,7 +144,9 @@ E_Manager.prototype.InitObject = function()
 
   //Init ParticleSs
   var prevMesh = null;
-  for(var i=0 ; i<10 ; i++){
+
+  var numPart = 3;
+  for(var i=0 ; i<numPart ; i++){
     var newMesh = new E_Particle(this, 0.45);
     newMesh.mass = 1;
     newMesh.lifeSpan = 18000000000000;
@@ -153,10 +155,10 @@ E_Manager.prototype.InitObject = function()
     newMesh.material.color = new THREE.Color(0.1, 0.1, 0.4);
     newMesh.m_colorFixed = true;
 
-    if( i!= 9)
-    {
+    //if( i!= numPart-1)
+    //{
       system.add(newMesh);
-    }
+    //}
     scene.add(newMesh);
 
     if(prevMesh != null){
@@ -170,37 +172,37 @@ E_Manager.prototype.InitObject = function()
     }
     prevMesh = newMesh;
 
-    if(i == 9) prevMesh = null;
+    if(i == numPart-1) prevMesh = null;
   }
 
-  prevMesh = null;
-
-  for(var i=0 ; i<10 ; i++){
-    var newMesh = new E_Particle(this, 0.45);
-    newMesh.mass = 1;
-    newMesh.lifeSpan = 18000000000000;
-    newMesh.castShadow = true;
-    newMesh.position.set(this.frand(-0.1, 0.1), i-4 , this.frand(-0.1, 0.1)-3);
-    newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
-    newMesh.m_colorFixed = true;
-
-    if( i!= 9)
-    {
-      system.add(newMesh);
-    }
-    scene.add(newMesh);
-
-    if(prevMesh != null){
-      var spring = new E_SpringDamper(this);
-      spring.castShadow = true;
-      spring.AddMesh(prevMesh);
-      spring.AddMesh(newMesh);
-
-      scene.add(spring);
-      system.add(spring);
-    }
-    prevMesh = newMesh;
-  }
+  // prevMesh = null;
+  //
+  // for(var i=0 ; i<10 ; i++){
+  //   var newMesh = new E_Particle(this, 0.45);
+  //   newMesh.mass = 1;
+  //   newMesh.lifeSpan = 18000000000000;
+  //   newMesh.castShadow = true;
+  //   newMesh.position.set(this.frand(-0.1, 0.1), i-4 , this.frand(-0.1, 0.1)-3);
+  //   newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+  //   newMesh.m_colorFixed = true;
+  //
+  //   if( i!= 9)
+  //   {
+  //     system.add(newMesh);
+  //   }
+  //   scene.add(newMesh);
+  //
+  //   if(prevMesh != null){
+  //     var spring = new E_SpringDamper(this);
+  //     spring.castShadow = true;
+  //     spring.AddMesh(prevMesh);
+  //     spring.AddMesh(newMesh);
+  //
+  //     scene.add(spring);
+  //     system.add(spring);
+  //   }
+  //   prevMesh = newMesh;
+  // }
 
 
 
