@@ -30,6 +30,9 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
   if(this.objects.length == 2){
     this.objects[0].connectedObject.push(this.objects[1]);
     this.objects[1].connectedObject.push(this.objects[0]);
+
+    var length = this.objects[0].position.clone().sub(this.objects[1].position).length();
+    //this.equilibriumLength = length;
   }
 
   if(this.objects.length >= 2){

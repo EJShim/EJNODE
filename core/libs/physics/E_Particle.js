@@ -64,7 +64,7 @@ E_Particle.prototype.HairSimulation2 = function()
   if(sinTheta == 0) sineTheta = 0.01;
 
   var ThetaD = ( (pN.clone().sub(cN).normalize().multiplyScalar(cosTheta)).sub( nN.clone().sub( pN ).normalize() ) ).multiplyScalar(1/( sinTheta * ( pN.clone().sub(cN).length())));
-  var force = ThetaD.multiplyScalar(-30)
+  var force = ThetaD.multiplyScalar(-1)
   this.ApplyForce( force )
 }
 
@@ -125,9 +125,9 @@ E_Particle.prototype.Update = function()
 
 
   //Hair Simulation
-  if(this.connectedObject.length == 2){
-    this.HairSimulation2();
-  }
+  // if(this.connectedObject.length == 2){
+  //   this.HairSimulation2();
+  // }
 
 
   var timeStep = this.Manager.timeStep;
