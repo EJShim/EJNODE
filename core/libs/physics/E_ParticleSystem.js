@@ -2,6 +2,7 @@ var E_Particle = require("./E_Particle.js");
 var E_ParticleSource = require("./E_ParticleSource");
 var E_FinitePlane = require("./E_FinitePlane.js");
 var E_SpringDamper = require("./E_SpringDamper.js");
+var Sushi = require("../Matrix/sushi.js");
 
 function E_ParticleSystem(Mgr)
 {
@@ -13,6 +14,9 @@ function E_ParticleSystem(Mgr)
 
   this.planeList = [];
   this.springList = [];
+
+
+  //Matrix
 }
 
 E_ParticleSystem.prototype.add = function( object )
@@ -202,6 +206,7 @@ E_ParticleSystem.prototype.Update = function()
 
   for(var i=0 ; i<this.springList.length ; i++){
     this.springList[i].Update();
+    this.ImplicitSpringDamperSystem();
   }
 }
 
@@ -336,6 +341,27 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
 
     objectB.m_bCollided = true;
   }
+}
+
+E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
+{
+  var nParticles = this.particleList.length;
+
+
+  //Build Mass Matrix
+  var arrayM = [];
+  for(var i=0 ; i<nParticles ; i++){
+    arrayM.push([]);
+    for(var j=0 ; j<nParticles ; j++){
+      arrayM[i].push(0)
+    }
+
+    arrayM[i][i] = this.particleList[i].mass;
+  }
+  var M = Sushi.Matrix.fromArray(arrayM);
+
+  //console.log(M.toString());
+
 }
 
 
