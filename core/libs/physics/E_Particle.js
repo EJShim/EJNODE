@@ -153,7 +153,7 @@ E_Particle.prototype.Update = function()
 
 
   //Remove Particle When
-  if(new Date() - this.startTime > this.lifeSpan || this.position.y < -10){
+  if(new Date() - this.startTime > this.lifeSpan || this.position.y < -15){
     this.Manager.GetScene().remove(this);
     this.Manager.ParticleSystem().remove(this);
   }

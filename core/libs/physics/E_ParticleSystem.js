@@ -100,8 +100,8 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   if(len == 0) return;
 
 
-  var kValue = 0.3;
-  var cValue = 0.2;
+  var kValue = 10;
+  var cValue = 0.5;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -315,14 +315,15 @@ E_ParticleSystem.prototype.Update = function()
     this.particleList[i].Update();
   }
 
-  for(var i=0 ; i<this.springList.length ; i++){
-    //this.springList[i].Update();
+  //Implicit Method-SpringDamper
+  this.ImplicitSpringDamperSystem();
 
-    this.springList[i].UpdateConnectivity();
-    this.springList[i].UpdateLineShape();
-    this.ImplicitSpringDamperSystem();
 
-  }
+  //Explicit Method-SpringDamper
+  // for(var i=0 ; i<this.springList.length ; i++){
+  //   this.springList[i].Update();
+  // }
+
 }
 
 
@@ -537,8 +538,12 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
 
   }
 
-  // this.P = updateP;
-  // this.V = updateV;
+
+  //Update Scene
+  for(var i=0 ; i<this.springList.length ; i++){
+    this.springList[i].UpdateConnectivity();
+    this.springList[i].UpdateLineShape();
+  }
 }
 
 

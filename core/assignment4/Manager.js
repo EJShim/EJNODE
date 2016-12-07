@@ -143,66 +143,76 @@ E_Manager.prototype.InitObject = function()
 
 
   //Init ParticleSs
-  var prevMesh = null;
-
+  var numRow = 12;
   var numPart = 10;
-  // for(var i=0 ; i<numPart ; i++){
-  //   var newMesh = new E_Particle(this, 0.45);
-  //   newMesh.mass = 0.1;
-  //   newMesh.lifeSpan = 18000000000000;
-  //   newMesh.castShadow = true;
-  //   newMesh.position.set(this.frand(-0.1, 0.1), i-4 , this.frand(-0.1, 0.1));
-  //   newMesh.material.color = new THREE.Color(0.1, 0.1, 0.4);
-  //   newMesh.m_colorFixed = true;
-  //   if(i == 0)
-  //   newMesh.m_bFixed = true;
-  //
-  //   system.add(newMesh);
-  //   scene.add(newMesh);
-  //
-  //   if(prevMesh != null){
-  //     var spring = new E_SpringDamper(this);
-  //     spring.castShadow = true;
-  //     spring.AddMesh(prevMesh);
-  //     spring.AddMesh(newMesh);
-  //
-  //     scene.add(spring);
-  //     system.add(spring);
-  //   }
-  //   prevMesh = newMesh;
-  //
-  //   if(i == numPart-1) prevMesh = null;
-  // }
 
   prevMesh = null;
 
+  var arr = [];
+  prevMesh = null;
 
-  for(var i=0 ; i<numPart ; i++){
-    var newMesh = new E_Particle(this, 0.45);
-    newMesh.mass = 0.1;
-    newMesh.lifeSpan = 18000000000000;
-    newMesh.castShadow = true;
-    newMesh.position.set(0, numPart/2 , i-numPart/2);
-    newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
-    newMesh.m_colorFixed = true;
-    if(i == 0 || i == numPart-1)
-    newMesh.m_bFixed = true;
+  for(var n=0 ; n<numRow ; n++){
+    for(var i=0 ; i<numPart ; i++){
+      var newMesh = new E_Particle(this, 0.45);
+      newMesh.mass = 1;
+      newMesh.lifeSpan = 18000000000000;
+      newMesh.castShadow = true;
+      newMesh.position.set(0, (n-numRow/2)*2 , (i-numPart/2)* 3 );
+      newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+      newMesh.m_colorFixed = true;
+      if(n == 0 || n == numRow-1 || i==0 || i == numPart-1){
+        newMesh.m_bFixed = true;
+      }
 
-    //Add o Scene
-    system.add(newMesh);
-    scene.add(newMesh);
+      //Add o Scene
+      system.add(newMesh);
+      scene.add(newMesh);
 
-    if(prevMesh != null){
-      var spring = new E_SpringDamper(this);
-      spring.castShadow = true;
-      spring.AddMesh(prevMesh);
-      spring.AddMesh(newMesh);
 
-      scene.add(spring);
-      system.add(spring);
+      if(prevMesh != null){
+        var spring = new E_SpringDamper(this);
+        spring.castShadow = true;
+        spring.AddMesh(prevMesh);
+        spring.AddMesh(newMesh);
+
+        scene.add(spring);
+        system.add(spring);
+      }
+
+      if(n != 0){
+        var spring = new E_SpringDamper(this);
+        spring.castShadow = true;
+        spring.AddMesh(arr[i]);
+        spring.AddMesh(newMesh);
+        scene.add(spring);
+        system.add(spring);
+      }
+
+
+      prevMesh = newMesh;
+      arr[i] = newMesh;
     }
-    prevMesh = newMesh;
+    prevMesh = null;
   }
+
+
+  // ///Build Twodimension
+  // var arr = [];
+  // for(var i=0 ; i<numPart ; i++){
+  //   arr[i] = [];
+  //   for(var j=0 ; j<numPart ; j++){
+  //     var particle = new E_Particle(this, 0.45);
+  //     particle.mass = 0.1;
+  //     particle.lifeSpan = 100000000000000;
+  //     particle.castShadow = true;
+  //     particle.position.set(0, i, j);
+  //     particle.material.color = new THREE.Color(0.4, 0.2, 0.1);
+  //     particle.m_colorFixed = true;
+  //
+  //     system.add(particle);
+  //     scene.add(particle);
+  //   }
+  // }
 
   prevMesh = null;
 
@@ -216,7 +226,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 8;
+  var scaleFactor = 16;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );

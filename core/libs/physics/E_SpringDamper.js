@@ -98,76 +98,7 @@ E_SpringDamper.prototype.Update = function()
   var obj1Color = this.objects[0].material.color;
   var obj2Color = this.objects[1].material.color;
 
-
-  //this.UpdateImplicit();
   //this.material.color = new THREE.Color(1 - obj1Color.r - obj2Color.r, 1 - obj1Color.g - obj2Color.g, 1 - obj1Color.b - obj2Color.b);
-}
-
-E_SpringDamper.prototype.UpdateImplicit = function()
-{
-  if(this.objects.length != 2) return;
-
-  //Update Line Shape
-  this.geometry.verticesNeedUpdate = true;
-  this.geometry.vertices[0] = this.objects[0].position.clone();
-  this.geometry.vertices[1] = this.objects[1].position.clone();
-
-  //Calcualte Force using Implicit Metho
-  var Xi = [this.objects[0].position.x, this.objects[0].position.y, this.objects[0].position.z];
-  var Xj = [this.objects[1].position.x, this.objects[1].position.y, this.objects[1].position.z];
-
-  var XJmXI = this.objects[1].position.clone().sub(this.objects[0].position);
-  var VJmVI = this.objects[1].velocity.clone().sub(this.objects[0].velocity);
-
-  var XJmXIarr = [XJmXI.x,XJmXI.y,XJmXI.z];
-  var VJmVIarr = [VJmVI.x,VJmVI.y,VJmVI.z];
-
-
-  var I = math.eye(3);
-
-  var xjxiT = math.zeros(3, 3);
-  for(var i=0 ; i<3 ; i++){
-    for(var j=0 ; j<3 ; j++){
-      xjxiT._data[i][j] = XJmXIarr[i] * XJmXIarr[j];
-    }
-  }
-
-  var length = this.objects[1].position.clone().sub(this.objects[0].position).length();
-  var length = 1;
-  //뒷부분
-  var bElement = math.subtract(I, this.MultiplyScalar(xjxiT, 2/math.pow(length, 2) ));
-  var SpringForce = this.MultiplyScalar(math.add( this.MultiplyScalar(bElement, this.equilibriumLength / length) , this.MultiplyScalar(I, -1.0) ), this.kValue);
-
-  var xvT = math.zeros(3, 3);
-  for(var i=0 ; i<3 ; i++){
-    for(var j=0 ; j<3 ; j++){
-      xvT._data[i][j] = XJmXIarr[i] * VJmVIarr[j];
-    }
-  }
-  var con = this.objects[1].position.clone().sub(this.objects[0].position).dot( this.objects[1].velocity.clone().sub(this.objects[0].velocity.clone()) );
-  var bb = this.MultiplyScalar(bElement, con);
-
-  var DamperForce = this.MultiplyScalar( math.add(xvT, bb), this.cValue / math.pow(length, 2) );
-
-  var FXi = math.subtract(SpringForce, DamperForce);
-  var FXj = this.MultiplyScalar(FXi, -1);
-
-  var FVi = this.MultiplyScalar(xjxiT, -this.cValue/math.pow(length,2));
-  var FVj = this.MultiplyScalar(FXj, -1);
-
-  var Mi = math.multiply( math.eye(3), this.objects[0].mass );
-  var Mj = math.multiply( math.eye(3), this.objects[1].mass );
-
-  var DaDxi = math.multiply( Mi, FXi );
-  var DaDxj = math.multiply( Mj, FXj );
-
-  var DaDvi = math.multiply( Mi, FVi );
-  var DaDvj = math.multiply( Mj, FVj );
-
-  console.log(DaDvi);
-
-  //console.log(haha);
-
 }
 
 E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
