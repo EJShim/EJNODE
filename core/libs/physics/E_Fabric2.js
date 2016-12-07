@@ -10,8 +10,8 @@ function E_Fabric2(Mgr)
 
   this.Manager = Mgr;
 
-  this.width = 24;
-  this.height = 20;
+  this.width = 12;
+  this.height = 10;
   this.xSeg = 11;
   this.ySeg = 9;
 
@@ -47,6 +47,8 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
     this.particles[i].position.set(realPos.x, realPos.y, realPos.z);
 
     this.particles[i].parent = true;
+    //this.particles[i].material.color = new THREE.Color(0.0, 0.1, 0.4);
+    //scene.add(this.particles[i]);
     system.add(this.particles[i]);
 
     var i0 = i<= this.xSeg;
@@ -58,6 +60,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i-1]);
       this.springs.push(spring);
 
+      //scene.add(spring);
       system.add(spring);
     }
 
@@ -69,6 +72,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i-this.xSeg-1]);
       this.springs.push(spring);
 
+      //scene.add(spring);
       system.add(spring);
     }
   }

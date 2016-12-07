@@ -346,7 +346,7 @@ E_Manager.prototype.InitObject = function()
   //Light
   var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
 
-  pointLight.position.set(10, 5, 5);
+  pointLight.position.set(20, 5, 5);
   pointLight.castShadow = true;
   pointLight.angle = Math.PI/4;
   pointLight.penumbra = 0.05;
@@ -424,21 +424,40 @@ E_Manager.prototype.InitObject = function()
   //   prevMesh = null;
   // }
 
-  var fab = new E_Fabric2(this);
-  fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-  fab.material.color = new THREE.Color(0.4, 0.1, 0.1);
-  fab.castShadow = true;
-  //fab.material = this.m_shaderMaterial;
-  fab.AddToRenderer(scene, system);
-  var scale = 12;
+  var color = [];
+  color.push( new THREE.Color(0.4, 0.0, 0.0) );
+  color.push( new THREE.Color(0.0, 0.4, 0.0) );
+  color.push( new THREE.Color(0.0, 0.1, 0.4) );
+  color.push( new THREE.Color(0.4, 0.4, 0.1) );
+  var idx = 0;
 
-  for(var i=0 ; i<=scale ; i++){
-    fab.FixPoint(0, i/scale);
-    fab.FixPoint(1, i/scale);
+  var scalefac = 15;
+  for(var k=0 ; k<2 ; k++){
+    for(var n=0 ; n<2 ; n++){
+        var fab = new E_Fabric2(this);
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
 
-    fab.FixPoint(i/scale, 0);
-    fab.FixPoint(i/scale, 1);
-  }
+
+        fab.material.color = color[idx];
+        idx++;
+        fab.castShadow = true;
+        fab.receiveShadow = true;
+        //fab.material = this.m_shaderMaterial;
+        fab.AddToRenderer(scene, system);
+        var scale = 12;
+
+        for(var i=0 ; i<=scale ; i++){
+          fab.FixPoint(0, i/scale);
+          fab.FixPoint(1, i/scale);
+
+          fab.FixPoint(i/scale, 0);
+          fab.FixPoint(i/scale, 1);
+        }
+    }
+}
+
+  system.CompleteInitialize();
 }
 
 E_Manager.prototype.GenerateRandomTriangle = function()
@@ -2431,8 +2450,8 @@ function E_Fabric2(Mgr)
 
   this.Manager = Mgr;
 
-  this.width = 24;
-  this.height = 20;
+  this.width = 12;
+  this.height = 10;
   this.xSeg = 11;
   this.ySeg = 9;
 
@@ -2468,6 +2487,8 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
     this.particles[i].position.set(realPos.x, realPos.y, realPos.z);
 
     this.particles[i].parent = true;
+    //this.particles[i].material.color = new THREE.Color(0.0, 0.1, 0.4);
+    //scene.add(this.particles[i]);
     system.add(this.particles[i]);
 
     var i0 = i<= this.xSeg;
@@ -2479,6 +2500,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i-1]);
       this.springs.push(spring);
 
+      //scene.add(spring);
       system.add(spring);
     }
 
@@ -2490,6 +2512,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i-this.xSeg-1]);
       this.springs.push(spring);
 
+      //scene.add(spring);
       system.add(spring);
     }
   }
@@ -2803,8 +2826,8 @@ E_Particle.prototype.Update = function()
 
   //Remove Particle When
   if(new Date() - this.startTime > this.lifeSpan || this.position.y < -15){
-    //this.Manager.GetScene().remove(this);
-    //this.Manager.ParticleSystem().remove(this);
+    this.Manager.GetScene().remove(this);
+    this.Manager.ParticleSystem().remove(this);
   }
 }
 
@@ -3006,6 +3029,7 @@ var Sushi = require("../Matrix/sushi.js");
 function E_ParticleSystem(Mgr)
 {
   this.Manager = Mgr;
+  this.m_bInitialized = false;
 
   this.particleList = [];
   this.SAPList = [[], [], []];
@@ -3033,6 +3057,12 @@ function E_ParticleSystem(Mgr)
 
   //K hat Inverse
   this.invK = null;
+}
+
+E_ParticleSystem.prototype.CompleteInitialize = function()
+{
+  this.m_bInitialized = true;
+  this.UpdateConnectivityMatrix();
 }
 
 E_ParticleSystem.prototype.add = function( object )
@@ -3102,6 +3132,7 @@ E_ParticleSystem.prototype.remove = function( object )
 
 E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
 {
+  if(!this.m_bInitialized) return;
 
   var len = this.particleList.length;
   if(len == 0) return;
@@ -3292,12 +3323,11 @@ E_ParticleSystem.prototype.SAPCollision = function()
       }
     }
   }
-
-
 }
 
 E_ParticleSystem.prototype.Update = function()
 {
+  if(!this.m_bInitialized) return;
   if(this.particleList.length < 1) return;
   // this.InsertionSort();
   // this.UpdateCollisionMap();

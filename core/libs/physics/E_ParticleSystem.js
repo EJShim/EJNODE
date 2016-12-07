@@ -13,6 +13,7 @@ var Sushi = require("../Matrix/sushi.js");
 function E_ParticleSystem(Mgr)
 {
   this.Manager = Mgr;
+  this.m_bInitialized = false;
 
   this.particleList = [];
   this.SAPList = [[], [], []];
@@ -40,6 +41,12 @@ function E_ParticleSystem(Mgr)
 
   //K hat Inverse
   this.invK = null;
+}
+
+E_ParticleSystem.prototype.CompleteInitialize = function()
+{
+  this.m_bInitialized = true;
+  this.UpdateConnectivityMatrix();
 }
 
 E_ParticleSystem.prototype.add = function( object )
@@ -109,6 +116,7 @@ E_ParticleSystem.prototype.remove = function( object )
 
 E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
 {
+  if(!this.m_bInitialized) return;
 
   var len = this.particleList.length;
   if(len == 0) return;
@@ -299,12 +307,11 @@ E_ParticleSystem.prototype.SAPCollision = function()
       }
     }
   }
-
-
 }
 
 E_ParticleSystem.prototype.Update = function()
 {
+  if(!this.m_bInitialized) return;
   if(this.particleList.length < 1) return;
   // this.InsertionSort();
   // this.UpdateCollisionMap();

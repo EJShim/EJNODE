@@ -127,7 +127,7 @@ E_Manager.prototype.InitObject = function()
   //Light
   var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
 
-  pointLight.position.set(10, 5, 5);
+  pointLight.position.set(20, 5, 5);
   pointLight.castShadow = true;
   pointLight.angle = Math.PI/4;
   pointLight.penumbra = 0.05;
@@ -205,21 +205,40 @@ E_Manager.prototype.InitObject = function()
   //   prevMesh = null;
   // }
 
-  var fab = new E_Fabric2(this);
-  fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-  fab.material.color = new THREE.Color(0.4, 0.1, 0.1);
-  fab.castShadow = true;
-  //fab.material = this.m_shaderMaterial;
-  fab.AddToRenderer(scene, system);
-  var scale = 12;
+  var color = [];
+  color.push( new THREE.Color(0.4, 0.0, 0.0) );
+  color.push( new THREE.Color(0.0, 0.4, 0.0) );
+  color.push( new THREE.Color(0.0, 0.1, 0.4) );
+  color.push( new THREE.Color(0.4, 0.4, 0.1) );
+  var idx = 0;
 
-  for(var i=0 ; i<=scale ; i++){
-    fab.FixPoint(0, i/scale);
-    fab.FixPoint(1, i/scale);
+  var scalefac = 15;
+  for(var k=0 ; k<2 ; k++){
+    for(var n=0 ; n<2 ; n++){
+        var fab = new E_Fabric2(this);
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
 
-    fab.FixPoint(i/scale, 0);
-    fab.FixPoint(i/scale, 1);
-  }
+
+        fab.material.color = color[idx];
+        idx++;
+        fab.castShadow = true;
+        fab.receiveShadow = true;
+        //fab.material = this.m_shaderMaterial;
+        fab.AddToRenderer(scene, system);
+        var scale = 12;
+
+        for(var i=0 ; i<=scale ; i++){
+          fab.FixPoint(0, i/scale);
+          fab.FixPoint(1, i/scale);
+
+          fab.FixPoint(i/scale, 0);
+          fab.FixPoint(i/scale, 1);
+        }
+    }
+}
+
+  system.CompleteInitialize();
 }
 
 E_Manager.prototype.GenerateRandomTriangle = function()
