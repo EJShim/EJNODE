@@ -1,7 +1,13 @@
 var E_Particle = require("./E_Particle.js");
 var E_ParticleSource = require("./E_ParticleSource");
 var E_FinitePlane = require("./E_FinitePlane.js");
+
 var E_SpringDamper = require("./E_SpringDamper.js");
+var E_SpringDamperSource = require("./E_SpringDamperSource.js");
+
+var E_Fabric2 = require("./E_Fabric2.js");
+
+//Matrix
 var Sushi = require("../Matrix/sushi.js");
 
 function E_ParticleSystem(Mgr)
@@ -14,6 +20,7 @@ function E_ParticleSystem(Mgr)
 
   this.planeList = [];
   this.springList = [];
+  this.fabricList = [];
 
 
   //Matrix
@@ -49,8 +56,12 @@ E_ParticleSystem.prototype.add = function( object )
   }
   else if(object instanceof E_FinitePlane){
     this.planeList.push(object);
-  }else if(object instanceof E_SpringDamper){
+  }else if(object instanceof E_SpringDamper || object instanceof E_SpringDamperSource){
     this.springList.push(object);
+  }else if(object instanceof E_Fabric2){
+
+    this.fabricList.push(object);
+
   }else{
     return;
   }
@@ -85,7 +96,7 @@ E_ParticleSystem.prototype.remove = function( object )
   }else if(object instanceof E_FinitePlane){
     var idx = this.planeList.indexOf(object);
     this.planeList.splice(idx, 1);
-  }else if(object instanceof E_SpringDamper){
+  }else if(object instanceof E_SpringDamper || object instanceof E_SpringDamperSource){
     var idx = this.springList.indexOf(object);
     this.springList.splice(idx, 1);
   }
@@ -98,7 +109,6 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
 
   var len = this.particleList.length;
   if(len == 0) return;
-
 
   var kValue = 10;
   var cValue = 0.5;
@@ -323,6 +333,13 @@ E_ParticleSystem.prototype.Update = function()
   // for(var i=0 ; i<this.springList.length ; i++){
   //   this.springList[i].Update();
   // }
+
+
+  //Update fabricList
+  var fablen = this.fabricList.length;
+  for(var i=0 ; i<fablen ; i++){
+    this.fabricList[i].Update();
+  }
 
 }
 

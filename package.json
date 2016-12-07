@@ -15,6 +15,6 @@
     "url": "https://github.com/EJShim/ejshim.git"
   },
   "scripts": {
-    "build": "browserify core/assignment4/MainFrm.js -o public/PhysicsAnimation/Assignment4/app.js"
+    "build": "browserify core/ImplicitFabric/MainFrm.js -o public/PhysicsAnimation/ImplicitFabric/app.js"
   }
 }
