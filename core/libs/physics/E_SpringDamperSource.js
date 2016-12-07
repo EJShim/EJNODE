@@ -1,4 +1,4 @@
-function E_SpringDamper(Mgr)
+function E_SpringDamperSource(Mgr)
 {
 
   this.Manager = Mgr;
@@ -12,7 +12,7 @@ function E_SpringDamper(Mgr)
 
 }
 
-E_SpringDamper.prototype.AddMesh = function(mesh)
+E_SpringDamperSource.prototype.AddMesh = function(mesh)
 {
   if(this.objects.length > 1){
     console.log("cannot add more than 2 objects");
@@ -30,7 +30,7 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
   }
 }
 
-E_SpringDamper.prototype.UpdateConnectivity = function()
+E_SpringDamperSource.prototype.UpdateConnectivity = function()
 {
   //Calculate The amount of Stretc
   if(this.objects[0].parent == null || this.objects[1].parent == null){
@@ -43,16 +43,13 @@ E_SpringDamper.prototype.UpdateConnectivity = function()
     }
 
     this.Manager.ParticleSystem().remove(this);
-    this.Manager.GetScene().remove(this);
   }
 }
 
-E_SpringDamper.prototype.Update = function()
+E_SpringDamperSource.prototype.Update = function()
 {
 
   this.UpdateConnectivity();
-  this.UpdateLineShape();
-
 
   //Calculate Force for both objects - Spring Force
   var pbpa = this.objects[1].position.clone().sub( this.objects[0].position.clone());
@@ -75,7 +72,7 @@ E_SpringDamper.prototype.Update = function()
   this.objects[1].ApplyForce(Fb);
 }
 
-E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
+E_SpringDamperSource.prototype.MultiplyScalar = function(mat, scalar)
 {
   var col = mat._size[0];
   var row = mat._size[1];
@@ -90,5 +87,4 @@ E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
   return result;
 }
 
-
-module.exports = E_SpringDamper;
+module.exports = E_SpringDamperSource;

@@ -219,8 +219,10 @@ $(window).keyup(function(event){
 },{"./Manager.js":3}],3:[function(require,module,exports){
 var E_Interactor = require('./E_Interactor.js');
 var E_Particle = require("../libs/physics/E_Particle.js");
+var E_ParticleSource = require("../libs/physics/E_ParticleSource.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
 var E_SpringDamper = require('../libs/physics/E_SpringDamper.js');
+var E_SpringDamperSource = require("../libs/physics/E_SpringDamperSource.js");
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
 
 var E_Fabric2 = require("../libs/physics/E_Fabric2.js");
@@ -344,7 +346,7 @@ E_Manager.prototype.InitObject = function()
   //Light
   var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
 
-  pointLight.position.set(10, 15, 5);
+  pointLight.position.set(10, 5, 5);
   pointLight.castShadow = true;
   pointLight.angle = Math.PI/4;
   pointLight.penumbra = 0.05;
@@ -364,46 +366,54 @@ E_Manager.prototype.InitObject = function()
 
 
   //Init ParticleSs
-  // var numRow = 12;
-  // var numPart = 10;
-  //
-  // var arr = [];
-  // prevMesh = null;
-  //
+  var numRow = 12;
+  var numPart = 10;
+
+  var arr = [];
+  prevMesh = null;
+
   // for(var n=0 ; n<numRow ; n++){
   //   for(var i=0 ; i<numPart ; i++){
-  //     var newMesh = new E_Particle(this, 0.45);
+  //     var newMesh;
+  //
+  //     if(n === 5){
+  //       newMesh = new E_ParticleSource(this, 0.45);
+  //       newMesh.parent = true;
+  //     }else{
+  //       newMesh = new E_Particle(this, 0.45);
+  //       newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+  //       newMesh.m_colorFixed = true;
+  //       scene.add(newMesh);
+  //     }
+  //
   //     newMesh.mass = 1;
   //     newMesh.lifeSpan = 18000000000000;
   //     newMesh.castShadow = true;
   //     newMesh.position.set(0, (n-numRow/2)*2 , (i-numPart/2)* 3 );
-  //     newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
-  //     newMesh.m_colorFixed = true;
-  //     if(n == 0 || n == numRow-1 || i==0 || i == numPart-1){
+  //
+  //     system.add(newMesh);
+  //
+  //     if(n === 0 || n === numRow-1 || i===0 || i === numPart-1){
   //       newMesh.m_bFixed = true;
   //     }
   //
-  //     //Add o Scene
-  //     system.add(newMesh);
-  //     scene.add(newMesh);
-  //
-  //
   //     if(prevMesh != null){
-  //       var spring = new E_SpringDamper(this);
+  //       var spring = new E_SpringDamperSource(this);
   //       spring.castShadow = true;
   //       spring.AddMesh(prevMesh);
   //       spring.AddMesh(newMesh);
   //
-  //       scene.add(spring);
+  //       //scene.add(spring);
   //       system.add(spring);
   //     }
   //
   //     if(n != 0){
-  //       var spring = new E_SpringDamper(this);
+  //       var spring = new E_SpringDamperSource(this);
   //       spring.castShadow = true;
   //       spring.AddMesh(arr[i]);
   //       spring.AddMesh(newMesh);
-  //       scene.add(spring);
+  //
+  //       //scene.add(spring);
   //       system.add(spring);
   //     }
   //
@@ -415,9 +425,20 @@ E_Manager.prototype.InitObject = function()
   // }
 
   var fab = new E_Fabric2(this);
-  //fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(-500, 200, 0));
+  fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
+  fab.material.color = new THREE.Color(0.4, 0.1, 0.1);
+  fab.castShadow = true;
   //fab.material = this.m_shaderMaterial;
   fab.AddToRenderer(scene, system);
+  var scale = 12;
+
+  for(var i=0 ; i<=scale ; i++){
+    fab.FixPoint(0, i/scale);
+    fab.FixPoint(1, i/scale);
+
+    fab.FixPoint(i/scale, 0);
+    fab.FixPoint(i/scale, 1);
+  }
 }
 
 E_Manager.prototype.GenerateRandomTriangle = function()
@@ -574,14 +595,14 @@ E_Manager.prototype.SelectObject = function(x, y)
         //intersects[i].object.material.color.set(0xff0000);
         break;
       }
-      // else if(intersects[i].object instanceof E_Fabric){
-      //   var faceIdx = intersects[i].face.a;
-      //   this.m_prevTime = new Date();
-      //   this.m_selectedMesh = intersects[i].object.particles[faceIdx];
-      //   this.m_selectedMesh.velocity.set(0, 0, 0);
-      //   this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
-      //   return true;
-      // }
+      else if(intersects[i].object instanceof E_Fabric2){
+        var faceIdx = intersects[i].face.a;
+        this.m_prevTime = new Date();
+        this.m_selectedMesh = intersects[i].object.particles[faceIdx];
+        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
+        return true;
+      }
     }
   }
   return false;
@@ -630,7 +651,7 @@ E_Manager.prototype.frand = function(min, max)
 
 module.exports = E_Manager;
 
-},{"../libs/physics/E_Fabric2.js":5,"../libs/physics/E_FinitePlane.js":6,"../libs/physics/E_Particle.js":7,"../libs/physics/E_ParticleSystem.js":9,"../libs/physics/E_SpringDamper.js":10,"./E_Interactor.js":1}],4:[function(require,module,exports){
+},{"../libs/physics/E_Fabric2.js":5,"../libs/physics/E_FinitePlane.js":6,"../libs/physics/E_Particle.js":7,"../libs/physics/E_ParticleSource.js":8,"../libs/physics/E_ParticleSystem.js":9,"../libs/physics/E_SpringDamper.js":10,"../libs/physics/E_SpringDamperSource.js":11,"./E_Interactor.js":1}],4:[function(require,module,exports){
 (function (Buffer){
 // The MIT License (MIT)
 
@@ -2401,16 +2422,19 @@ module.exports = E_Manager;
 var E_SpringDamperSource = require('./E_SpringDamperSource.js');
 var E_ParticleSource = require('./E_ParticleSource.js');
 
+var E_Particle = require("./E_Particle.js");
+var E_SpringDamper = require("./E_SpringDamper.js");
+
 function E_Fabric2(Mgr)
 {
   THREE.Mesh.call(this);
 
   this.Manager = Mgr;
 
-  this.width = 12;
-  this.height = 10;
-  this.xSeg = 12;
-  this.ySeg = 10;
+  this.width = 24;
+  this.height = 20;
+  this.xSeg = 11;
+  this.ySeg = 9;
 
   this.geometry = new THREE.PlaneGeometry(this.width, this.height, this.xSeg, this.ySeg);
   this.material = new THREE.MeshPhongMaterial({color:0xaa0000});
@@ -2434,17 +2458,20 @@ E_Fabric2.prototype.SetGeometry = function(x, y, xSeg, ySeg)
 
 E_Fabric2.prototype.AddToRenderer = function(scene, system)
 {
-  //this.material.morphTargets = true;
-  scene.add(this);
-  //this.visible = false;
+
   for(var i in this.geometry.vertices){
 
-    this.particles[i] = new E_ParticleSource(this.Manager);
+    this.particles[i] = new E_ParticleSource(this.Manager, 0.45);
+    this.particles[i].mass = 1;
+    var realPos = this.geometry.vertices[i].clone();
+    this.particles[i].m_colorFixed = true;
+    this.particles[i].position.set(realPos.x, realPos.y, realPos.z);
+
+    this.particles[i].parent = true;
     system.add(this.particles[i]);
 
     var i0 = i<= this.xSeg;
     var j0 = i % (this.xSeg+1) == 0;
-
 
     if(!j0){
       var spring = new E_SpringDamperSource(this.Manager);
@@ -2452,6 +2479,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i-1]);
       this.springs.push(spring);
 
+      system.add(spring);
     }
 
     if(i0){
@@ -2461,32 +2489,20 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-this.xSeg-1]);
       this.springs.push(spring);
+
       system.add(spring);
     }
-
-
-    var realPos = this.geometry.vertices[i].clone();
-    this.particles[i].m_colorFixed = true;
-    this.particles[i].position.set(realPos.x, realPos.y, realPos.z);
-    system.add(spring);
-
   }
 
   //Add to System
+  scene.add(this);
   system.add(this);
 }
 
 E_Fabric2.prototype.Update = function()
 {
-
-  //Update Spring Damper
-  for(var i in this.springs){
-    this.springs[i].Update();
-  }
-
   //Update Particles and Geometry
   for(var i in this.geometry.vertices){
-    this.particles[i].Update();
     this.geometry.verticesNeedUpdate = true;
 
     var pos = this.particles[i].position.clone();
@@ -2539,7 +2555,7 @@ E_Fabric2.prototype.SetELength = function(eL)
 
 module.exports = E_Fabric2;
 
-},{"./E_ParticleSource.js":8,"./E_SpringDamperSource.js":11}],6:[function(require,module,exports){
+},{"./E_Particle.js":7,"./E_ParticleSource.js":8,"./E_SpringDamper.js":10,"./E_SpringDamperSource.js":11}],6:[function(require,module,exports){
 function E_FinitePlane(v1, v2, v3)
 {
   THREE.Mesh.call(this);
@@ -2646,7 +2662,7 @@ function E_Particle(Mgr, radius){
   //Dynamics
   this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.mass = radius * 10;
+  this.mass = radius;
 
   this.elasticity = 0.1;
 
@@ -2787,8 +2803,8 @@ E_Particle.prototype.Update = function()
 
   //Remove Particle When
   if(new Date() - this.startTime > this.lifeSpan || this.position.y < -15){
-    this.Manager.GetScene().remove(this);
-    this.Manager.ParticleSystem().remove(this);
+    //this.Manager.GetScene().remove(this);
+    //this.Manager.ParticleSystem().remove(this);
   }
 }
 
@@ -2822,7 +2838,7 @@ function E_ParticleSource(Mgr, radius){
   this.position = new THREE.Vector3(0.0, 0.0, 0.0);
   this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.mass = radius * 10;
+  this.mass = radius;
 
   this.elasticity = 0.1;
 
@@ -2919,9 +2935,14 @@ E_ParticleSource.prototype.GetTangentPrime = function(Xp, Xc, Xn)
 
 E_ParticleSource.prototype.Update = function()
 {
-  if(!this.visible) {
-    this.Manager.particleList().remove(this);
-    this.Manager.GetScene().remove(this);
+  // if(!this.visible) {
+  //   this.Manager.particleList().remove(this);
+  //   this.Manager.GetScene().remove(this);
+  //   return;
+  // }
+
+  if(this.m_bFixed) {
+    //If Fixed Position
     return;
   }
 
@@ -2949,8 +2970,7 @@ E_ParticleSource.prototype.Update = function()
 
   //Remove Particle When
   if(new Date() - this.startTime > this.lifeSpan || this.position.y < -15){
-    this.Manager.GetScene().remove(this);
-    this.Manager.ParticleSystem().remove(this);
+    //this.Manager.ParticleSystem().remove(this);
   }
 }
 
@@ -2972,7 +2992,7 @@ module.exports = E_ParticleSource;
 
 },{}],9:[function(require,module,exports){
 var E_Particle = require("./E_Particle.js");
-var E_ParticleSource = require("./E_ParticleSource");
+var E_ParticleSource = require("./E_ParticleSource.js");
 var E_FinitePlane = require("./E_FinitePlane.js");
 
 var E_SpringDamper = require("./E_SpringDamper.js");
@@ -3018,6 +3038,9 @@ function E_ParticleSystem(Mgr)
 E_ParticleSystem.prototype.add = function( object )
 {
   if(object instanceof E_Particle || object instanceof E_ParticleSource){
+    if(object instanceof E_ParticleSource){
+      object.parent = true;
+    }
     this.particleList.push(object);
 
     for(var i in this.SAPList){
@@ -3306,13 +3329,15 @@ E_ParticleSystem.prototype.Update = function()
   // for(var i=0 ; i<this.springList.length ; i++){
   //   this.springList[i].Update();
   // }
-
+  //
 
   //Update fabricList
   var fablen = this.fabricList.length;
+  if(fablen !== 0){
   for(var i=0 ; i<fablen ; i++){
-    this.fabricList[i].Update();
+      this.fabricList[i].Update();
   }
+}
 
 }
 
@@ -3337,7 +3362,7 @@ E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 
 E_ParticleSystem.prototype.IsPlaneObjectCollisionOccured = function(plane, object, nextPosition)
 {
-  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle || object instanceof E_ParticleSource){
+  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle || !object instanceof E_ParticleSource){
     console.error("not proper type");
     return;
   }
@@ -3532,7 +3557,10 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   //Update Scene
   for(var i=0 ; i<this.springList.length ; i++){
     this.springList[i].UpdateConnectivity();
-    this.springList[i].UpdateLineShape();
+
+    if(this.springList[i] instanceof E_SpringDamper){
+      this.springList[i].UpdateLineShape();
+    }
   }
 }
 
@@ -3542,7 +3570,7 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
 
 module.exports = E_ParticleSystem;
 
-},{"../Matrix/sushi.js":4,"./E_Fabric2.js":5,"./E_FinitePlane.js":6,"./E_Particle.js":7,"./E_ParticleSource":8,"./E_SpringDamper.js":10,"./E_SpringDamperSource.js":11}],10:[function(require,module,exports){
+},{"../Matrix/sushi.js":4,"./E_Fabric2.js":5,"./E_FinitePlane.js":6,"./E_Particle.js":7,"./E_ParticleSource.js":8,"./E_SpringDamper.js":10,"./E_SpringDamperSource.js":11}],10:[function(require,module,exports){
 function E_SpringDamper(Mgr)
 {
   THREE.Line.call(this);
@@ -3665,7 +3693,7 @@ E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
 module.exports = E_SpringDamper;
 
 },{}],11:[function(require,module,exports){
-function E_SpringDamper(Mgr)
+function E_SpringDamperSource(Mgr)
 {
 
   this.Manager = Mgr;
@@ -3679,7 +3707,7 @@ function E_SpringDamper(Mgr)
 
 }
 
-E_SpringDamper.prototype.AddMesh = function(mesh)
+E_SpringDamperSource.prototype.AddMesh = function(mesh)
 {
   if(this.objects.length > 1){
     console.log("cannot add more than 2 objects");
@@ -3697,7 +3725,7 @@ E_SpringDamper.prototype.AddMesh = function(mesh)
   }
 }
 
-E_SpringDamper.prototype.UpdateConnectivity = function()
+E_SpringDamperSource.prototype.UpdateConnectivity = function()
 {
   //Calculate The amount of Stretc
   if(this.objects[0].parent == null || this.objects[1].parent == null){
@@ -3710,16 +3738,13 @@ E_SpringDamper.prototype.UpdateConnectivity = function()
     }
 
     this.Manager.ParticleSystem().remove(this);
-    this.Manager.GetScene().remove(this);
   }
 }
 
-E_SpringDamper.prototype.Update = function()
+E_SpringDamperSource.prototype.Update = function()
 {
 
   this.UpdateConnectivity();
-  this.UpdateLineShape();
-
 
   //Calculate Force for both objects - Spring Force
   var pbpa = this.objects[1].position.clone().sub( this.objects[0].position.clone());
@@ -3742,7 +3767,7 @@ E_SpringDamper.prototype.Update = function()
   this.objects[1].ApplyForce(Fb);
 }
 
-E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
+E_SpringDamperSource.prototype.MultiplyScalar = function(mat, scalar)
 {
   var col = mat._size[0];
   var row = mat._size[1];
@@ -3757,8 +3782,7 @@ E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
   return result;
 }
 
-
-module.exports = E_SpringDamper;
+module.exports = E_SpringDamperSource;
 
 },{}],12:[function(require,module,exports){
 (function (global){

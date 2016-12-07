@@ -13,7 +13,7 @@ function E_Particle(Mgr, radius){
   //Dynamics
   this.acceleration = new THREE.Vector3(0.0, 0.0, 0.0);
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
-  this.mass = radius * 10;
+  this.mass = radius;
 
   this.elasticity = 0.1;
 
@@ -154,8 +154,8 @@ E_Particle.prototype.Update = function()
 
   //Remove Particle When
   if(new Date() - this.startTime > this.lifeSpan || this.position.y < -15){
-    this.Manager.GetScene().remove(this);
-    this.Manager.ParticleSystem().remove(this);
+    //this.Manager.GetScene().remove(this);
+    //this.Manager.ParticleSystem().remove(this);
   }
 }
 

@@ -1,7 +1,9 @@
 var E_Interactor = require('./E_Interactor.js');
 var E_Particle = require("../libs/physics/E_Particle.js");
+var E_ParticleSource = require("../libs/physics/E_ParticleSource.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
 var E_SpringDamper = require('../libs/physics/E_SpringDamper.js');
+var E_SpringDamperSource = require("../libs/physics/E_SpringDamperSource.js");
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
 
 var E_Fabric2 = require("../libs/physics/E_Fabric2.js");
@@ -125,7 +127,7 @@ E_Manager.prototype.InitObject = function()
   //Light
   var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
 
-  pointLight.position.set(10, 15, 5);
+  pointLight.position.set(10, 5, 5);
   pointLight.castShadow = true;
   pointLight.angle = Math.PI/4;
   pointLight.penumbra = 0.05;
@@ -145,46 +147,54 @@ E_Manager.prototype.InitObject = function()
 
 
   //Init ParticleSs
-  // var numRow = 12;
-  // var numPart = 10;
-  //
-  // var arr = [];
-  // prevMesh = null;
-  //
+  var numRow = 12;
+  var numPart = 10;
+
+  var arr = [];
+  prevMesh = null;
+
   // for(var n=0 ; n<numRow ; n++){
   //   for(var i=0 ; i<numPart ; i++){
-  //     var newMesh = new E_Particle(this, 0.45);
+  //     var newMesh;
+  //
+  //     if(n === 5){
+  //       newMesh = new E_ParticleSource(this, 0.45);
+  //       newMesh.parent = true;
+  //     }else{
+  //       newMesh = new E_Particle(this, 0.45);
+  //       newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+  //       newMesh.m_colorFixed = true;
+  //       scene.add(newMesh);
+  //     }
+  //
   //     newMesh.mass = 1;
   //     newMesh.lifeSpan = 18000000000000;
   //     newMesh.castShadow = true;
   //     newMesh.position.set(0, (n-numRow/2)*2 , (i-numPart/2)* 3 );
-  //     newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
-  //     newMesh.m_colorFixed = true;
-  //     if(n == 0 || n == numRow-1 || i==0 || i == numPart-1){
+  //
+  //     system.add(newMesh);
+  //
+  //     if(n === 0 || n === numRow-1 || i===0 || i === numPart-1){
   //       newMesh.m_bFixed = true;
   //     }
   //
-  //     //Add o Scene
-  //     system.add(newMesh);
-  //     scene.add(newMesh);
-  //
-  //
   //     if(prevMesh != null){
-  //       var spring = new E_SpringDamper(this);
+  //       var spring = new E_SpringDamperSource(this);
   //       spring.castShadow = true;
   //       spring.AddMesh(prevMesh);
   //       spring.AddMesh(newMesh);
   //
-  //       scene.add(spring);
+  //       //scene.add(spring);
   //       system.add(spring);
   //     }
   //
   //     if(n != 0){
-  //       var spring = new E_SpringDamper(this);
+  //       var spring = new E_SpringDamperSource(this);
   //       spring.castShadow = true;
   //       spring.AddMesh(arr[i]);
   //       spring.AddMesh(newMesh);
-  //       scene.add(spring);
+  //
+  //       //scene.add(spring);
   //       system.add(spring);
   //     }
   //
@@ -196,9 +206,20 @@ E_Manager.prototype.InitObject = function()
   // }
 
   var fab = new E_Fabric2(this);
-  //fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(-500, 200, 0));
+  fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
+  fab.material.color = new THREE.Color(0.4, 0.1, 0.1);
+  fab.castShadow = true;
   //fab.material = this.m_shaderMaterial;
   fab.AddToRenderer(scene, system);
+  var scale = 12;
+
+  for(var i=0 ; i<=scale ; i++){
+    fab.FixPoint(0, i/scale);
+    fab.FixPoint(1, i/scale);
+
+    fab.FixPoint(i/scale, 0);
+    fab.FixPoint(i/scale, 1);
+  }
 }
 
 E_Manager.prototype.GenerateRandomTriangle = function()
@@ -355,14 +376,14 @@ E_Manager.prototype.SelectObject = function(x, y)
         //intersects[i].object.material.color.set(0xff0000);
         break;
       }
-      // else if(intersects[i].object instanceof E_Fabric){
-      //   var faceIdx = intersects[i].face.a;
-      //   this.m_prevTime = new Date();
-      //   this.m_selectedMesh = intersects[i].object.particles[faceIdx];
-      //   this.m_selectedMesh.velocity.set(0, 0, 0);
-      //   this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
-      //   return true;
-      // }
+      else if(intersects[i].object instanceof E_Fabric2){
+        var faceIdx = intersects[i].face.a;
+        this.m_prevTime = new Date();
+        this.m_selectedMesh = intersects[i].object.particles[faceIdx];
+        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
+        return true;
+      }
     }
   }
   return false;

@@ -1,5 +1,5 @@
 var E_Particle = require("./E_Particle.js");
-var E_ParticleSource = require("./E_ParticleSource");
+var E_ParticleSource = require("./E_ParticleSource.js");
 var E_FinitePlane = require("./E_FinitePlane.js");
 
 var E_SpringDamper = require("./E_SpringDamper.js");
@@ -45,6 +45,9 @@ function E_ParticleSystem(Mgr)
 E_ParticleSystem.prototype.add = function( object )
 {
   if(object instanceof E_Particle || object instanceof E_ParticleSource){
+    if(object instanceof E_ParticleSource){
+      object.parent = true;
+    }
     this.particleList.push(object);
 
     for(var i in this.SAPList){
@@ -333,13 +336,15 @@ E_ParticleSystem.prototype.Update = function()
   // for(var i=0 ; i<this.springList.length ; i++){
   //   this.springList[i].Update();
   // }
-
+  //
 
   //Update fabricList
   var fablen = this.fabricList.length;
+  if(fablen !== 0){
   for(var i=0 ; i<fablen ; i++){
-    this.fabricList[i].Update();
+      this.fabricList[i].Update();
   }
+}
 
 }
 
@@ -364,7 +369,7 @@ E_ParticleSystem.prototype.PlaneCollisionDetection = function(object, plane)
 
 E_ParticleSystem.prototype.IsPlaneObjectCollisionOccured = function(plane, object, nextPosition)
 {
-  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle || object instanceof E_ParticleSource){
+  if(!plane instanceof E_FinitePlane || !object instanceof E_Particle || !object instanceof E_ParticleSource){
     console.error("not proper type");
     return;
   }
@@ -559,7 +564,10 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   //Update Scene
   for(var i=0 ; i<this.springList.length ; i++){
     this.springList[i].UpdateConnectivity();
-    this.springList[i].UpdateLineShape();
+
+    if(this.springList[i] instanceof E_SpringDamper){
+      this.springList[i].UpdateLineShape();
+    }
   }
 }
 

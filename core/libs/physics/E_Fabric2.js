@@ -1,16 +1,19 @@
 var E_SpringDamperSource = require('./E_SpringDamperSource.js');
 var E_ParticleSource = require('./E_ParticleSource.js');
 
+var E_Particle = require("./E_Particle.js");
+var E_SpringDamper = require("./E_SpringDamper.js");
+
 function E_Fabric2(Mgr)
 {
   THREE.Mesh.call(this);
 
   this.Manager = Mgr;
 
-  this.width = 12;
-  this.height = 10;
-  this.xSeg = 12;
-  this.ySeg = 10;
+  this.width = 24;
+  this.height = 20;
+  this.xSeg = 11;
+  this.ySeg = 9;
 
   this.geometry = new THREE.PlaneGeometry(this.width, this.height, this.xSeg, this.ySeg);
   this.material = new THREE.MeshPhongMaterial({color:0xaa0000});
@@ -34,12 +37,16 @@ E_Fabric2.prototype.SetGeometry = function(x, y, xSeg, ySeg)
 
 E_Fabric2.prototype.AddToRenderer = function(scene, system)
 {
-  //this.material.morphTargets = true;
-  scene.add(this);
-  //this.visible = false;
+
   for(var i in this.geometry.vertices){
 
-    this.particles[i] = new E_ParticleSource(this.Manager);
+    this.particles[i] = new E_ParticleSource(this.Manager, 0.45);
+    this.particles[i].mass = 1;
+    var realPos = this.geometry.vertices[i].clone();
+    this.particles[i].m_colorFixed = true;
+    this.particles[i].position.set(realPos.x, realPos.y, realPos.z);
+
+    this.particles[i].parent = true;
     system.add(this.particles[i]);
 
     var i0 = i<= this.xSeg;
@@ -50,6 +57,8 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-1]);
       this.springs.push(spring);
+
+      system.add(spring);
     }
 
     if(i0){
@@ -59,32 +68,20 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-this.xSeg-1]);
       this.springs.push(spring);
+
       system.add(spring);
     }
-
-
-    var realPos = this.geometry.vertices[i].clone();
-    this.particles[i].m_colorFixed = true;
-    this.particles[i].position.set(realPos.x, realPos.y, realPos.z);
-    system.add(spring);
-
   }
 
   //Add to System
+  scene.add(this);
   system.add(this);
 }
 
 E_Fabric2.prototype.Update = function()
 {
-
-  //Update Spring Damper
-  for(var i in this.springs){
-    this.springs[i].Update();
-  }
-
   //Update Particles and Geometry
   for(var i in this.geometry.vertices){
-    this.particles[i].Update();
     this.geometry.verticesNeedUpdate = true;
 
     var pos = this.particles[i].position.clone();
