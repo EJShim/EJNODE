@@ -1,8 +1,6 @@
 var E_SpringDamperSource = require('./E_SpringDamperSource.js');
 var E_ParticleSource = require('./E_ParticleSource.js');
 
-var E_Particle = require("./E_Particle.js");
-var E_SpringDamper = require("./E_SpringDamper.js");
 
 function E_Fabric2(Mgr)
 {
@@ -10,10 +8,12 @@ function E_Fabric2(Mgr)
 
   this.Manager = Mgr;
 
-  this.width = 12;
-  this.height = 10;
-  this.xSeg = 11;
-  this.ySeg = 9;
+  this.width = 24;
+  this.height = 20;
+
+  this.resolution = 1.1;
+  this.xSeg = Math.round(this.width*this.resolution)-1;
+  this.ySeg = Math.round(this.height*this.resolution)-1;
 
   this.geometry = new THREE.PlaneGeometry(this.width, this.height, this.xSeg, this.ySeg);
   this.material = new THREE.MeshPhongMaterial({color:0xaa0000});

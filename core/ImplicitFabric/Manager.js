@@ -30,6 +30,7 @@ function E_Manager()
   //Time Step for Rendering
   this.timeStep = 0;
   this.prevTime = new Date();
+  this.light = new THREE.SpotLight( 0xffffff, 1, 100 );
 
   this.groundMesh = [];
   this.m_selectedMesh = null
@@ -125,99 +126,40 @@ E_Manager.prototype.InitObject = function()
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   //Light
-  var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
-
-  pointLight.position.set(20, 5, 5);
-  pointLight.castShadow = true;
-  pointLight.angle = Math.PI/4;
-  pointLight.penumbra = 0.05;
-  pointLight.decay = 2;
-  pointLight.distance = 200;
-  pointLight.shadow.mapSize.width = 1024;
-  pointLight.shadow.mapSize.height = 1024;
-  pointLight.shadow.camera.near = 1;
-  pointLight.shadow.camera.far = 10000;
+  this.light.position.set(15, 5, 5);
+  this.light.castShadow = true;
+  this.light.angle = Math.PI/4;
+  //this.light.target.position.set(0, 0, 0);
+  this.light.penumbra = 0.05;
+  this.light.decay = 2;
+  this.light.distance = 200;
+  this.light.shadow.mapSize.width = 1024;
+  this.light.shadow.mapSize.height = 1024;
+  this.light.shadow.camera.near = 1;
+  this.light.shadow.camera.far = 10000;
 
   var ambient = new THREE.AmbientLight({color:0x000000});
 
-  scene.add(pointLight);
+  scene.add(this.light);
   scene.add(ambient);
 
-  this.GenerateRandomTriangle();
+  //this.GenerateRandomTriangle();
 
-
-  //Init ParticleSs
-  var numRow = 12;
-  var numPart = 10;
-
-  var arr = [];
-  prevMesh = null;
-
-  // for(var n=0 ; n<numRow ; n++){
-  //   for(var i=0 ; i<numPart ; i++){
-  //     var newMesh;
-  //
-  //     if(n === 5){
-  //       newMesh = new E_ParticleSource(this, 0.45);
-  //       newMesh.parent = true;
-  //     }else{
-  //       newMesh = new E_Particle(this, 0.45);
-  //       newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
-  //       newMesh.m_colorFixed = true;
-  //       scene.add(newMesh);
-  //     }
-  //
-  //     newMesh.mass = 1;
-  //     newMesh.lifeSpan = 18000000000000;
-  //     newMesh.castShadow = true;
-  //     newMesh.position.set(0, (n-numRow/2)*2 , (i-numPart/2)* 3 );
-  //
-  //     system.add(newMesh);
-  //
-  //     if(n === 0 || n === numRow-1 || i===0 || i === numPart-1){
-  //       newMesh.m_bFixed = true;
-  //     }
-  //
-  //     if(prevMesh != null){
-  //       var spring = new E_SpringDamperSource(this);
-  //       spring.castShadow = true;
-  //       spring.AddMesh(prevMesh);
-  //       spring.AddMesh(newMesh);
-  //
-  //       //scene.add(spring);
-  //       system.add(spring);
-  //     }
-  //
-  //     if(n != 0){
-  //       var spring = new E_SpringDamperSource(this);
-  //       spring.castShadow = true;
-  //       spring.AddMesh(arr[i]);
-  //       spring.AddMesh(newMesh);
-  //
-  //       //scene.add(spring);
-  //       system.add(spring);
-  //     }
-  //
-  //
-  //     prevMesh = newMesh;
-  //     arr[i] = newMesh;
-  //   }
-  //   prevMesh = null;
-  // }
 
   var color = [];
-  color.push( new THREE.Color(0.4, 0.0, 0.0) );
+  color.push( new THREE.Color(0.2, 0.01, 0.0) );
   color.push( new THREE.Color(0.0, 0.4, 0.0) );
   color.push( new THREE.Color(0.0, 0.1, 0.4) );
   color.push( new THREE.Color(0.4, 0.4, 0.1) );
   var idx = 0;
 
   var scalefac = 15;
-  for(var k=0 ; k<2 ; k++){
-    for(var n=0 ; n<2 ; n++){
+  for(var k=0 ; k<1 ; k++){
+    for(var n=0 ; n<1 ; n++){
         var fab = new E_Fabric2(this);
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
         fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-        fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
+        //fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
 
 
         fab.material.color = color[idx];
@@ -226,7 +168,7 @@ E_Manager.prototype.InitObject = function()
         fab.receiveShadow = true;
         //fab.material = this.m_shaderMaterial;
         fab.AddToRenderer(scene, system);
-        var scale = 12;
+        var scale = 50;
 
         for(var i=0 ; i<=scale ; i++){
           fab.FixPoint(0, i/scale);
