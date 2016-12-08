@@ -1,5 +1,7 @@
-var E_SpringDamperSource = require('./E_SpringDamperSource.js');
 var E_ParticleSource = require('./E_ParticleSource.js');
+
+var E_Particle = require("./E_Particle.js");
+var E_SpringDamper = require("./E_SpringDamper");
 
 
 function E_Fabric2(Mgr)
@@ -8,15 +10,15 @@ function E_Fabric2(Mgr)
 
   this.Manager = Mgr;
 
-  this.width = 24;
-  this.height = 20;
+  this.width = 10;
+  this.height = 10;
 
-  this.resolution = 1.1;
+  this.resolution = 1;
   this.xSeg = Math.round(this.width*this.resolution)-1;
   this.ySeg = Math.round(this.height*this.resolution)-1;
 
   this.geometry = new THREE.PlaneGeometry(this.width, this.height, this.xSeg, this.ySeg);
-  this.material = new THREE.MeshPhongMaterial({color:0xaa0000});
+  this.material = new THREE.MeshPhongMaterial({color:0x5a0000});
 
   this.particles = [];
   this.springs = [];
@@ -55,7 +57,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
     var j0 = i % (this.xSeg+1) == 0;
 
     if(!j0){
-      var spring = new E_SpringDamperSource(this.Manager);
+      var spring = new E_SpringDamper(this.Manager);
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-1]);
       this.springs.push(spring);
@@ -67,7 +69,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
     if(i0){
       //this.particles[i].m_bFixed = true;
     }else{
-      var spring = new E_SpringDamperSource(this.Manager);
+      var spring = new E_SpringDamper(this.Manager);
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-this.xSeg-1]);
       this.springs.push(spring);

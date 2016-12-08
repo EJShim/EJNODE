@@ -13,7 +13,7 @@ function E_ParticleSource(Mgr, radius){
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
   this.mass = radius;
 
-  this.elasticity = 0.1;
+  this.elasticity = 0.04;
 
   //Informations
   this.lifeSpan = 30000000000000;

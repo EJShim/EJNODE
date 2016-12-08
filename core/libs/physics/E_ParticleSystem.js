@@ -3,7 +3,6 @@ var E_ParticleSource = require("./E_ParticleSource.js");
 var E_FinitePlane = require("./E_FinitePlane.js");
 
 var E_SpringDamper = require("./E_SpringDamper.js");
-var E_SpringDamperSource = require("./E_SpringDamperSource.js");
 
 var E_Fabric2 = require("./E_Fabric2.js");
 
@@ -37,6 +36,7 @@ function E_ParticleSystem(Mgr)
   this.P = null;
   this.V = null;
   this.A = null;
+  this.dispMat = null;
 
 
   //K hat Inverse
@@ -66,7 +66,7 @@ E_ParticleSystem.prototype.add = function( object )
   }
   else if(object instanceof E_FinitePlane){
     this.planeList.push(object);
-  }else if(object instanceof E_SpringDamper || object instanceof E_SpringDamperSource){
+  }else if(object instanceof E_SpringDamper){
     this.springList.push(object);
   }else if(object instanceof E_Fabric2){
 
@@ -106,12 +106,19 @@ E_ParticleSystem.prototype.remove = function( object )
   }else if(object instanceof E_FinitePlane){
     var idx = this.planeList.indexOf(object);
     this.planeList.splice(idx, 1);
-  }else if(object instanceof E_SpringDamper || object instanceof E_SpringDamperSource){
+  }else if(object instanceof E_SpringDamper){
     var idx = this.springList.indexOf(object);
     this.springList.splice(idx, 1);
   }
 
   this.UpdateConnectivityMatrix();
+}
+
+E_ParticleSystem.prototype.UpdateDisplacementMatrix = function()
+{
+  this.dispMat = this.P;
+
+  console.log(this.dispMat);
 }
 
 E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
@@ -121,8 +128,8 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var len = this.particleList.length;
   if(len == 0) return;
 
-  var kValue = 4;
-  var cValue = 0.4;
+  var kValue = 50;
+  var cValue = 0.0;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -496,37 +503,41 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   //Build Position, Velocity, Acceleration Matrix
 
   //if(this.P == null || this.V == null || this.A == null){
-  var arrayP = [];
-  var arrayV = [];
-  var arrayA = [];
+    var arrayP = [];
+    var arrayV = [];
+    var arrayA = [];
 
-  arrayP.push([]);
-  arrayV.push([]);
-  arrayA.push([]);
+    arrayP.push([]);
+    arrayV.push([]);
+    arrayA.push([]);
 
-  for(var i=0 ; i<len ; i++){
-    arrayP[0].push(this.particleList[i].position.x);
-    arrayV[0].push(this.particleList[i].velocity.x);
-    arrayA[0].push(this.particleList[i].acceleration.x);
-  }
+    for(var i=0 ; i<len ; i++){
+      arrayP[0].push(this.particleList[i].position.x);
+      arrayV[0].push(this.particleList[i].velocity.x);
+      arrayA[0].push(this.particleList[i].acceleration.x);
+    }
 
-  for(var i=0 ; i<len ; i++){
-    arrayP[0].push(this.particleList[i].position.y);
-    arrayV[0].push(this.particleList[i].velocity.y);
-    arrayA[0].push(this.particleList[i].acceleration.y);
-  }
+    for(var i=0 ; i<len ; i++){
+      arrayP[0].push(this.particleList[i].position.y);
+      arrayV[0].push(this.particleList[i].velocity.y);
+      arrayA[0].push(this.particleList[i].acceleration.y);
+    }
 
-  for(var i=0 ; i<len ; i++){
-    arrayP[0].push(this.particleList[i].position.z);
-    arrayV[0].push(this.particleList[i].velocity.z);
-    arrayA[0].push(this.particleList[i].acceleration.z);
-  }
+    for(var i=0 ; i<len ; i++){
+      arrayP[0].push(this.particleList[i].position.z);
+      arrayV[0].push(this.particleList[i].velocity.z);
+      arrayA[0].push(this.particleList[i].acceleration.z);
+    }
 
-  this.P = Sushi.Matrix.fromArray(arrayP).t();
-  this.V = Sushi.Matrix.fromArray(arrayV).t();
-  this.A = Sushi.Matrix.fromArray(arrayA).t();
+    this.P = Sushi.Matrix.fromArray(arrayP).t();
+    this.V = Sushi.Matrix.fromArray(arrayV).t();
+    this.A = Sushi.Matrix.fromArray(arrayA).t();
 
-  //}
+    if(this.dispMat === null){
+      this.dispMat = this.P;
+    }else{
+      this.P.sub(this.dispMat);
+    }
 
 
 
@@ -555,14 +566,17 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
 
 
+
+
+  updateP.add(this.dispMat);
   //Update Animation
   for(var i=0 ; i<len ; i++){
     var particle = this.particleList[i];
 
     if(!particle.m_bFixed){
-      particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
-      particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
-      particle.acceleration.set( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) );
+      //particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
+      //particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
+      particle.acceleration.add(new THREE.Vector3( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) ));
     }
 
   }
@@ -576,6 +590,7 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
       this.springList[i].UpdateLineShape();
     }
   }
+
 }
 
 

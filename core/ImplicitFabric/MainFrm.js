@@ -3,7 +3,6 @@ var E_Manager = require("./Manager.js");
 
 var Manager = new E_Manager();
 Manager.Initialize();
-Manager.Animate();
 
 $(window).resize(function(){
   Manager.GetRenderer().setSize(window.innerWidth, window.innerHeight);

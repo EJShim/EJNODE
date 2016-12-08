@@ -169,7 +169,6 @@ var E_Manager = require("./Manager.js");
 
 var Manager = new E_Manager();
 Manager.Initialize();
-Manager.Animate();
 
 $(window).resize(function(){
   Manager.GetRenderer().setSize(window.innerWidth, window.innerHeight);
@@ -222,7 +221,6 @@ var E_Particle = require("../libs/physics/E_Particle.js");
 var E_ParticleSource = require("../libs/physics/E_ParticleSource.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
 var E_SpringDamper = require('../libs/physics/E_SpringDamper.js');
-var E_SpringDamperSource = require("../libs/physics/E_SpringDamperSource.js");
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
 
 var E_Fabric2 = require("../libs/physics/E_Fabric2.js");
@@ -238,13 +236,13 @@ function E_Manager()
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
-  var m_gravity = new THREE.Vector3(0.0, -0.98, 0.0);
+  var m_gravity = new THREE.Vector3(0.0, 0.0, 0.0);
 
   this.thumbnailSaved = false;
   this.starttime = new Date();
 
   this.then = new Date();
-  this.interval = 1000 / 60;
+  this.interval = 1000 / 30;
 
   //Time Step for Rendering
   this.timeStep = 0;
@@ -294,6 +292,7 @@ E_Manager.prototype.Initialize = function()
 
   //Initialize Object
   this.InitObject();
+  this.Animate();
 }
 
 E_Manager.prototype.Animate = function()
@@ -367,21 +366,30 @@ E_Manager.prototype.InitObject = function()
 
   var color = [];
   color.push( new THREE.Color(0.2, 0.01, 0.0) );
-  color.push( new THREE.Color(0.0, 0.4, 0.0) );
+  color.push( new THREE.Color(0.0, 0.3, 0.0) );
   color.push( new THREE.Color(0.0, 0.1, 0.4) );
   color.push( new THREE.Color(0.4, 0.4, 0.1) );
   var idx = 0;
 
   var scalefac = 15;
   for(var k=0 ; k<1 ; k++){
-    for(var n=0 ; n<1 ; n++){
+    for(var n=0 ; n<2 ; n++){
         var fab = new E_Fabric2(this);
         fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
         fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-        //fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
-
-
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
         fab.material.color = color[idx];
+
+        if(idx == 1){
+          var textureLoader = new THREE.TextureLoader();
+          textureLoader.load('../../images/avatar.jpg', function(texture){
+            fab.material.color = new THREE.Color(0.5, 0.5, 0.5);
+            fab.material.map = texture;
+            fab.material.needsUpdate = true;
+          });
+        }
+
+
         idx++;
         fab.castShadow = true;
         fab.receiveShadow = true;
@@ -390,13 +398,17 @@ E_Manager.prototype.InitObject = function()
         var scale = 50;
 
         for(var i=0 ; i<=scale ; i++){
-          fab.FixPoint(0, i/scale);
-          fab.FixPoint(1, i/scale);
+          //Left Side
+          //fab.FixPoint(0, i/scale);
 
+          // fab.FixPoint(1, i/scale);
+          //
           fab.FixPoint(i/scale, 0);
-          fab.FixPoint(i/scale, 1);
+          //fab.FixPoint(i/scale, 1);
         }
     }
+
+    //system.UpdateDisplacementMatrix();
 }
 
   system.CompleteInitialize();
@@ -612,7 +624,7 @@ E_Manager.prototype.frand = function(min, max)
 
 module.exports = E_Manager;
 
-},{"../libs/physics/E_Fabric2.js":5,"../libs/physics/E_FinitePlane.js":6,"../libs/physics/E_Particle.js":7,"../libs/physics/E_ParticleSource.js":8,"../libs/physics/E_ParticleSystem.js":9,"../libs/physics/E_SpringDamper.js":10,"../libs/physics/E_SpringDamperSource.js":11,"./E_Interactor.js":1}],4:[function(require,module,exports){
+},{"../libs/physics/E_Fabric2.js":5,"../libs/physics/E_FinitePlane.js":6,"../libs/physics/E_Particle.js":7,"../libs/physics/E_ParticleSource.js":8,"../libs/physics/E_ParticleSystem.js":9,"../libs/physics/E_SpringDamper.js":10,"./E_Interactor.js":1}],4:[function(require,module,exports){
 (function (Buffer){
 // The MIT License (MIT)
 
@@ -2380,8 +2392,10 @@ module.exports = E_Manager;
 
 }).call(this,require("buffer").Buffer)
 },{"buffer":12}],5:[function(require,module,exports){
-var E_SpringDamperSource = require('./E_SpringDamperSource.js');
 var E_ParticleSource = require('./E_ParticleSource.js');
+
+var E_Particle = require("./E_Particle.js");
+var E_SpringDamper = require("./E_SpringDamper");
 
 
 function E_Fabric2(Mgr)
@@ -2390,15 +2404,15 @@ function E_Fabric2(Mgr)
 
   this.Manager = Mgr;
 
-  this.width = 24;
-  this.height = 20;
+  this.width = 10;
+  this.height = 10;
 
-  this.resolution = 1.1;
+  this.resolution = 1;
   this.xSeg = Math.round(this.width*this.resolution)-1;
   this.ySeg = Math.round(this.height*this.resolution)-1;
 
   this.geometry = new THREE.PlaneGeometry(this.width, this.height, this.xSeg, this.ySeg);
-  this.material = new THREE.MeshPhongMaterial({color:0xaa0000});
+  this.material = new THREE.MeshPhongMaterial({color:0x5a0000});
 
   this.particles = [];
   this.springs = [];
@@ -2437,7 +2451,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
     var j0 = i % (this.xSeg+1) == 0;
 
     if(!j0){
-      var spring = new E_SpringDamperSource(this.Manager);
+      var spring = new E_SpringDamper(this.Manager);
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-1]);
       this.springs.push(spring);
@@ -2449,7 +2463,7 @@ E_Fabric2.prototype.AddToRenderer = function(scene, system)
     if(i0){
       //this.particles[i].m_bFixed = true;
     }else{
-      var spring = new E_SpringDamperSource(this.Manager);
+      var spring = new E_SpringDamper(this.Manager);
       spring.AddMesh(this.particles[i]);
       spring.AddMesh(this.particles[i-this.xSeg-1]);
       this.springs.push(spring);
@@ -2520,7 +2534,7 @@ E_Fabric2.prototype.SetELength = function(eL)
 
 module.exports = E_Fabric2;
 
-},{"./E_ParticleSource.js":8,"./E_SpringDamperSource.js":11}],6:[function(require,module,exports){
+},{"./E_Particle.js":7,"./E_ParticleSource.js":8,"./E_SpringDamper":10}],6:[function(require,module,exports){
 function E_FinitePlane(v1, v2, v3)
 {
   THREE.Mesh.call(this);
@@ -2805,7 +2819,7 @@ function E_ParticleSource(Mgr, radius){
   this.velocity = new THREE.Vector3(0.0, 0.0, 0.0);
   this.mass = radius;
 
-  this.elasticity = 0.1;
+  this.elasticity = 0.04;
 
   //Informations
   this.lifeSpan = 30000000000000;
@@ -2961,7 +2975,6 @@ var E_ParticleSource = require("./E_ParticleSource.js");
 var E_FinitePlane = require("./E_FinitePlane.js");
 
 var E_SpringDamper = require("./E_SpringDamper.js");
-var E_SpringDamperSource = require("./E_SpringDamperSource.js");
 
 var E_Fabric2 = require("./E_Fabric2.js");
 
@@ -2995,6 +3008,7 @@ function E_ParticleSystem(Mgr)
   this.P = null;
   this.V = null;
   this.A = null;
+  this.dispMat = null;
 
 
   //K hat Inverse
@@ -3024,7 +3038,7 @@ E_ParticleSystem.prototype.add = function( object )
   }
   else if(object instanceof E_FinitePlane){
     this.planeList.push(object);
-  }else if(object instanceof E_SpringDamper || object instanceof E_SpringDamperSource){
+  }else if(object instanceof E_SpringDamper){
     this.springList.push(object);
   }else if(object instanceof E_Fabric2){
 
@@ -3064,12 +3078,19 @@ E_ParticleSystem.prototype.remove = function( object )
   }else if(object instanceof E_FinitePlane){
     var idx = this.planeList.indexOf(object);
     this.planeList.splice(idx, 1);
-  }else if(object instanceof E_SpringDamper || object instanceof E_SpringDamperSource){
+  }else if(object instanceof E_SpringDamper){
     var idx = this.springList.indexOf(object);
     this.springList.splice(idx, 1);
   }
 
   this.UpdateConnectivityMatrix();
+}
+
+E_ParticleSystem.prototype.UpdateDisplacementMatrix = function()
+{
+  this.dispMat = this.P;
+
+  console.log(this.dispMat);
 }
 
 E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
@@ -3079,8 +3100,8 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var len = this.particleList.length;
   if(len == 0) return;
 
-  var kValue = 4;
-  var cValue = 0.4;
+  var kValue = 50;
+  var cValue = 0.0;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -3454,37 +3475,41 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   //Build Position, Velocity, Acceleration Matrix
 
   //if(this.P == null || this.V == null || this.A == null){
-  var arrayP = [];
-  var arrayV = [];
-  var arrayA = [];
+    var arrayP = [];
+    var arrayV = [];
+    var arrayA = [];
 
-  arrayP.push([]);
-  arrayV.push([]);
-  arrayA.push([]);
+    arrayP.push([]);
+    arrayV.push([]);
+    arrayA.push([]);
 
-  for(var i=0 ; i<len ; i++){
-    arrayP[0].push(this.particleList[i].position.x);
-    arrayV[0].push(this.particleList[i].velocity.x);
-    arrayA[0].push(this.particleList[i].acceleration.x);
-  }
+    for(var i=0 ; i<len ; i++){
+      arrayP[0].push(this.particleList[i].position.x);
+      arrayV[0].push(this.particleList[i].velocity.x);
+      arrayA[0].push(this.particleList[i].acceleration.x);
+    }
 
-  for(var i=0 ; i<len ; i++){
-    arrayP[0].push(this.particleList[i].position.y);
-    arrayV[0].push(this.particleList[i].velocity.y);
-    arrayA[0].push(this.particleList[i].acceleration.y);
-  }
+    for(var i=0 ; i<len ; i++){
+      arrayP[0].push(this.particleList[i].position.y);
+      arrayV[0].push(this.particleList[i].velocity.y);
+      arrayA[0].push(this.particleList[i].acceleration.y);
+    }
 
-  for(var i=0 ; i<len ; i++){
-    arrayP[0].push(this.particleList[i].position.z);
-    arrayV[0].push(this.particleList[i].velocity.z);
-    arrayA[0].push(this.particleList[i].acceleration.z);
-  }
+    for(var i=0 ; i<len ; i++){
+      arrayP[0].push(this.particleList[i].position.z);
+      arrayV[0].push(this.particleList[i].velocity.z);
+      arrayA[0].push(this.particleList[i].acceleration.z);
+    }
 
-  this.P = Sushi.Matrix.fromArray(arrayP).t();
-  this.V = Sushi.Matrix.fromArray(arrayV).t();
-  this.A = Sushi.Matrix.fromArray(arrayA).t();
+    this.P = Sushi.Matrix.fromArray(arrayP).t();
+    this.V = Sushi.Matrix.fromArray(arrayV).t();
+    this.A = Sushi.Matrix.fromArray(arrayA).t();
 
-  //}
+    if(this.dispMat === null){
+      this.dispMat = this.P;
+    }else{
+      this.P.sub(this.dispMat);
+    }
 
 
 
@@ -3513,14 +3538,17 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
 
 
+
+
+  updateP.add(this.dispMat);
   //Update Animation
   for(var i=0 ; i<len ; i++){
     var particle = this.particleList[i];
 
     if(!particle.m_bFixed){
-      particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
-      particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
-      particle.acceleration.set( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) );
+      //particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
+      //particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
+      particle.acceleration.add(new THREE.Vector3( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) ));
     }
 
   }
@@ -3534,6 +3562,7 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
       this.springList[i].UpdateLineShape();
     }
   }
+
 }
 
 
@@ -3542,7 +3571,7 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
 
 module.exports = E_ParticleSystem;
 
-},{"../Matrix/sushi.js":4,"./E_Fabric2.js":5,"./E_FinitePlane.js":6,"./E_Particle.js":7,"./E_ParticleSource.js":8,"./E_SpringDamper.js":10,"./E_SpringDamperSource.js":11}],10:[function(require,module,exports){
+},{"../Matrix/sushi.js":4,"./E_Fabric2.js":5,"./E_FinitePlane.js":6,"./E_Particle.js":7,"./E_ParticleSource.js":8,"./E_SpringDamper.js":10}],10:[function(require,module,exports){
 function E_SpringDamper(Mgr)
 {
   THREE.Line.call(this);
@@ -3550,7 +3579,7 @@ function E_SpringDamper(Mgr)
   this.Manager = Mgr;
   this.geometry = new THREE.Geometry();
   this.geometry.vertices.push(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1));
-  this.material = new THREE.LineBasicMaterial({color:0xaaaa00, linewidth:10});
+  this.material = new THREE.LineBasicMaterial({color:0xaaaa00, linewidth:1});
 
   this.objects = [];
   this.cValue = 5;
@@ -3665,96 +3694,120 @@ E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
 module.exports = E_SpringDamper;
 
 },{}],11:[function(require,module,exports){
-function E_SpringDamperSource(Mgr)
-{
+'use strict'
 
-  this.Manager = Mgr;
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
 
-  this.objects = [];
-  this.cValue = 5;
-  this.equilibriumLength = 1;
-  this.kValue = 50;
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
 
-  //TEMP
-
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
 }
 
-E_SpringDamperSource.prototype.AddMesh = function(mesh)
-{
-  if(this.objects.length > 1){
-    console.log("cannot add more than 2 objects");
-    return;
-  }
-  this.objects.push(mesh);
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
 
-  //Add Mesh a Spring Damper
-  if(this.objects.length == 2){
-    this.objects[0].connectedObject.push(this.objects[1]);
-    this.objects[1].connectedObject.push(this.objects[0]);
-
-    var length = this.objects[0].position.clone().sub(this.objects[1].position).length();
-    //this.equilibriumLength = length;
-  }
-}
-
-E_SpringDamperSource.prototype.UpdateConnectivity = function()
-{
-  //Calculate The amount of Stretc
-  if(this.objects[0].parent == null || this.objects[1].parent == null){
-    if(this.objects[0].parent == null){
-      var idx = this.objects[1].connectedObject.indexOf(this.objects[0]);
-      this.objects[1].connectedObject.splice(idx, 1);
-    }else{
-      var idx = this.objects[0].connectedObject.indexOf(this.objects[1]);
-      this.objects[0].connectedObject.splice(idx, 1);
-    }
-
-    this.Manager.ParticleSystem().remove(this);
-  }
-}
-
-E_SpringDamperSource.prototype.Update = function()
-{
-
-  this.UpdateConnectivity();
-
-  //Calculate Force for both objects - Spring Force
-  var pbpa = this.objects[1].position.clone().sub( this.objects[0].position.clone());
-  var lpbpa = pbpa.length();
-
-  var magnitudeSpring = this.kValue * ( lpbpa - this.equilibriumLength );
-  var Fsa = pbpa.multiplyScalar( magnitudeSpring / lpbpa );
-
-  //Damper Force
-  var d = this.objects[1].position.clone().sub( this.objects[0].position.clone()).normalize();
-  var vda = this.objects[0].velocity.clone().dot(d.clone());
-  var vdb = this.objects[1].velocity.clone().dot(d.clone());
-  //var Fa = d.clone().multiplyScalar(this.objects[0].velocity.length() * this.cValue).add(Fsa);
-
-  var Fa = d.clone().multiplyScalar(this.cValue * (vdb - vda)).add(Fsa);
-  var Fb = Fa.clone().multiplyScalar(-1);
-
-
-  this.objects[0].ApplyForce(Fa);
-  this.objects[1].ApplyForce(Fb);
-}
-
-E_SpringDamperSource.prototype.MultiplyScalar = function(mat, scalar)
-{
-  var col = mat._size[0];
-  var row = mat._size[1];
-  var result = math.zeros(col, row);
-
-  for(var i=0 ; i<col ; i++){
-    for(var j=0 ; j<row ; j++){
-      result._data[i][j] = mat._data[i][j] * scalar;
-    }
+function placeHoldersCount (b64) {
+  var len = b64.length
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
   }
 
-  return result;
+  // the number of equal signs (place holders)
+  // if there are two placeholders, than the two characters before it
+  // represent one byte
+  // if there is only one, then the three characters before it represent 2 bytes
+  // this is just a cheap hack to not do indexOf twice
+  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
 }
 
-module.exports = E_SpringDamperSource;
+function byteLength (b64) {
+  // base64 is 4/3 + up to two characters of the original data
+  return b64.length * 3 / 4 - placeHoldersCount(b64)
+}
+
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
+  var len = b64.length
+  placeHolders = placeHoldersCount(b64)
+
+  arr = new Arr(len * 3 / 4 - placeHolders)
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  l = placeHolders > 0 ? len - 4 : len
+
+  var L = 0
+
+  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
+    arr[L++] = (tmp >> 16) & 0xFF
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  if (placeHolders === 2) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[L++] = tmp & 0xFF
+  } else if (placeHolders === 1) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var output = ''
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    output += lookup[tmp >> 2]
+    output += lookup[(tmp << 4) & 0x3F]
+    output += '=='
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
+    output += lookup[tmp >> 10]
+    output += lookup[(tmp >> 4) & 0x3F]
+    output += lookup[(tmp << 2) & 0x3F]
+    output += '='
+  }
+
+  parts.push(output)
+
+  return parts.join('')
+}
 
 },{}],12:[function(require,module,exports){
 (function (global){
@@ -5549,123 +5602,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":13,"ieee754":14,"isarray":15}],13:[function(require,module,exports){
-'use strict'
-
-exports.byteLength = byteLength
-exports.toByteArray = toByteArray
-exports.fromByteArray = fromByteArray
-
-var lookup = []
-var revLookup = []
-var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-for (var i = 0, len = code.length; i < len; ++i) {
-  lookup[i] = code[i]
-  revLookup[code.charCodeAt(i)] = i
-}
-
-revLookup['-'.charCodeAt(0)] = 62
-revLookup['_'.charCodeAt(0)] = 63
-
-function placeHoldersCount (b64) {
-  var len = b64.length
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // the number of equal signs (place holders)
-  // if there are two placeholders, than the two characters before it
-  // represent one byte
-  // if there is only one, then the three characters before it represent 2 bytes
-  // this is just a cheap hack to not do indexOf twice
-  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
-}
-
-function byteLength (b64) {
-  // base64 is 4/3 + up to two characters of the original data
-  return b64.length * 3 / 4 - placeHoldersCount(b64)
-}
-
-function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
-  var len = b64.length
-  placeHolders = placeHoldersCount(b64)
-
-  arr = new Arr(len * 3 / 4 - placeHolders)
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  l = placeHolders > 0 ? len - 4 : len
-
-  var L = 0
-
-  for (i = 0, j = 0; i < l; i += 4, j += 3) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp >> 16) & 0xFF
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  if (placeHolders === 2) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[L++] = tmp & 0xFF
-  } else if (placeHolders === 1) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  var tmp
-  var output = []
-  for (var i = start; i < end; i += 3) {
-    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  var tmp
-  var len = uint8.length
-  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var output = ''
-  var parts = []
-  var maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    output += lookup[tmp >> 2]
-    output += lookup[(tmp << 4) & 0x3F]
-    output += '=='
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
-    output += lookup[tmp >> 10]
-    output += lookup[(tmp >> 4) & 0x3F]
-    output += lookup[(tmp << 2) & 0x3F]
-    output += '='
-  }
-
-  parts.push(output)
-
-  return parts.join('')
-}
-
-},{}],14:[function(require,module,exports){
+},{"base64-js":11,"ieee754":13,"isarray":14}],13:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -5751,7 +5688,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {

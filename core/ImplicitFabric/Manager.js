@@ -3,7 +3,6 @@ var E_Particle = require("../libs/physics/E_Particle.js");
 var E_ParticleSource = require("../libs/physics/E_ParticleSource.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
 var E_SpringDamper = require('../libs/physics/E_SpringDamper.js');
-var E_SpringDamperSource = require("../libs/physics/E_SpringDamperSource.js");
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
 
 var E_Fabric2 = require("../libs/physics/E_Fabric2.js");
@@ -19,13 +18,13 @@ function E_Manager()
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
-  var m_gravity = new THREE.Vector3(0.0, -0.98, 0.0);
+  var m_gravity = new THREE.Vector3(0.0, 0.0, 0.0);
 
   this.thumbnailSaved = false;
   this.starttime = new Date();
 
   this.then = new Date();
-  this.interval = 1000 / 60;
+  this.interval = 1000 / 30;
 
   //Time Step for Rendering
   this.timeStep = 0;
@@ -75,6 +74,7 @@ E_Manager.prototype.Initialize = function()
 
   //Initialize Object
   this.InitObject();
+  this.Animate();
 }
 
 E_Manager.prototype.Animate = function()
@@ -148,21 +148,30 @@ E_Manager.prototype.InitObject = function()
 
   var color = [];
   color.push( new THREE.Color(0.2, 0.01, 0.0) );
-  color.push( new THREE.Color(0.0, 0.4, 0.0) );
+  color.push( new THREE.Color(0.0, 0.3, 0.0) );
   color.push( new THREE.Color(0.0, 0.1, 0.4) );
   color.push( new THREE.Color(0.4, 0.4, 0.1) );
   var idx = 0;
 
   var scalefac = 15;
   for(var k=0 ; k<1 ; k++){
-    for(var n=0 ; n<1 ; n++){
+    for(var n=0 ; n<2 ; n++){
         var fab = new E_Fabric2(this);
         fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
         fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-        //fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
-
-
+        fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
         fab.material.color = color[idx];
+
+        if(idx == 1){
+          var textureLoader = new THREE.TextureLoader();
+          textureLoader.load('../../images/avatar.jpg', function(texture){
+            fab.material.color = new THREE.Color(0.5, 0.5, 0.5);
+            fab.material.map = texture;
+            fab.material.needsUpdate = true;
+          });
+        }
+
+
         idx++;
         fab.castShadow = true;
         fab.receiveShadow = true;
@@ -171,13 +180,17 @@ E_Manager.prototype.InitObject = function()
         var scale = 50;
 
         for(var i=0 ; i<=scale ; i++){
-          fab.FixPoint(0, i/scale);
-          fab.FixPoint(1, i/scale);
+          //Left Side
+          //fab.FixPoint(0, i/scale);
 
+          // fab.FixPoint(1, i/scale);
+          //
           fab.FixPoint(i/scale, 0);
-          fab.FixPoint(i/scale, 1);
+          //fab.FixPoint(i/scale, 1);
         }
     }
+
+    //system.UpdateDisplacementMatrix();
 }
 
   system.CompleteInitialize();
