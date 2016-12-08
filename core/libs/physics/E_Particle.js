@@ -143,8 +143,10 @@ E_Particle.prototype.Update = function()
   }
 
   //Set Initial Acceleration
-  this.acceleration = new THREE.Vector3(0, 0, 0);
+
   var gravity = this.Manager.GetGravity();
+
+  this.acceleration = new THREE.Vector3(0, 0, 0);
   if(gravity.length() > 0){
     this.ApplyForce(gravity.multiplyScalar(this.mass ));
   }
@@ -153,7 +155,7 @@ E_Particle.prototype.Update = function()
 
 
   //Remove Particle When
-  if(new Date() - this.startTime > this.lifeSpan || this.position.y < -15){
+  if(new Date() - this.startTime > this.lifeSpan){
     this.Manager.GetScene().remove(this);
     this.Manager.ParticleSystem().remove(this);
   }

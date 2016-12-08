@@ -169,6 +169,7 @@ var E_Manager = require("./Manager.js");
 
 var Manager = new E_Manager();
 Manager.Initialize();
+Manager.Animate();
 
 $(window).resize(function(){
   Manager.GetRenderer().setSize(window.innerWidth, window.innerHeight);
@@ -218,12 +219,9 @@ $(window).keyup(function(event){
 },{"./Manager.js":3}],3:[function(require,module,exports){
 var E_Interactor = require('./E_Interactor.js');
 var E_Particle = require("../libs/physics/E_Particle.js");
-var E_ParticleSource = require("../libs/physics/E_ParticleSource.js");
 var E_FinitePlane = require("../libs/physics/E_FinitePlane.js");
 var E_SpringDamper = require('../libs/physics/E_SpringDamper.js');
 var E_ParticleSystem = require("../libs/physics/E_ParticleSystem.js");
-
-var E_Fabric2 = require("../libs/physics/E_Fabric2.js");
 
 function E_Manager()
 {
@@ -236,18 +234,17 @@ function E_Manager()
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
-  var m_gravity = new THREE.Vector3(0.0, 0.0, 0.0);
+  var m_gravity = new THREE.Vector3(0.0, -0.98, 0.0);
 
   this.thumbnailSaved = false;
   this.starttime = new Date();
 
   this.then = new Date();
-  this.interval = 1000 / 30;
+  this.interval = 1000 / 60;
 
   //Time Step for Rendering
   this.timeStep = 0;
   this.prevTime = new Date();
-  this.light = new THREE.SpotLight( 0xffffff, 1, 100 );
 
   this.groundMesh = [];
   this.m_selectedMesh = null
@@ -292,7 +289,6 @@ E_Manager.prototype.Initialize = function()
 
   //Initialize Object
   this.InitObject();
-  this.Animate();
 }
 
 E_Manager.prototype.Animate = function()
@@ -339,77 +335,84 @@ E_Manager.prototype.InitObject = function()
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  camera.position.x = 23;
-  camera.position.y = 10;
+  camera.position.x = 70;
+  camera.position.y = 0;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   //Light
-  this.light.position.set(15, 5, 5);
-  this.light.castShadow = true;
-  this.light.angle = Math.PI/4;
-  //this.light.target.position.set(0, 0, 0);
-  this.light.penumbra = 0.05;
-  this.light.decay = 2;
-  this.light.distance = 200;
-  this.light.shadow.mapSize.width = 1024;
-  this.light.shadow.mapSize.height = 1024;
-  this.light.shadow.camera.near = 1;
-  this.light.shadow.camera.far = 10000;
+  var pointLight = new THREE.SpotLight( 0xffffff, 1, 100 );
+
+  pointLight.position.set(10, 15, 5);
+  pointLight.castShadow = true;
+  pointLight.angle = Math.PI/4;
+  pointLight.penumbra = 0.05;
+  pointLight.decay = 2;
+  pointLight.distance = 200;
+  pointLight.shadow.mapSize.width = 1024;
+  pointLight.shadow.mapSize.height = 1024;
+  pointLight.shadow.camera.near = 1;
+  pointLight.shadow.camera.far = 10000;
 
   var ambient = new THREE.AmbientLight({color:0x000000});
 
-  scene.add(this.light);
+  scene.add(pointLight);
   scene.add(ambient);
 
-  //this.GenerateRandomTriangle();
+  this.GenerateRandomTriangle();
 
 
-  var color = [];
-  color.push( new THREE.Color(0.2, 0.01, 0.0) );
-  color.push( new THREE.Color(0.0, 0.3, 0.0) );
-  color.push( new THREE.Color(0.0, 0.1, 0.4) );
-  color.push( new THREE.Color(0.4, 0.4, 0.1) );
-  var idx = 0;
+  //Init ParticleSs
+  var numRow = 12;
+  var numPart = 10;
 
-  var scalefac = 15;
-  for(var k=0 ; k<1 ; k++){
-    for(var n=0 ; n<2 ; n++){
-        var fab = new E_Fabric2(this);
-        fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
-        fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
-        fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
-        fab.material.color = color[idx];
+  prevMesh = null;
 
-        if(idx == 1){
-          var textureLoader = new THREE.TextureLoader();
-          textureLoader.load('../../images/avatar.jpg', function(texture){
-            fab.material.color = new THREE.Color(0.5, 0.5, 0.5);
-            fab.material.map = texture;
-            fab.material.needsUpdate = true;
-          });
-        }
+  var arr = [];
+  prevMesh = null;
+
+  for(var n=0 ; n<numRow ; n++){
+    for(var i=0 ; i<numPart ; i++){
+      var newMesh = new E_Particle(this, 0.45);
+      newMesh.mass = 1;
+      newMesh.lifeSpan = 18000000000000;
+      newMesh.castShadow = true;
+      newMesh.position.set((i-numPart/2)*1+3, (n-numRow/2)*0.8+4 , -n*0.8+8 );
+      newMesh.material.color = new THREE.Color(0.1, 0.4, 0.1);
+      newMesh.m_colorFixed = true;
+      if(i == 0){
+        //newMesh.m_bFixed = true;
+      }
+
+      //Add o Scene
+      system.add(newMesh);
+      scene.add(newMesh);
 
 
-        idx++;
-        fab.castShadow = true;
-        fab.receiveShadow = true;
-        //fab.material = this.m_shaderMaterial;
-        fab.AddToRenderer(scene, system);
-        var scale = 50;
+      if(prevMesh != null){
+        var spring = new E_SpringDamper(this);
+        spring.castShadow = true;
+        spring.AddMesh(prevMesh);
+        spring.AddMesh(newMesh);
 
-        for(var i=0 ; i<=scale ; i++){
-          //Left Side
-          //fab.FixPoint(0, i/scale);
+        scene.add(spring);
+        system.add(spring);
+      }
 
-          // fab.FixPoint(1, i/scale);
-          //
-          fab.FixPoint(i/scale, 0);
-          //fab.FixPoint(i/scale, 1);
-        }
+      if(n != 0){
+        var spring = new E_SpringDamper(this);
+        spring.castShadow = true;
+        spring.AddMesh(arr[i]);
+        spring.AddMesh(newMesh);
+        scene.add(spring);
+        system.add(spring);
+      }
+
+
+      prevMesh = newMesh;
+      arr[i] = newMesh;
     }
-
-    //system.UpdateDisplacementMatrix();
-}
+    prevMesh = null;
+  }
 
   system.CompleteInitialize();
 }
@@ -419,7 +422,7 @@ E_Manager.prototype.GenerateRandomTriangle = function()
   var scene = this.GetScene();
   var system = this.ParticleSystem();
 
-  var scaleFactor = 16;
+  var scaleFactor = 20;
   var vertices = [];
   vertices[0] = new THREE.Vector3( -scaleFactor, -scaleFactor, -scaleFactor );
   vertices[1] = new THREE.Vector3( -scaleFactor, -scaleFactor, scaleFactor );
@@ -513,7 +516,6 @@ E_Manager.prototype.SaveThumbnail = function()
     return;
   }
 
-
   this.thumbnailSaved = true;
   console.log("Thumbnail Saved");
 
@@ -568,14 +570,14 @@ E_Manager.prototype.SelectObject = function(x, y)
         //intersects[i].object.material.color.set(0xff0000);
         break;
       }
-      else if(intersects[i].object instanceof E_Fabric2){
-        var faceIdx = intersects[i].face.a;
-        this.m_prevTime = new Date();
-        this.m_selectedMesh = intersects[i].object.particles[faceIdx];
-        this.m_selectedMesh.velocity.set(0, 0, 0);
-        this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
-        return true;
-      }
+      // else if(intersects[i].object instanceof E_Fabric){
+      //   var faceIdx = intersects[i].face.a;
+      //   this.m_prevTime = new Date();
+      //   this.m_selectedMesh = intersects[i].object.particles[faceIdx];
+      //   this.m_selectedMesh.velocity.set(0, 0, 0);
+      //   this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
+      //   return true;
+      // }
     }
   }
   return false;
@@ -624,7 +626,7 @@ E_Manager.prototype.frand = function(min, max)
 
 module.exports = E_Manager;
 
-},{"../libs/physics/E_Fabric2.js":5,"../libs/physics/E_FinitePlane.js":6,"../libs/physics/E_Particle.js":7,"../libs/physics/E_ParticleSource.js":8,"../libs/physics/E_ParticleSystem.js":9,"../libs/physics/E_SpringDamper.js":10,"./E_Interactor.js":1}],4:[function(require,module,exports){
+},{"../libs/physics/E_FinitePlane.js":6,"../libs/physics/E_Particle.js":7,"../libs/physics/E_ParticleSystem.js":9,"../libs/physics/E_SpringDamper.js":10,"./E_Interactor.js":1}],4:[function(require,module,exports){
 (function (Buffer){
 // The MIT License (MIT)
 
@@ -2771,8 +2773,10 @@ E_Particle.prototype.Update = function()
   }
 
   //Set Initial Acceleration
-  this.acceleration = new THREE.Vector3(0, 0, 0);
+
   var gravity = this.Manager.GetGravity();
+
+  this.acceleration = new THREE.Vector3(0, 0, 0);
   if(gravity.length() > 0){
     this.ApplyForce(gravity.multiplyScalar(this.mass ));
   }
@@ -3008,7 +3012,9 @@ function E_ParticleSystem(Mgr)
   this.P = null;
   this.V = null;
   this.A = null;
+
   this.dispMat = null;
+  this.R = null;
 
 
   //K hat Inverse
@@ -3101,7 +3107,7 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   if(len == 0) return;
 
   var kValue = 50;
-  var cValue = 0.8;
+  var cValue = 0.9;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -3296,6 +3302,22 @@ E_ParticleSystem.prototype.Update = function()
   // this.UpdateCollisionMap();
   // this.SAPCollision();
 
+
+
+  //Explicit Method-SpringDamper
+  // for(var i=0 ; i<this.springList.length ; i++){
+  //   this.springList[i].Update();
+  // }
+  //
+
+  //Update fabricList
+  var fablen = this.fabricList.length;
+  if(fablen !== 0){
+    for(var i=0 ; i<fablen ; i++){
+        this.fabricList[i].Update();
+    }
+  }
+
   for(var i = 0  ; i < this.particleList.length ; i++){
 
       //Update Plane Collision
@@ -3310,27 +3332,15 @@ E_ParticleSystem.prototype.Update = function()
   }
 
 
-  for(var i=0 ; i<this.particleList.length ; i++){
-    this.particleList[i].Update();
-  }
-
   //Implicit Method-SpringDamper
   this.ImplicitSpringDamperSystem();
 
 
-  //Explicit Method-SpringDamper
-  // for(var i=0 ; i<this.springList.length ; i++){
-  //   this.springList[i].Update();
-  // }
-  //
-
-  //Update fabricList
-  var fablen = this.fabricList.length;
-  if(fablen !== 0){
-  for(var i=0 ; i<fablen ; i++){
-      this.fabricList[i].Update();
+  for(var i=0 ; i<this.particleList.length ; i++){
+    this.particleList[i].Update();
   }
-}
+
+
 
 }
 
@@ -3469,7 +3479,63 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
 E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
 {
   if(this.invK == null) return;
+  var len = this.particleList.length;
 
+  this.UpdateDynamics();
+
+  var timeStep = 1 / this.Manager.interval;
+  var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
+  var a1 = 0.5/( 0.25 * timeStep );
+  var a2 = 1/(0.25 * timeStep);
+  var a3 = 1/( 2* 0.25 ) - 1;
+  var a4 = (0.5 / 0.25) - 1;
+  var a5 = (timeStep / 2)*((0.5/0.25)-2 );
+  var a6 = timeStep * (1 - 0.5);
+  var a7 = 0.5 * timeStep;
+
+  var eq1 = Sushi.Matrix.mul(this.M ,  this.P.clone().times(a0).add( this.V.clone().times(a2) ).add( this.A.clone().times(a3) ) );
+  var eq2 = Sushi.Matrix.mul(this.C ,  this.P.clone().times(a1).add( this.V.clone().times(a4) ).add( this.A.clone().times(a5) ) );
+
+  var RHat = eq1.add(eq2);
+
+  //Update Position
+  var updateP = Sushi.Matrix.mul(this.invK, RHat);
+
+  //Update Acceleration
+  var updateA =  updateP.clone().sub( this.P ).times(a0).sub( this.V.clone().times(a2) ).sub( this.A.clone().times(a3) );
+
+  //Update Velocity
+  var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
+
+  updateP.add(this.dispMat);
+
+  //Update Animation
+  for(var i=0 ; i<len ; i++){
+    var particle = this.particleList[i];
+
+    if(!particle.m_bFixed){
+      particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
+      particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
+      var acc = new THREE.Vector3( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) )
+      particle.acceleration.add( acc );
+    }
+
+  }
+
+
+  //Update Scene
+  for(var i=0 ; i<this.springList.length ; i++){
+    this.springList[i].UpdateConnectivity();
+
+    if(this.springList[i] instanceof E_SpringDamper){
+      this.springList[i].UpdateLineShape();
+    }
+  }
+
+}
+
+E_ParticleSystem.prototype.UpdateDynamics = function()
+{
   var len = this.particleList.length;
 
   //Build Position, Velocity, Acceleration Matrix
@@ -3510,58 +3576,6 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
     }else{
       this.P.sub(this.dispMat);
     }
-
-
-
-  var timeStep = 1 / this.Manager.interval;
-  var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
-  var a1 = 0.5/( 0.25 * timeStep );
-  var a2 = 1/(0.25 * timeStep);
-  var a3 = 1/( 2* 0.25 ) - 1;
-  var a4 = (0.5 / 0.25) - 1;
-  var a5 = (timeStep / 2)*((0.5/0.25)-2 );
-  var a6 = timeStep * (1 - 0.5);
-  var a7 = 0.5 * timeStep;
-
-  var eq1 = Sushi.Matrix.mul(this.M ,  this.P.clone().times(a0).add( this.V.clone().times(a2) ).add( this.A.clone().times(a3) ) );
-  var eq2 = Sushi.Matrix.mul(this.C ,  this.P.clone().times(a1).add( this.V.clone().times(a4) ).add( this.A.clone().times(a5) ) );
-
-  var RHat = eq1.add(eq2);
-
-  //Update Position
-  var updateP = Sushi.Matrix.mul(this.invK, RHat);
-
-  //Update Acceleration
-  var updateA =  updateP.clone().sub( this.P ).times(a0).sub( this.V.clone().times(a2) ).sub( this.A.clone().times(a3) );
-
-  //Update Velocity
-  var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
-
-
-
-
-  updateP.add(this.dispMat);
-  //Update Animation
-  for(var i=0 ; i<len ; i++){
-    var particle = this.particleList[i];
-
-    if(!particle.m_bFixed){
-      particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
-      particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
-      particle.acceleration.add(new THREE.Vector3( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) ));
-    }
-
-  }
-
-
-  //Update Scene
-  for(var i=0 ; i<this.springList.length ; i++){
-    this.springList[i].UpdateConnectivity();
-
-    if(this.springList[i] instanceof E_SpringDamper){
-      this.springList[i].UpdateLineShape();
-    }
-  }
 
 }
 

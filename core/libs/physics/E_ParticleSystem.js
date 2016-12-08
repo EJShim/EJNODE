@@ -36,7 +36,9 @@ function E_ParticleSystem(Mgr)
   this.P = null;
   this.V = null;
   this.A = null;
+
   this.dispMat = null;
+  this.R = null;
 
 
   //K hat Inverse
@@ -129,7 +131,7 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   if(len == 0) return;
 
   var kValue = 50;
-  var cValue = 0.0;
+  var cValue = 0.9;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -324,6 +326,22 @@ E_ParticleSystem.prototype.Update = function()
   // this.UpdateCollisionMap();
   // this.SAPCollision();
 
+
+
+  //Explicit Method-SpringDamper
+  // for(var i=0 ; i<this.springList.length ; i++){
+  //   this.springList[i].Update();
+  // }
+  //
+
+  //Update fabricList
+  var fablen = this.fabricList.length;
+  if(fablen !== 0){
+    for(var i=0 ; i<fablen ; i++){
+        this.fabricList[i].Update();
+    }
+  }
+
   for(var i = 0  ; i < this.particleList.length ; i++){
 
       //Update Plane Collision
@@ -338,27 +356,15 @@ E_ParticleSystem.prototype.Update = function()
   }
 
 
-  for(var i=0 ; i<this.particleList.length ; i++){
-    this.particleList[i].Update();
-  }
-
   //Implicit Method-SpringDamper
   this.ImplicitSpringDamperSystem();
 
 
-  //Explicit Method-SpringDamper
-  // for(var i=0 ; i<this.springList.length ; i++){
-  //   this.springList[i].Update();
-  // }
-  //
-
-  //Update fabricList
-  var fablen = this.fabricList.length;
-  if(fablen !== 0){
-  for(var i=0 ; i<fablen ; i++){
-      this.fabricList[i].Update();
+  for(var i=0 ; i<this.particleList.length ; i++){
+    this.particleList[i].Update();
   }
-}
+
+
 
 }
 
@@ -497,7 +503,63 @@ E_ParticleSystem.prototype.ParticleCollisionDetection = function(objectA, object
 E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
 {
   if(this.invK == null) return;
+  var len = this.particleList.length;
 
+  this.UpdateDynamics();
+
+  var timeStep = 1 / this.Manager.interval;
+  var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
+  var a1 = 0.5/( 0.25 * timeStep );
+  var a2 = 1/(0.25 * timeStep);
+  var a3 = 1/( 2* 0.25 ) - 1;
+  var a4 = (0.5 / 0.25) - 1;
+  var a5 = (timeStep / 2)*((0.5/0.25)-2 );
+  var a6 = timeStep * (1 - 0.5);
+  var a7 = 0.5 * timeStep;
+
+  var eq1 = Sushi.Matrix.mul(this.M ,  this.P.clone().times(a0).add( this.V.clone().times(a2) ).add( this.A.clone().times(a3) ) );
+  var eq2 = Sushi.Matrix.mul(this.C ,  this.P.clone().times(a1).add( this.V.clone().times(a4) ).add( this.A.clone().times(a5) ) );
+
+  var RHat = eq1.add(eq2);
+
+  //Update Position
+  var updateP = Sushi.Matrix.mul(this.invK, RHat);
+
+  //Update Acceleration
+  var updateA =  updateP.clone().sub( this.P ).times(a0).sub( this.V.clone().times(a2) ).sub( this.A.clone().times(a3) );
+
+  //Update Velocity
+  var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
+
+  updateP.add(this.dispMat);
+
+  //Update Animation
+  for(var i=0 ; i<len ; i++){
+    var particle = this.particleList[i];
+
+    if(!particle.m_bFixed){
+      particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
+      particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
+      var acc = new THREE.Vector3( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) )
+      particle.acceleration.add( acc );
+    }
+
+  }
+
+
+  //Update Scene
+  for(var i=0 ; i<this.springList.length ; i++){
+    this.springList[i].UpdateConnectivity();
+
+    if(this.springList[i] instanceof E_SpringDamper){
+      this.springList[i].UpdateLineShape();
+    }
+  }
+
+}
+
+E_ParticleSystem.prototype.UpdateDynamics = function()
+{
   var len = this.particleList.length;
 
   //Build Position, Velocity, Acceleration Matrix
@@ -538,58 +600,6 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
     }else{
       this.P.sub(this.dispMat);
     }
-
-
-
-  var timeStep = 1 / this.Manager.interval;
-  var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
-  var a1 = 0.5/( 0.25 * timeStep );
-  var a2 = 1/(0.25 * timeStep);
-  var a3 = 1/( 2* 0.25 ) - 1;
-  var a4 = (0.5 / 0.25) - 1;
-  var a5 = (timeStep / 2)*((0.5/0.25)-2 );
-  var a6 = timeStep * (1 - 0.5);
-  var a7 = 0.5 * timeStep;
-
-  var eq1 = Sushi.Matrix.mul(this.M ,  this.P.clone().times(a0).add( this.V.clone().times(a2) ).add( this.A.clone().times(a3) ) );
-  var eq2 = Sushi.Matrix.mul(this.C ,  this.P.clone().times(a1).add( this.V.clone().times(a4) ).add( this.A.clone().times(a5) ) );
-
-  var RHat = eq1.add(eq2);
-
-  //Update Position
-  var updateP = Sushi.Matrix.mul(this.invK, RHat);
-
-  //Update Acceleration
-  var updateA =  updateP.clone().sub( this.P ).times(a0).sub( this.V.clone().times(a2) ).sub( this.A.clone().times(a3) );
-
-  //Update Velocity
-  var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
-
-
-
-
-  updateP.add(this.dispMat);
-  //Update Animation
-  for(var i=0 ; i<len ; i++){
-    var particle = this.particleList[i];
-
-    if(!particle.m_bFixed){
-      //particle.position.set( updateP.get(i, 0),  updateP.get(i+len, 0),  updateP.get(i+len*2, 0) );
-      //particle.velocity.set( updateV.get(i, 0),  updateV.get(i+len, 0),  updateV.get(i+len*2, 0) );
-      particle.acceleration.add(new THREE.Vector3( updateA.get(i, 0),  updateA.get(i+len, 0),  updateA.get(i+len*2, 0) ));
-    }
-
-  }
-
-
-  //Update Scene
-  for(var i=0 ; i<this.springList.length ; i++){
-    this.springList[i].UpdateConnectivity();
-
-    if(this.springList[i] instanceof E_SpringDamper){
-      this.springList[i].UpdateLineShape();
-    }
-  }
 
 }
 
