@@ -1,6 +1,7 @@
 var E_Particle = require("./E_Particle.js");
 var E_ParticleSource = require("./E_ParticleSource.js");
 var E_FinitePlane = require("./E_FinitePlane.js");
+var E_DeformableMesh = require("./E_DeformableMesh.js");
 
 var E_SpringDamper = require("./E_SpringDamper.js");
 
@@ -21,6 +22,7 @@ function E_ParticleSystem(Mgr)
   this.planeList = [];
   this.springList = [];
   this.fabricList = [];
+  this.meshList = [];
 
 
   //Matrix
@@ -71,9 +73,9 @@ E_ParticleSystem.prototype.add = function( object )
   }else if(object instanceof E_SpringDamper){
     this.springList.push(object);
   }else if(object instanceof E_Fabric2){
-
     this.fabricList.push(object);
-
+  }else if(object instanceof E_DeformableMesh){
+    this.meshList.push(object);
   }else{
     return;
   }
@@ -130,8 +132,8 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var len = this.particleList.length;
   if(len == 0) return;
 
-  var kValue = 50;
-  var cValue = 0.8;
+  var kValue = 20;
+  var cValue = 1;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -322,9 +324,9 @@ E_ParticleSystem.prototype.Update = function()
 {
   if(!this.m_bInitialized) return;
   if(this.particleList.length < 1) return;
-  // this.InsertionSort();
-  // this.UpdateCollisionMap();
-  // this.SAPCollision();
+  this.InsertionSort();
+  this.UpdateCollisionMap();
+  this.SAPCollision();
 
 
 
@@ -339,6 +341,13 @@ E_ParticleSystem.prototype.Update = function()
   if(fablen !== 0){
     for(var i=0 ; i<fablen ; i++){
         this.fabricList[i].Update();
+    }
+  }
+
+  var meshLen = this.meshList.length;
+  if(meshLen != 0){
+    for(var i=0 ; i<meshLen ; i++){
+      this.meshList[i].Update();
     }
   }
 

@@ -53,18 +53,18 @@ E_SpringDamper.prototype.UpdateLineShape = function()
 E_SpringDamper.prototype.UpdateConnectivity = function()
 {
   //Calculate The amount of Stretc
-  if(this.objects[0].parent == null || this.objects[1].parent == null){
-    if(this.objects[0].parent == null){
-      var idx = this.objects[1].connectedObject.indexOf(this.objects[0]);
-      this.objects[1].connectedObject.splice(idx, 1);
-    }else{
-      var idx = this.objects[0].connectedObject.indexOf(this.objects[1]);
-      this.objects[0].connectedObject.splice(idx, 1);
-    }
-
-    this.Manager.ParticleSystem().remove(this);
-    this.Manager.GetScene().remove(this);
-  }
+  // if(this.objects[0].parent == null || this.objects[1].parent == null){
+  //   if(this.objects[0].parent == null){
+  //     var idx = this.objects[1].connectedObject.indexOf(this.objects[0]);
+  //     this.objects[1].connectedObject.splice(idx, 1);
+  //   }else{
+  //     var idx = this.objects[0].connectedObject.indexOf(this.objects[1]);
+  //     this.objects[0].connectedObject.splice(idx, 1);
+  //   }
+  //
+  //   this.Manager.ParticleSystem().remove(this);
+  //   this.Manager.GetScene().remove(this);
+  // }
 }
 
 E_SpringDamper.prototype.Update = function()
