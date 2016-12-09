@@ -106,7 +106,7 @@ E_Interactor.prototype.Update = function()
   var camera = this.Manager.GetCamera();
   var mat = camera.matrix.clone();
 
-  var factor = 0.1;
+  var factor = 0.5;
 
   switch (this.m_keyCode) {
     case -1:
@@ -238,13 +238,13 @@ function E_Manager()
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
-  var m_gravity = new THREE.Vector3(0.0, -9.8, 0.0);
+  var m_gravity = new THREE.Vector3(0.0, -0.98, 0.0);
 
   this.thumbnailSaved = false;
   this.starttime = new Date();
 
   this.then = new Date();
-  this.interval = 1000 / 30;
+  this.interval = 1000 / 60;
 
   //Time Step for Rendering
   this.timeStep = 0;
@@ -372,7 +372,7 @@ E_Manager.prototype.InitObject = function()
   deformmesh.AddToRenderer(scene, system);
 
 
-  var deformmesh2 = new E_DeformableMesh( this, new THREE.BoxGeometry(5, 5, 5) );
+  var deformmesh2 = new E_DeformableMesh( this, new THREE.BoxGeometry(8, 8, 8) );
   deformmesh2.AddToRenderer(scene, system);
 
 
@@ -382,9 +382,9 @@ E_Manager.prototype.InitObject = function()
   deformmesh3.AddToRenderer(scene, system);
 
 
-  var deformmesh4 = new E_DeformableMesh( this, new THREE.SphereGeometry( 5, 10, 10 ) );
+  var deformmesh4 = new E_DeformableMesh( this, new THREE.SphereGeometry( 5, 15, 15 ) );
   deformmesh4.MakeTranslation(0, 0, 8);
-  deformmesh4.material.color = new THREE.Color(0.0, 0.25, 0.25);
+  deformmesh4.material.color = new THREE.Color(0.5, 0.1, 0.2);
   deformmesh4.AddToRenderer(scene, system);
 
 
@@ -2380,7 +2380,7 @@ module.exports = E_Manager;
 })(typeof window === 'undefined');
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":13}],5:[function(require,module,exports){
+},{"buffer":12}],5:[function(require,module,exports){
 var E_Particle = require("./E_Particle.js");
 var E_SpringDamper = require("./E_SpringDamper");
 
@@ -2391,6 +2391,7 @@ function E_DeformableMesh(Mgr, geometry)
   this.Mgr = Mgr;
 
   this.geometry = geometry;
+  this.geometry.mergeVertices();
   this.material = new THREE.MeshPhongMaterial({color:0x5a0000});
 
   this.particles = [];
@@ -2407,17 +2408,19 @@ E_DeformableMesh.prototype = Object.create(THREE.Mesh.prototype);
 
 E_DeformableMesh.prototype.Initialize = function()
 {
-  //Get Information of geometry's vertices and faces
-  // console.log(this.geometry.vertices);
-  // console.log(this.geometry.faces);
+
+
   var vertMap = [];
 
   var numVerts = this.geometry.vertices.length;
   var numFaces = this.geometry.faces.length;
+  var mass = 1;
+
+  if(this.geometry instanceof THREE.SphereGeometry) mass = 0.5;
 
   for(var i=0 ; i<numVerts ; i++){
     var part = new E_Particle(this.Mgr, 0.45);
-    part.mass = 1;
+    part.mass = mass;
     var realPos = this.geometry.vertices[i].clone();
     part.position.set(realPos.x, realPos.y, realPos.z);
     part.m_colorFixed = true;
@@ -2476,7 +2479,9 @@ E_DeformableMesh.prototype.AddToRenderer = function(scene, system)
 
   for(var i=0 ; i<numVerts ; i++){
     if(this.particles[i].connectedObject.length !== 0){
-      //scene.add(this.particles[i]);
+
+      if(i == 0)
+      scene.add(this.particles[i]);
       system.add(this.particles[i]);
     }
   }
@@ -3237,8 +3242,8 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var len = this.particleList.length;
   if(len == 0) return;
 
-  var kValue = 20;
-  var cValue = 1;
+  var kValue = 50;
+  var cValue = 20;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -3429,9 +3434,9 @@ E_ParticleSystem.prototype.Update = function()
 {
   if(!this.m_bInitialized) return;
   if(this.particleList.length < 1) return;
-  this.InsertionSort();
-  this.UpdateCollisionMap();
-  this.SAPCollision();
+  // this.InsertionSort();
+  // this.UpdateCollisionMap();
+  // this.SAPCollision();
 
 
 
@@ -3846,122 +3851,6 @@ E_SpringDamper.prototype.MultiplyScalar = function(mat, scalar)
 module.exports = E_SpringDamper;
 
 },{}],12:[function(require,module,exports){
-'use strict'
-
-exports.byteLength = byteLength
-exports.toByteArray = toByteArray
-exports.fromByteArray = fromByteArray
-
-var lookup = []
-var revLookup = []
-var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-for (var i = 0, len = code.length; i < len; ++i) {
-  lookup[i] = code[i]
-  revLookup[code.charCodeAt(i)] = i
-}
-
-revLookup['-'.charCodeAt(0)] = 62
-revLookup['_'.charCodeAt(0)] = 63
-
-function placeHoldersCount (b64) {
-  var len = b64.length
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // the number of equal signs (place holders)
-  // if there are two placeholders, than the two characters before it
-  // represent one byte
-  // if there is only one, then the three characters before it represent 2 bytes
-  // this is just a cheap hack to not do indexOf twice
-  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
-}
-
-function byteLength (b64) {
-  // base64 is 4/3 + up to two characters of the original data
-  return b64.length * 3 / 4 - placeHoldersCount(b64)
-}
-
-function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
-  var len = b64.length
-  placeHolders = placeHoldersCount(b64)
-
-  arr = new Arr(len * 3 / 4 - placeHolders)
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  l = placeHolders > 0 ? len - 4 : len
-
-  var L = 0
-
-  for (i = 0, j = 0; i < l; i += 4, j += 3) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp >> 16) & 0xFF
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  if (placeHolders === 2) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[L++] = tmp & 0xFF
-  } else if (placeHolders === 1) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  var tmp
-  var output = []
-  for (var i = start; i < end; i += 3) {
-    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  var tmp
-  var len = uint8.length
-  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var output = ''
-  var parts = []
-  var maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    output += lookup[tmp >> 2]
-    output += lookup[(tmp << 4) & 0x3F]
-    output += '=='
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
-    output += lookup[tmp >> 10]
-    output += lookup[(tmp >> 4) & 0x3F]
-    output += lookup[(tmp << 2) & 0x3F]
-    output += '='
-  }
-
-  parts.push(output)
-
-  return parts.join('')
-}
-
-},{}],13:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -5754,7 +5643,123 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":12,"ieee754":14,"isarray":15}],14:[function(require,module,exports){
+},{"base64-js":13,"ieee754":14,"isarray":15}],13:[function(require,module,exports){
+'use strict'
+
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
+
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
+
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
+}
+
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
+
+function placeHoldersCount (b64) {
+  var len = b64.length
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // the number of equal signs (place holders)
+  // if there are two placeholders, than the two characters before it
+  // represent one byte
+  // if there is only one, then the three characters before it represent 2 bytes
+  // this is just a cheap hack to not do indexOf twice
+  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+}
+
+function byteLength (b64) {
+  // base64 is 4/3 + up to two characters of the original data
+  return b64.length * 3 / 4 - placeHoldersCount(b64)
+}
+
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
+  var len = b64.length
+  placeHolders = placeHoldersCount(b64)
+
+  arr = new Arr(len * 3 / 4 - placeHolders)
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  l = placeHolders > 0 ? len - 4 : len
+
+  var L = 0
+
+  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
+    arr[L++] = (tmp >> 16) & 0xFF
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  if (placeHolders === 2) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[L++] = tmp & 0xFF
+  } else if (placeHolders === 1) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var output = ''
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    output += lookup[tmp >> 2]
+    output += lookup[(tmp << 4) & 0x3F]
+    output += '=='
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
+    output += lookup[tmp >> 10]
+    output += lookup[(tmp >> 4) & 0x3F]
+    output += lookup[(tmp << 2) & 0x3F]
+    output += '='
+  }
+
+  parts.push(output)
+
+  return parts.join('')
+}
+
+},{}],14:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1

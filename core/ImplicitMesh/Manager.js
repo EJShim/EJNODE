@@ -20,13 +20,13 @@ function E_Manager()
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
-  var m_gravity = new THREE.Vector3(0.0, -9.8, 0.0);
+  var m_gravity = new THREE.Vector3(0.0, -0.98, 0.0);
 
   this.thumbnailSaved = false;
   this.starttime = new Date();
 
   this.then = new Date();
-  this.interval = 1000 / 30;
+  this.interval = 1000 / 60;
 
   //Time Step for Rendering
   this.timeStep = 0;
@@ -154,7 +154,7 @@ E_Manager.prototype.InitObject = function()
   deformmesh.AddToRenderer(scene, system);
 
 
-  var deformmesh2 = new E_DeformableMesh( this, new THREE.BoxGeometry(5, 5, 5) );
+  var deformmesh2 = new E_DeformableMesh( this, new THREE.BoxGeometry(8, 8, 8) );
   deformmesh2.AddToRenderer(scene, system);
 
 
@@ -164,9 +164,9 @@ E_Manager.prototype.InitObject = function()
   deformmesh3.AddToRenderer(scene, system);
 
 
-  var deformmesh4 = new E_DeformableMesh( this, new THREE.SphereGeometry( 5, 10, 10 ) );
+  var deformmesh4 = new E_DeformableMesh( this, new THREE.SphereGeometry( 5, 15, 15 ) );
   deformmesh4.MakeTranslation(0, 0, 8);
-  deformmesh4.material.color = new THREE.Color(0.0, 0.25, 0.25);
+  deformmesh4.material.color = new THREE.Color(0.5, 0.1, 0.2);
   deformmesh4.AddToRenderer(scene, system);
 
 

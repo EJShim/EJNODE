@@ -105,7 +105,7 @@ E_Interactor.prototype.Update = function()
   var camera = this.Manager.GetCamera();
   var mat = camera.matrix.clone();
 
-  var factor = 0.1;
+  var factor = 0.5;
 
   switch (this.m_keyCode) {
     case -1:

@@ -132,8 +132,8 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   var len = this.particleList.length;
   if(len == 0) return;
 
-  var kValue = 20;
-  var cValue = 1;
+  var kValue = 50;
+  var cValue = 20;
 
   var conMatrix = [];
   var massMatrix = [];
@@ -324,9 +324,9 @@ E_ParticleSystem.prototype.Update = function()
 {
   if(!this.m_bInitialized) return;
   if(this.particleList.length < 1) return;
-  this.InsertionSort();
-  this.UpdateCollisionMap();
-  this.SAPCollision();
+  // this.InsertionSort();
+  // this.UpdateCollisionMap();
+  // this.SAPCollision();
 
 
 

@@ -8,6 +8,7 @@ function E_DeformableMesh(Mgr, geometry)
   this.Mgr = Mgr;
 
   this.geometry = geometry;
+  this.geometry.mergeVertices();
   this.material = new THREE.MeshPhongMaterial({color:0x5a0000});
 
   this.particles = [];
@@ -24,17 +25,19 @@ E_DeformableMesh.prototype = Object.create(THREE.Mesh.prototype);
 
 E_DeformableMesh.prototype.Initialize = function()
 {
-  //Get Information of geometry's vertices and faces
-  // console.log(this.geometry.vertices);
-  // console.log(this.geometry.faces);
+
+
   var vertMap = [];
 
   var numVerts = this.geometry.vertices.length;
   var numFaces = this.geometry.faces.length;
+  var mass = 1;
+
+  if(this.geometry instanceof THREE.SphereGeometry) mass = 0.5;
 
   for(var i=0 ; i<numVerts ; i++){
     var part = new E_Particle(this.Mgr, 0.45);
-    part.mass = 1;
+    part.mass = mass;
     var realPos = this.geometry.vertices[i].clone();
     part.position.set(realPos.x, realPos.y, realPos.z);
     part.m_colorFixed = true;
@@ -93,7 +96,9 @@ E_DeformableMesh.prototype.AddToRenderer = function(scene, system)
 
   for(var i=0 ; i<numVerts ; i++){
     if(this.particles[i].connectedObject.length !== 0){
-      //scene.add(this.particles[i]);
+
+      if(i == 0)
+      scene.add(this.particles[i]);
       system.add(this.particles[i]);
     }
   }
