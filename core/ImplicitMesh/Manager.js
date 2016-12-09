@@ -147,7 +147,7 @@ E_Manager.prototype.InitObject = function()
 
 
   var mesh = []
-  var sFac = 1;
+  var sFac = 3;
 
   for(var i=0 ; i<8 ; i++){
     var newMesh = new E_Particle(this, 0.45);
@@ -210,8 +210,9 @@ E_Manager.prototype.InitObject = function()
   console.log(mesh[7]);
 
   for(var i=0 ; i<12 ; i++){
-      system.add(spring[i]);
-      scene.add(spring[i]);
+    spring[i].castShadow = true;
+    system.add(spring[i]);
+    scene.add(spring[i]);
   }
 
 
@@ -368,7 +369,7 @@ E_Manager.prototype.SelectObject = function(x, y)
     for(var i in intersects){
       if(intersects[i].object instanceof E_Particle){
         this.m_selectedMesh = intersects[i].object;
-        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_selectedMesh.m_bFixed = true;
 
         this.m_prevTime = new Date();
         this.m_prevPosition = this.m_selectedMesh.position.clone();
@@ -380,7 +381,8 @@ E_Manager.prototype.SelectObject = function(x, y)
         var faceIdx = intersects[i].face.a;
         this.m_prevTime = new Date();
         this.m_selectedMesh = intersects[i].object.particles[faceIdx];
-        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_selectedMesh.m_bFixed = true;
+
         this.m_prevPosition = intersects[i].object.particles[faceIdx].position.clone();
         return true;
       }
@@ -414,6 +416,7 @@ E_Manager.prototype.OnReleaseMouse = function()
   var elapsedPosition = currentPosition.sub(this.m_prevPosition);
 
 
+  this.m_selectedMesh.m_bFixed = false;
   this.m_selectedMesh = -1;
   this.m_prevTime = 0;
   this.m_prevPosition.set(0, 0, 0);

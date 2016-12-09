@@ -131,7 +131,7 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   if(len == 0) return;
 
   var kValue = 50;
-  var cValue = 0.9;
+  var cValue = 0.8;
 
   var conMatrix = [];
   var massMatrix = [];

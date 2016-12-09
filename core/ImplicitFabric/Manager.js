@@ -157,7 +157,7 @@ E_Manager.prototype.InitObject = function()
   for(var k=0 ; k<1 ; k++){
     for(var n=0 ; n<2 ; n++){
         var fab = new E_Fabric2(this);
-        fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
+        //fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/4));
         fab.geometry.applyMatrix(new THREE.Matrix4().makeRotationY(Math.PI/2));
         fab.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, k*scalefac - scalefac/2, n*scalefac - scalefac/2));
         fab.material.color = color[idx];
@@ -185,8 +185,8 @@ E_Manager.prototype.InitObject = function()
 
           // fab.FixPoint(1, i/scale);
           //
-          fab.FixPoint(i/scale, 0);
-          //fab.FixPoint(i/scale, 1);
+          //fab.FixPoint(i/scale, 0);
+          fab.FixPoint(i/scale, 1);
         }
     }
 
@@ -342,7 +342,7 @@ E_Manager.prototype.SelectObject = function(x, y)
     for(var i in intersects){
       if(intersects[i].object instanceof E_Particle){
         this.m_selectedMesh = intersects[i].object;
-        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_selectedMesh.m_bFixed = true;
 
         this.m_prevTime = new Date();
         this.m_prevPosition = this.m_selectedMesh.position.clone();
@@ -387,7 +387,7 @@ E_Manager.prototype.OnReleaseMouse = function()
   var elapsedTime = (currentTime-this.m_prevTime);
   var elapsedPosition = currentPosition.sub(this.m_prevPosition);
 
-
+  this.m_selectedMesh.m_bFixed = false;
   this.m_selectedMesh = -1;
   this.m_prevTime = 0;
   this.m_prevPosition.set(0, 0, 0);

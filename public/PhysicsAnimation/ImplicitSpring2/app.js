@@ -365,8 +365,6 @@ E_Manager.prototype.InitObject = function()
   var numRow = 12;
   var numPart = 10;
 
-  prevMesh = null;
-
   var arr = [];
   prevMesh = null;
 
@@ -562,7 +560,7 @@ E_Manager.prototype.SelectObject = function(x, y)
     for(var i in intersects){
       if(intersects[i].object instanceof E_Particle){
         this.m_selectedMesh = intersects[i].object;
-        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_selectedMesh.m_bFixed = true;
 
         this.m_prevTime = new Date();
         this.m_prevPosition = this.m_selectedMesh.position.clone();
@@ -607,7 +605,7 @@ E_Manager.prototype.OnReleaseMouse = function()
   var elapsedTime = (currentTime-this.m_prevTime);
   var elapsedPosition = currentPosition.sub(this.m_prevPosition);
 
-
+  this.m_selectedMesh.m_bFixed = false;
   this.m_selectedMesh = -1;
   this.m_prevTime = 0;
   this.m_prevPosition.set(0, 0, 0);
@@ -2748,10 +2746,12 @@ E_Particle.prototype.Update = function()
     return;
   }
 
-  if(this.m_bFixed) {
-    this.material.color = new THREE.Color(0.2, 0.2, 0.2);
-    return;
-  }
+  // if(this.m_bFixed) {
+  //   this.material.color = new THREE.Color(0.4, 0.2, 0.1);
+  //   return;
+  // }else{
+  //   this.material.color = new THREE.Color(0.0, 0.4, 0.0);
+  // }
 
 
   //Hair Simulation
@@ -3107,7 +3107,7 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   if(len == 0) return;
 
   var kValue = 50;
-  var cValue = 0.9;
+  var cValue = 0.8;
 
   var conMatrix = [];
   var massMatrix = [];

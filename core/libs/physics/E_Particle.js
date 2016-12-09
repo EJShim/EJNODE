@@ -118,10 +118,12 @@ E_Particle.prototype.Update = function()
     return;
   }
 
-  if(this.m_bFixed) {
-    this.material.color = new THREE.Color(0.2, 0.2, 0.2);
-    return;
-  }
+  // if(this.m_bFixed) {
+  //   this.material.color = new THREE.Color(0.4, 0.2, 0.1);
+  //   return;
+  // }else{
+  //   this.material.color = new THREE.Color(0.0, 0.4, 0.0);
+  // }
 
 
   //Hair Simulation

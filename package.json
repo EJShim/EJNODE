@@ -15,6 +15,8 @@
     "url": "https://github.com/EJShim/ejshim.git"
   },
   "scripts": {
+    "buildF": "browserify core/ImplicitFabric/MainFrm.js -o public/PhysicsAnimation/ImplicitFabric/app.js",
+    "buildS": "browserify core/ImplicitSpring2/MainFrm.js -o public/PhysicsAnimation/ImplicitSpring2/app.js",
     "build": "browserify core/ImplicitMesh/MainFrm.js -o public/PhysicsAnimation/ImplicitMesh/app.js"
   }
 }

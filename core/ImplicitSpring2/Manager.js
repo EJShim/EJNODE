@@ -341,7 +341,7 @@ E_Manager.prototype.SelectObject = function(x, y)
     for(var i in intersects){
       if(intersects[i].object instanceof E_Particle){
         this.m_selectedMesh = intersects[i].object;
-        this.m_selectedMesh.velocity.set(0, 0, 0);
+        this.m_selectedMesh.m_bFixed = true;
 
         this.m_prevTime = new Date();
         this.m_prevPosition = this.m_selectedMesh.position.clone();
@@ -386,7 +386,7 @@ E_Manager.prototype.OnReleaseMouse = function()
   var elapsedTime = (currentTime-this.m_prevTime);
   var elapsedPosition = currentPosition.sub(this.m_prevPosition);
 
-
+  this.m_selectedMesh.m_bFixed = false;
   this.m_selectedMesh = -1;
   this.m_prevTime = 0;
   this.m_prevPosition.set(0, 0, 0);
