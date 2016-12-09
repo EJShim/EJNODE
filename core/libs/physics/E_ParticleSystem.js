@@ -9,9 +9,11 @@ var E_Fabric2 = require("./E_Fabric2.js");
 
 //Matrix
 var Sushi = require("../Matrix/sushi.js");
+var $M = require('milsushi2');
 
 function E_ParticleSystem(Mgr)
 {
+
   this.Manager = Mgr;
   this.m_bInitialized = false;
 
@@ -121,8 +123,6 @@ E_ParticleSystem.prototype.remove = function( object )
 E_ParticleSystem.prototype.UpdateDisplacementMatrix = function()
 {
   this.dispMat = this.P;
-
-  console.log(this.dispMat);
 }
 
 E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
@@ -198,13 +198,20 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
   }
 
   var connectivityMatrix = Sushi.Matrix.fromArray(conMatrix);
+  //var connectivityMatrix = $M.jsa2mat(conMatrix);
   var mMatrix = Sushi.Matrix.fromArray(massMatrix);
+  //var mMatrix = $M.jsa2mat(massMatrix);
   var kMatrix = Sushi.Matrix.fromArray(kMatrix);
+  //var kMatrix = $M.jsa2mat(kMatrix);
   var cMatrix = Sushi.Matrix.fromArray(cMatrix);
+  //var cMatrix = $M.jsa2mat(cMatrix);
 
   this.M = Sushi.Matrix.fromArray( massMatrix );
-  this.K = connectivityMatrix.clone().times(kValue);
+  //this.M = $M.jsa2mat( massMatrix );
+   this.K = connectivityMatrix.clone().times(kValue);
+  //this.K = $M.times(kValue, connectivityMatrix);
   this.C = connectivityMatrix.clone().times(cValue);
+  //this.C = $M.times(cValue, connectivityMatrix);
 
   var timeStep = 1 / this.Manager.interval;
   var a0 = 1/(0.25 * Math.pow(timeStep, 2) );
@@ -212,7 +219,10 @@ E_ParticleSystem.prototype.UpdateConnectivityMatrix = function()
 
 
   var KHat = this.K.clone().add( this.M.clone().times(a0) ).add(this.C.clone().times(a1));
+  //var KHat = $M.plus($M.plus(this.K, $M.times(a0, this.M)), $M.times(a1, this.C));
+
   this.invK = KHat.clone().inverse();
+  //this.invK = $M.uminus(KHat);
 }
 
 
@@ -328,13 +338,6 @@ E_ParticleSystem.prototype.Update = function()
   // this.UpdateCollisionMap();
   // this.SAPCollision();
 
-
-
-  //Explicit Method-SpringDamper
-  // for(var i=0 ; i<this.springList.length ; i++){
-  //   this.springList[i].Update();
-  // }
-  //
 
   //Update fabricList
   var fablen = this.fabricList.length;
@@ -527,20 +530,29 @@ E_ParticleSystem.prototype.ImplicitSpringDamperSystem = function()
   var a7 = 0.5 * timeStep;
 
   var eq1 = Sushi.Matrix.mul(this.M ,  this.P.clone().times(a0).add( this.V.clone().times(a2) ).add( this.A.clone().times(a3) ) );
+  //var eq1 = $M.mtimes(this.M, $M.plus($M.plus($M.times(a0, this.P), $M.times(a2, this.V)), $M.times(a3, this.A)) );
+
   var eq2 = Sushi.Matrix.mul(this.C ,  this.P.clone().times(a1).add( this.V.clone().times(a4) ).add( this.A.clone().times(a5) ) );
+  //var eq2 = $M.mtimes(this.C ,  $M.plus($M.plus($M.times(a1, this.P), $M.times(a4, this.V)), $M.times(a5, this.A)) );
 
   var RHat = eq1.add(eq2);
+  //var RHat = $M.plus(eq1, eq1);
+
 
   //Update Position
   var updateP = Sushi.Matrix.mul(this.invK, RHat);
+  //var updateP = $M.mtimes(this.invK, RHat);
 
   //Update Acceleration
   var updateA =  updateP.clone().sub( this.P ).times(a0).sub( this.V.clone().times(a2) ).sub( this.A.clone().times(a3) );
+  //var updateA =  $M.minus($M.minus($M.minus(updateP, $M.times(a0, this.P)), $M.times(a2, this.V) ), $M.times(a3, this.A));
 
   //Update Velocity
   var updateV = this.V.clone().add( this.A.clone().times(a6) ).add( updateA.clone().times(a7) );
+  //var updateV = $M.plus($M.plus(this.V, $M.times(a6, this.A)), $M.times(a7, updateA));
 
   updateP.add(this.dispMat);
+  //updateP = $M.plus(updateP, this.dispMat);
 
   //Update Animation
   for(var i=0 ; i<len ; i++){
@@ -578,42 +590,55 @@ E_ParticleSystem.prototype.UpdateDynamics = function()
     var arrayV = [];
     var arrayA = [];
 
-    arrayP.push([]);
-    arrayV.push([]);
-    arrayA.push([]);
+
+
 
     for(var i=0 ; i<len ; i++){
-      arrayP[0].push(this.particleList[i].position.x);
-      arrayV[0].push(this.particleList[i].velocity.x);
-      arrayA[0].push(this.particleList[i].acceleration.x);
+      arrayP.push([]);
+      arrayV.push([]);
+      arrayA.push([]);
+
+      arrayP[arrayP.length-1].push(this.particleList[i].position.x);
+      arrayV[arrayV.length-1].push(this.particleList[i].velocity.x);
+      arrayA[arrayA.length-1].push(this.particleList[i].acceleration.x);
     }
 
     for(var i=0 ; i<len ; i++){
-      arrayP[0].push(this.particleList[i].position.y);
-      arrayV[0].push(this.particleList[i].velocity.y);
-      arrayA[0].push(this.particleList[i].acceleration.y);
+
+      arrayP.push([]);
+      arrayV.push([]);
+      arrayA.push([]);
+
+      arrayP[arrayP.length-1].push(this.particleList[i].position.y);
+      arrayV[arrayV.length-1].push(this.particleList[i].velocity.y);
+      arrayA[arrayA.length-1].push(this.particleList[i].acceleration.y);
     }
 
     for(var i=0 ; i<len ; i++){
-      arrayP[0].push(this.particleList[i].position.z);
-      arrayV[0].push(this.particleList[i].velocity.z);
-      arrayA[0].push(this.particleList[i].acceleration.z);
+
+      arrayP.push([]);
+      arrayV.push([]);
+      arrayA.push([]);
+
+      arrayP[arrayP.length-1].push(this.particleList[i].position.z);
+      arrayV[arrayV.length-1].push(this.particleList[i].velocity.z);
+      arrayA[arrayA.length-1].push(this.particleList[i].acceleration.z);
     }
 
-    this.P = Sushi.Matrix.fromArray(arrayP).t();
-    this.V = Sushi.Matrix.fromArray(arrayV).t();
-    this.A = Sushi.Matrix.fromArray(arrayA).t();
+    this.P = Sushi.Matrix.fromArray(arrayP);
+    //this.P = $M.jsa2mat(arrayP);
+    this.V = Sushi.Matrix.fromArray(arrayV);
+    //this.V = $M.jsa2mat(arrayV);
+    this.A = Sushi.Matrix.fromArray(arrayA);
+    //this.A = $M.jsa2mat(arrayA);
 
     if(this.dispMat === null){
       this.dispMat = this.P;
     }else{
       this.P.sub(this.dispMat);
+      //this.P = $M.minus(this.P, this.dispMat);
     }
 
 }
-
-
-
-
 
 module.exports = E_ParticleSystem;

@@ -33,7 +33,6 @@ E_DeformableMesh.prototype.Initialize = function()
   var numFaces = this.geometry.faces.length;
   var mass = 1;
 
-  if(this.geometry instanceof THREE.SphereGeometry) mass = 0.5;
 
   for(var i=0 ; i<numVerts ; i++){
     var part = new E_Particle(this.Mgr, 0.45);

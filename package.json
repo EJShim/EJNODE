@@ -4,6 +4,7 @@
   "dependencies": {
     "ejs": "~2.4.1",
     "express": "~4.13.1",
+    "milsushi2": "0.0.1",
     "three-stl-loader": "^1.0.4"
   },
   "devDependencies": {

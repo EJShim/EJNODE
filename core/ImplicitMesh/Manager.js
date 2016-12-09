@@ -20,7 +20,7 @@ function E_Manager()
   var m_interactor = new E_Interactor(this);
   var m_particleSystem = new E_ParticleSystem(this);
 
-  var m_gravity = new THREE.Vector3(0.0, -0.98, 0.0);
+  var m_gravity = new THREE.Vector3(0.0, -1.98, 0.0);
 
   this.thumbnailSaved = false;
   this.starttime = new Date();
