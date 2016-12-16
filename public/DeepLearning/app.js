@@ -1,46 +1,124 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var convnetjs = require("convnetjs");
+var E_SocketManager = require("./E_SocketManager.js")
 
-var layer_defs = [];
-// input layer of size 1x1x2 (all volumes are 3D)
-layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:3});
-// some fully connected layers
-layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-// a softmax classifier predicting probabilities for two classes: 0,1
-layer_defs.push({type:'softmax', num_classes:3});
+function E_Manager()
+{
 
-// create a net out of it
-var net = new convnetjs.Net();
-net.makeLayers(layer_defs);
+  var m_socketMgr = new E_SocketManager(this);
 
-// the network always works on Vol() elements. These are essentially
-// simple wrappers around lists, but also contain gradients and dimensions
-// line below will create a 1x1x2 volume and fill it with 0.5 and -1.3
-var x = new convnetjs.Vol([1.0, 0.0, 0.0]);
-var y = new convnetjs.Vol([0.0, 1.0, 0.0]);
-var z = new convnetjs.Vol([0.0, 0.0, 1.0]);
+  this.SocketMgr = function()
+  {
+    return m_socketMgr;
+  }
 
-
-var trainer = new convnetjs.Trainer(net, {learning_rate:0.01, l2_decay:0.001});
-for(var i=0 ; i<10 ; i++){
-  trainer.train(x, 0);
-  trainer.train(y, 1);
-  trainer.train(z, 2);
 }
 
-var random = [Math.random(), 0, 0];
-console.log( "Generate Random Value : " + random[0] + "," + random[1] + "," + random[2] );
+E_Manager.prototype.Initialize = function()
+{
+  var layer_defs = [];
+  // input layer of size 1x1x2 (all volumes are 3D)
+  layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:3});
+  // some fully connected layers
+  layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
+  // a softmax classifier predicting probabilities for two classes: 0,1
+  layer_defs.push({type:'softmax', num_classes:3});
 
-var inputVol = new convnetjs.Vol(random);
-var probability_volume = net.forward(inputVol);
+  // create a net out of it
+  var net = new convnetjs.Net();
+  net.makeLayers(layer_defs);
 
-console.log('probability that input is near X axis : ' + probability_volume.w[0]);
-console.log('probability that input is near Y axis : ' + probability_volume.w[1]);
-console.log('probability that input is near Z axis : ' + probability_volume.w[2]);
-// prints 0.50101
+  // the network always works on Vol() elements. These are essentially
+  // simple wrappers around lists, but also contain gradients and dimensions
+  // line below will create a 1x1x2 volume and fill it with 0.5 and -1.3
+  var x = new convnetjs.Vol([1.0, 0.0, 0.0]);
+  var y = new convnetjs.Vol([0.0, 1.0, 0.0]);
+  var z = new convnetjs.Vol([0.0, 0.0, 1.0]);
 
-},{"convnetjs":2}],2:[function(require,module,exports){
+
+  var trainer = new convnetjs.Trainer(net, {learning_rate:0.01, l2_decay:0.001});
+  for(var i=0 ; i<10 ; i++){
+    trainer.train(x, 0);
+    trainer.train(y, 1);
+    trainer.train(z, 2);
+  }
+
+
+  var idx = Math.round( Math.random() * 2 );
+  var random = [0, 0, 0];
+  random[idx] = 1;
+
+
+  this.SetLog("Generate Random Value : " + random[0] + "," + random[1] + "," + random[2] );
+
+
+
+  var inputVol = new convnetjs.Vol(random);
+  var probability_volume = net.forward(inputVol);
+
+  this.AppendLog('X axis : ' + probability_volume.w[0]);
+  this.AppendLog('Y axis : ' + probability_volume.w[1]);
+  this.AppendLog('Z axis : ' + probability_volume.w[2]);
+
+
+  this.SaveJSON( JSON.stringify(net) );
+
+}
+
+E_Manager.prototype.SetLog = function(string)
+{
+
+  //console.log( document.getElementById("log") );
+  document.getElementById("log").innerHTML = string;
+}
+
+E_Manager.prototype.AppendLog = function(string)
+{
+  document.getElementById("log").innerHTML += "<br>" + string;
+}
+
+E_Manager.prototype.SaveJSON = function(string)
+{
+
+  this.SocketMgr().EmitData("WRITE_NEURAL_NET", string);
+}
+module.exports = E_Manager;
+
+},{"./E_SocketManager.js":2,"convnetjs":4}],2:[function(require,module,exports){
+function E_SocketManager(Mgr)
+{
+
+  this.Mgr = Mgr
+  this.socket = io();
+
+
+
+  this.HandleSignal();
+}
+
+E_SocketManager.prototype.EmitData = function(signal, data)
+{
+  this.socket.emit(signal, data);
+}
+
+E_SocketManager.prototype.HandleSignal = function()
+{
+  var Mgr = this.Mgr;
+  this.socket.on("SIGNAL_INITIALIZE", function(data){
+    Mgr.Initialize();
+  })
+}
+
+module.exports = E_SocketManager;
+
+},{}],3:[function(require,module,exports){
+
+var E_Manager = require("./E_Manager.js");
+
+var Manager = new E_Manager();
+
+},{"./E_Manager.js":1}],4:[function(require,module,exports){
 var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 (function(global) {
   "use strict";
@@ -2240,4 +2318,4 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
   }
 })(convnetjs);
 
-},{}]},{},[1]);
+},{}]},{},[3]);
