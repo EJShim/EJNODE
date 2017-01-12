@@ -5,6 +5,8 @@ var E_SocketManager = require("./E_SocketManager.js")
 function E_Manager()
 {
 
+  this.net = null;
+
   var m_socketMgr = new E_SocketManager(this);
 
   this.SocketMgr = function()
@@ -16,6 +18,8 @@ function E_Manager()
 
 E_Manager.prototype.Initialize = function()
 {
+
+
   var layer_defs = [];
   // input layer of size 1x1x2 (all volumes are 3D)
   layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:3});
