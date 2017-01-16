@@ -20,6 +20,6 @@
   "scripts": {
     "buildF": "browserify core/ImplicitFabric/MainFrm.js -o public/PhysicsAnimation/ImplicitFabric/app.js",
     "buildS": "browserify core/ImplicitSpring2/MainFrm.js -o public/PhysicsAnimation/ImplicitSpring2/app.js",
-    "build": "browserify core/DeepLearning/Main.js -o public/DeepLearning/app.js"
+    "build": "browserify core/WebVR/Mainfrm.js -o public/WEBVR/app.js"
   }
 }
