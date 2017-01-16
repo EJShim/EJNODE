@@ -7,7 +7,8 @@
     "jsonfile": "^2.4.0",
     "milsushi2": "0.0.1",
     "socket.io": "^1.7.2",
-    "three-stl-loader": "^1.0.4"
+    "three-stl-loader": "^1.0.4",
+    "three-vive-controller": "^1.4.1"
   },
   "devDependencies": {
     "browserify": "^13.1.0",

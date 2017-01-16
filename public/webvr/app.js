@@ -15,10 +15,6 @@ function E_Manager()
   this.renderer = null;
   this.effect = null;
   this.controls = null;
-  this.floor = 0;
-
-
-  this.skull = null;
 
   this.controller1 = null;
   this.controller2 = null;
@@ -27,12 +23,32 @@ function E_Manager()
 
   this.Init();
   this.Animate();
+
+
+  function onWindowResize() {
+
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.effect.setSize( window.innerWidth, window.innerHeight );
+
+  }
 }
 
 E_Manager.prototype.Init = function()
 {
   this.container = document.createElement( 'div' );
   document.body.appendChild( this.container );
+
+  var info = document.createElement( 'div' );
+  info.style.position = 'absolute';
+  info.style.top = '10px';
+  info.style.width = '100%';
+  info.style.textAlign = 'center';
+  info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> webgl - htc vive';
+
+  this.container.appendChild( info );
+
 
   //Initialize Scene
   this.scene = new THREE.Scene();
@@ -41,27 +57,28 @@ E_Manager.prototype.Init = function()
   this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 10 );
   this.scene.add( this.camera );
 
-  var scaleFactor = 3;
-  this.floor = -scaleFactor/2
-
   this.room = new THREE.Mesh(
-    new THREE.BoxGeometry( scaleFactor, scaleFactor, scaleFactor, 8, 8, 8 ),
+    new THREE.BoxGeometry( 6, 6, 6, 8, 8, 8 ),
     new THREE.MeshBasicMaterial( { color: 0x404040, wireframe: true } )
   );
-  this.room.position.y = scaleFactor/2 + 0.7;
-  this.scene.add( this.room );
+  this.room.position.y = 3;
+  this.scene.add( room );
 
   this.scene.add( new THREE.HemisphereLight( 0x606060, 0x404040 ) );
 
-  this.light = new THREE.DirectionalLight( 0xffffff );
-  this.scene.add( this.light );
+  var light = new THREE.DirectionalLight( 0xffffff );
+  light.position.set( 1, 1, 1 ).normalize();
+  this.scene.add( light );
 
   var geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
 
-  for(var i=0 ; i<20 ; i++){
+  for ( var i = 0; i < 200; i ++ ) {
+
     var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-    object.position.set(Math.random() * scaleFactor + this.floor, this.floor, Math.random() * scaleFactor + this.floor);
+    object.position.x = Math.random() * 4 - 2;
+    object.position.y = Math.random() * 4 - 2;
+    object.position.z = Math.random() * 4 - 2;
 
     object.rotation.x = Math.random() * 2 * Math.PI;
     object.rotation.y = Math.random() * 2 * Math.PI;
@@ -71,19 +88,67 @@ E_Manager.prototype.Init = function()
     object.scale.y = Math.random() + 0.5;
     object.scale.z = Math.random() + 0.5;
 
+    object.userData.velocity = new THREE.Vector3();
+    object.userData.velocity.x = Math.random() * 0.01 - 0.005;
+    object.userData.velocity.y = Math.random() * 0.01 - 0.005;
+    object.userData.velocity.z = Math.random() * 0.01 - 0.005;
+
     this.room.add( object );
+
   }
 
-
-  //Load OBJLoader
-  var loader = new THREE.OBJLoader();
-  loader.setPath( 'models/' );
-
-  var that = this;
-
+  // var material = new THREE.MeshStandardMaterial();
+  //
+  // var loader = new THREE.OBJLoader();
+  // loader.setPath( 'models/obj/cerberus/' );
+  // loader.load( 'Cerberus.obj', function ( group ) {
+  //
+  //   // var material = new THREE.MeshBasicMaterial( { wireframe: true } );
+  //
+  //   var loader = new THREE.TextureLoader();
+  //   loader.setPath( 'models/obj/cerberus/' );
+  //
+  //   material.roughness = 1;
+  //   material.metalness = 1;
+  //
+  //   material.map = loader.load( 'Cerberus_A.jpg' );
+  //   material.roughnessMap = loader.load( 'Cerberus_R.jpg' );
+  //   material.metalnessMap = loader.load( 'Cerberus_M.jpg' );
+  //   material.normalMap = loader.load( 'Cerberus_N.jpg' );
+  //
+  //   material.map.wrapS = THREE.RepeatWrapping;
+  //   material.roughnessMap.wrapS = THREE.RepeatWrapping;
+  //   material.metalnessMap.wrapS = THREE.RepeatWrapping;
+  //   material.normalMap.wrapS = THREE.RepeatWrapping;
+  //
+  //   group.traverse( function ( child ) {
+  //
+  //     if ( child instanceof THREE.Mesh ) {
+  //
+  //       child.material = material;
+  //
+  //     }
+  //
+  //   } );
+  //
+  //   group.position.y = - 2;
+  //   group.rotation.y = - Math.PI / 2;
+  //   room.add( group );
+  //
+  // } );
+  //
+  // var loader = new THREE.CubeTextureLoader();
+  // loader.setPath( 'textures/cube/pisa/' );
+  // material.envMap = loader.load( [
+  //   "px.png", "nx.png",
+  //   "py.png", "ny.png",
+  //   "pz.png", "nz.png"
+  // ] );
+  //
+  // //
 
   this.renderer = new THREE.WebGLRenderer( { antialias: true } );
-  this.renderer.setClearColor( 0x505f50 );
+  this.renderer.setClearColor( 0x505050 );
   this.renderer.setPixelRatio( window.devicePixelRatio );
   this.renderer.setSize( window.innerWidth, window.innerHeight );
   this.renderer.sortObjects = false;
@@ -95,51 +160,28 @@ E_Manager.prototype.Init = function()
   // controllers
 
   this.controller1 = new THREE.ViveController( 0 );
-  this.controller1.standingMatrix = this.controls.getStandingMatrix();
+  this.controller1.standingMatrix = controls.getStandingMatrix();
   this.scene.add( this.controller1 );
 
   this.controller2 = new THREE.ViveController( 1 );
-  this.controller2.standingMatrix = this.controls.getStandingMatrix();
+  this.controller2.standingMatrix = controls.getStandingMatrix();
   this.scene.add( this.controller2 );
 
   var loader = new THREE.OBJLoader();
-  loader.setPath( 'models/' );
-
-  var that = this;
+  loader.setPath( 'models/obj/vive-controller/' );
   loader.load( 'vr_controller_vive_1_5.obj', function ( object ) {
 
     var loader = new THREE.TextureLoader();
-    loader.setPath( 'models/' );
+    loader.setPath( 'models/obj/vive-controller/' );
 
     var controller = object.children[ 0 ];
     controller.material.map = loader.load( 'onepointfive_texture.png' );
     controller.material.specularMap = loader.load( 'onepointfive_spec.png' );
 
-    that.controller1.add( object.clone() );
-    //that.controller2.add( object.clone() );
+    controller1.add( object.clone() );
+    controller2.add( object.clone() );
 
   } );
-
-
-  var loader = new THREE.OBJLoader();
-  loader.setPath( 'models/' );
-
-  loader.load( 'craniopagus_bone.obj', function ( object ) {
-    console.log(object);
-
-    object.scale.x = 0.1;
-    object.scale.y = 0.1;
-    object.scale.z = 0.1;
-    //object.position.set(1, that.floor, 1);
-
-    object.material = new THREE.MeshPhongMaterial({color:0xaaaaaa, side:THREE.DoubleSide});
-
-    //that.skull = object;
-
-    that.controller2.add(object);
-  } );
-
-
 
   this.effect = new THREE.VREffect( this.renderer );
 
@@ -160,34 +202,47 @@ E_Manager.prototype.Animate = function()
 
 E_Manager.prototype.render = function()
 {
-      var delta = this.clock.getDelta() * 60;
+      var delta = clock.getDelta() * 60;
 
       this.controller1.update();
       this.controller2.update();
 
       this.controls.update();
 
+      for ( var i = 0; i < this.room.children.length; i ++ ) {
 
-      var pos = this.camera.position;
-      this.light.position.set(pos.x, pos.y, pos.z);
+        var cube = this.room.children[ i ];
 
-      if(this.skull !== null)
-      {
-        this.skull.rotation.y += 0.01;
+        if ( cube.geometry instanceof THREE.BoxGeometry === false ) continue;
+
+        // cube.position.add( cube.userData.velocity );
+
+        if ( cube.position.x < - 3 || cube.position.x > 3 ) {
+
+          cube.position.x = THREE.Math.clamp( cube.position.x, - 3, 3 );
+          cube.userData.velocity.x = - cube.userData.velocity.x;
+
+        }
+
+        if ( cube.position.y < - 3 || cube.position.y > 3 ) {
+
+          cube.position.y = THREE.Math.clamp( cube.position.y, - 3, 3 );
+          cube.userData.velocity.y = - cube.userData.velocity.y;
+
+        }
+
+        if ( cube.position.z < - 3 || cube.position.z > 3 ) {
+
+          cube.position.z = THREE.Math.clamp( cube.position.z, - 3, 3 );
+          cube.userData.velocity.z = - cube.userData.velocity.z;
+
+        }
+
+        cube.rotation.x += 0.01 * delta;
+
       }
 
-
-
-      this.effect.render( this.scene, this.camera );
-}
-
-E_Manager.prototype.onWindowResize = function()
-{
-
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-
-      this.effect.setSize( window.innerWidth, window.innerHeight );
+      this.effect.render( scene, camera );
 }
 
 module.exports = E_Manager;
