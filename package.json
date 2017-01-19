@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "browserify": "^13.1.0",
+    "kw-web-suite": "^2.2.1",
     "watchify": "^3.7.0"
   },
   "repository": {
