@@ -8,7 +8,8 @@
     "milsushi2": "0.0.1",
     "socket.io": "^1.7.2",
     "three-stl-loader": "^1.0.4",
-    "three-vive-controller": "^1.4.1"
+    "three-vive-controller": "^1.4.1",
+    "vtk.js": "^2.8.1"
   },
   "devDependencies": {
     "browserify": "^13.1.0",
@@ -21,6 +22,6 @@
   "scripts": {
     "buildF": "browserify core/ImplicitFabric/MainFrm.js -o public/PhysicsAnimation/ImplicitFabric/app.js",
     "buildS": "browserify core/ImplicitSpring2/MainFrm.js -o public/PhysicsAnimation/ImplicitSpring2/app.js",
-    "build": "browserify core/WebVR/Mainfrm.js -o public/WEBVR/app.js"
+    "build": "browserify core/VTKWeb/main.js -o public/VTKJS/app.js"
   }
 }
