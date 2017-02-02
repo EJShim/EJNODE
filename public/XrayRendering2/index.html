@@ -1,0 +1,123 @@
+<html>
+	<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title> Virtual X-ray Simulation </title>
+    <meta name="generator" content="Bootply" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="../gmapBstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+	</head>
+	<body>
+
+    <div class="container-fluid" id="main">
+      <div class="row">
+				<p class="col-md-12" id="debugConsole"></p>
+        <div class="col-md-12" id = "viewport"></div>
+      </div>
+    </div>
+
+    <!---script area -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="../gmapBstrap/js/bootstrap.min.js"></script>
+		<script src="../libs/Math//three.js"></script>
+    <script src="../libs/TrackballControls.js"></script>
+		<script src="../libs/STLLoader.js"></script>
+		<script src="../libs/DAT.gui.js"></script>
+		<script type="x-shader/x-vertex" id="shader-vertex">
+		// switch on high precision floats
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying vec3 viewDirection;
+		varying vec3 E;
+
+		uniform vec3 camPos;
+
+		void main()
+		{
+
+			//vNormal = normal;
+			float xSeg = 1000.0;
+			vNormal = normal;
+			vNormal = normalize(vNormal);
+
+			viewDirection = camPos - vec3(position.x, position.y, position.z);
+			viewDirection = normalize(viewDirection);
+
+			E = normalize(camPos);
+
+			//calculate angle between view idrection and normal
+			if(dot(vNormal, viewDirection) < 0.0){
+				viewDirection = -viewDirection;
+				E = -E;
+			}
+
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+
+			// float rgbPos = position.x * 16777215.0 / 1000.0;
+			// int u_color = int(rgbPos);
+			// int rIntValue = (u_color / 256 / 256) % 256;
+			// int gIntValue = (u_color / 256      ) % 256;
+			// int bIntValue = (u_color            ) % 256;
+			// vec3 col = vec3(rValue, gValue, bValue);
+			// normalize(col);
+			//vec3 col = vec3( exp(-pow(position.x, 2.0) / 100000.0), exp(-pow(position.x - 400.0, 2.0) / 100000.0), exp(-pow(position.x- 700.0, 2.0) / 100000.0));
+			vPosition = position;
+			//vPosition = normalize(vPosition);
+
+		}
+		</script>
+		<script type="x-shader/x-fragment" id="shader-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		vec3 RainBowColor(float position, float maxLength)
+		{
+				float i = (position * 255.0 / maxLength);
+				float r = float(int(cos(0.024 * i + 0.0) * 127.0 + 128.0));
+				float g = float(int(cos(0.024 * i + 2.0) * 127.0 + 128.0));
+				float b = float(int(cos(0.024 * i + 4.0) * 127.0 + 128.0));
+				return vec3( r/255.0, g/255.0, b/255.0 );
+		}
+
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying vec3 viewDirection;
+		varying vec3 E;
+
+		uniform vec3 viewDir;
+
+		void main()
+		{
+			float pos = vPosition.z;
+			vec3 R = normalize( -reflect(viewDirection, vNormal) );
+
+			vec3 ambient = vec3(0.0, 0.0, 0.0);
+
+			float maxVal = 200.0;
+			vec3 diffuseColor = RainBowColor(pos, maxVal);
+			//vec3 diffuseColor = vec3( exp(-pow(pos, 2.0) / 4000.0), exp(-pow(pos - 100.0, 2.0) / 4000.0), exp(-pow(pos-200.0, 2.0) / 4000.0));
+			vec3 diffuse = diffuseColor * max(dot(vNormal, viewDirection)  , 0.0);
+
+			float shininess = 50.0;
+			vec3 specularColor = vec3(1.0, 1.0, 1.0);
+			vec3 specular = specularColor * pow(max(dot(R, E),0.0),shininess);
+			specular = clamp(specular, 0.0, 1.0);
+
+
+			//vec3 color = col * (dot(vNormal, viewDirection ));
+			vec3 final = ambient + diffuse + specular;
+		  gl_FragColor 	= vec4(final,1.0);
+
+		}
+
+
+		</script>
+		<script src="savethumbnail.js"></script>
+		<script src="main.js"></script>
+	</body>
+</html>
